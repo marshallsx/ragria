@@ -1,0 +1,19 @@
+# RAGRIA — core dependencies (v0)
+# Pinned to the versions that installed & imported cleanly on Python 3.14.4 (2026-07-06).
+# These are top-level deps only; their sub-dependencies are resolved by pip.
+
+# Vector store + built-in default embeddings (no PyTorch, no separate model)
+chromadb==1.5.9
+
+# Grounded answer generation
+anthropic==0.116.0
+
+# UI
+streamlit==1.58.0
+
+# PDF ingestion
+pdfplumber==0.11.10
+pypdf==6.14.2
+
+# Config / secrets (.env)
+python-dotenv==1.2.2
