@@ -33,8 +33,8 @@
 - [x] Create `requirements.txt` and install dependencies — all installed & import cleanly on Python 3.14.4 (no drop to 3.12 needed)
 - [x] Create `.gitignore` (excludes `.env`, `venv/`, `data/`, Chroma store)
 - [x] Create `.env` and add Anthropic API key — loads via python-dotenv, verified masked
-- [ ] `git init` + first commit + create GitHub repo
-- **Verify:** venv active, packages import, `.env` loads, key NOT in git status
+- [x] `git init` + first commit + create GitHub repo — private repo at github.com/marshallsx/ragria, pushed to `main`
+- **Verify:** ✅ venv active (Py 3.14.4), ✅ packages import, ✅ `.env` loads (masked), ✅ key NOT in git status / NOT on GitHub
 
 ## Phase 1 — Get the corpus
 - [ ] Download Ofgem Standard Licence Conditions (electricity and/or gas supply) from Ofgem's public site
