@@ -44,6 +44,16 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   **rank 1** for the back-billing query. Retrieval quality is downstream of chunking
   correctness — a citation/parsing bug is also a retrieval bug.
 
+- **The weak embedder causes false refusals via vocabulary gaps — the #1 retrieval risk.**
+  "Can a supplier back-bill more than 12 months ago?" retrieves Condition 21BA at rank 1
+  and answers perfectly; the near-synonym "What is the **maximum back-billing period**?"
+  doesn't surface 21BA even in the **top 15**, so the system refuses a question the corpus
+  answers. Raising k does not help (it's a semantic-match failure, not a threshold one).
+  Candidate fixes, cheapest first: (1) **embed the condition title with the chunk text**
+  so "Backbilling" is in the vector; (2) **hybrid BM25 + vector** retrieval so the keyword
+  matches; (3) a stronger embedder (reintroduces the model dependency v0 avoided). Recorded
+  as O4 in `docs/query-taxonomy.md`; quantify + fix in Phase 5.
+
 - **Small chunks clip multi-part conditions — fix with neighbour expansion.** The
   back-billing answer honestly flagged that 21BA's exceptions were truncated: 21BA is 4
   chunks and only chunk 0 (rule + start of exceptions) was retrieved; chunk 1 (rest of
