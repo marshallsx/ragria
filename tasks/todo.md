@@ -43,11 +43,11 @@
 - **Verify:** ✅ file present, ✅ readable (611 pages, real text via pdfplumber), ✅ provenance noted (electricity only for v0)
 
 ## Phase 2 — Ingestion pipeline (v0)
-- [ ] Load document(s): PDF/HTML → text
-- [ ] Chunk text, attaching metadata (source, section/condition ref, page)
-- [ ] Embed + store chunks in ChromaDB
-- [ ] Persist the Chroma store to disk
-- **Verify:** chunk count sensible; spot-check 3 chunks have correct text + metadata
+- [x] Load document(s): PDF/HTML → text — `src/extract_pages.py`, pypdf → `data/interim/slc_pages.jsonl` (611 pages cached; pdfplumber too slow)
+- [x] Chunk text, attaching metadata (source, section/condition ref, page) — `src/chunk.py`, structure-aware by Condition (Option B), 111 conditions → 1133 chunks, ~175-word windows
+- [x] Embed + store chunks in ChromaDB — `src/embed.py`, default embedder, collection `ofgem_slc_electricity` (1133), idempotent reset
+- [x] Persist the Chroma store to disk — `chroma/` (gitignored)
+- **Verify:** ✅ 1133 chunks (sensible); ✅ 3 chunks spot-checked (text+metadata correct); ✅ 0 boilerplate leaks; ✅ end-to-end smoke query works; ✅ parser completeness bug (missed 19AA/21BA/28AA/28AD) caught + fixed
 
 ## Phase 3 — Retrieval + grounded generation (v0)
 - [ ] Query → retrieve top-k relevant chunks
