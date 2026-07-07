@@ -62,10 +62,12 @@ if "question" not in st.session_state:
 
 # --- Example questions ---
 st.write("**Try an example:**")
-cols = st.columns(len(EXAMPLES))
-for col, (label, q) in zip(cols, EXAMPLES):
-    if col.button(label, help=q, use_container_width=True):
-        st.session_state.question = q
+PER_ROW = 3
+for start in range(0, len(EXAMPLES), PER_ROW):
+    cols = st.columns(PER_ROW)  # fixed width so labels wrap only at spaces
+    for col, (label, q) in zip(cols, EXAMPLES[start : start + PER_ROW]):
+        if col.button(label, help=q, use_container_width=True):
+            st.session_state.question = q
 
 # --- Question input ---
 question = st.text_input("Your question", key="question", placeholder="e.g. When can a supplier disconnect a domestic customer?")
