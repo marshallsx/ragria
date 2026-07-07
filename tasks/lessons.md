@@ -44,6 +44,25 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   **rank 1** for the back-billing query. Retrieval quality is downstream of chunking
   correctness — a citation/parsing bug is also a retrieval bug.
 
+## Phase 5 — Evals
+
+- **Measuring a fix beats assuming it.** The "embed condition titles" fix for O4 *felt*
+  obviously right — but measured, it moved 21BA only from absent→rank 18 (still a false
+  refusal), so we reverted it. Without the eval we'd have shipped a non-fix and believed
+  the problem solved. The evidence (keyword "Backbilling" → exactly 21BA's 4 chunks) then
+  pointed cleanly at hybrid retrieval as the real fix.
+
+- **A/B on substance vs format.** Opus 4.8 and Haiku 4.5 scored *identically* on decision
+  accuracy (9/10), retrieval (6/7), and hallucinations (0) — retrieval is model-independent.
+  The only gap was citation *formatting*: Haiku emits sub-paragraph refs (`27.11`) / prefixes
+  (`Condition 0`) where Opus emits the bare condition number. Lesson: a strict grader
+  conflates "found the right thing" with "formatted it right" — separate the two, and
+  tighten the output schema's field descriptions so weaker models comply.
+
+- **Model capability differs by feature.** Haiku 4.5 400s on `thinking: adaptive` and
+  `effort` (Opus/Sonnet-5 features) but supports structured output. Branch the request by
+  model rather than assuming one shape fits all.
+
 - **The weak embedder causes false refusals via vocabulary gaps — the #1 retrieval risk.**
   "Can a supplier back-bill more than 12 months ago?" retrieves Condition 21BA at rank 1
   and answers perfectly; the near-synonym "What is the **maximum back-billing period**?"

@@ -46,6 +46,11 @@ def main() -> int:
         pass
     coll = client.create_collection(COLLECTION)  # uses default embedder
 
+    # NOTE (Phase 5): we tried prepending the condition title to the embedded text
+    # to fix the O4 false refusal ("maximum back-billing period" not retrieving
+    # Condition 21BA "Backbilling"). Measured result: 21BA moved from absent-in-top-15
+    # to rank 18 — insufficient, so reverted. The keyword "Backbilling" maps to exactly
+    # 21BA's chunks, so the real fix is hybrid keyword+vector retrieval (see evals/report.md).
     t0 = time.time()
     for i in range(0, len(chunks), BATCH):
         batch = chunks[i : i + BATCH]

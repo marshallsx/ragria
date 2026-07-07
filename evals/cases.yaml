@@ -1,0 +1,67 @@
+# Eval cases for RIA — derived from docs/query-taxonomy.md
+#
+# expected: "answer" (should answer from the electricity supply SLCs) or
+#           "refuse" (correctly out of corpus).
+# expect_conditions: for answer cases, the condition(s) that would satisfy the
+#   question. Retrieval/citation counts as a hit if ANY of these appears
+#   (a topic can legitimately map to several conditions).
+
+- id: O1
+  category: Obligations
+  question: What must we do before disconnecting a domestic customer for debt?
+  expected: answer
+  expect_conditions: ["27"]
+
+- id: O2
+  category: Obligations
+  question: What are our Priority Services Register obligations for identifying and recording vulnerable customers?
+  expected: answer
+  expect_conditions: ["26", "28"]
+
+- id: O3
+  category: Obligations
+  question: What must we tell a customer when a fixed-term tariff ends, and how far ahead?
+  expected: answer
+  expect_conditions: ["22C", "23", "31I"]
+
+- id: O4
+  category: Obligations
+  question: What is the maximum back-billing period for domestic customers?
+  expected: answer
+  expect_conditions: ["21BA"]
+
+- id: D1
+  category: Deadlines
+  question: What is the deadline to resolve a complaint before it can escalate to the Energy Ombudsman?
+  expected: refuse
+  expect_conditions: []
+
+- id: D2
+  category: Deadlines
+  question: What are the Guaranteed Standards switching timescales, and what compensation applies if missed?
+  expected: refuse
+  expect_conditions: []
+
+- id: S1
+  category: Smoke
+  question: Can a supplier back-bill a domestic customer for consumption more than 12 months ago?
+  expected: answer
+  expect_conditions: ["21BA"]
+
+- id: S2
+  category: Smoke
+  question: Can a supplier block a customer from switching to another supplier?
+  expected: answer
+  expect_conditions: ["14", "14A"]
+
+- id: S3
+  category: Smoke
+  question: What protections apply to customers in vulnerable situations?
+  expected: answer
+  expect_conditions: ["0", "26", "31G"]
+
+- id: S4
+  category: Smoke
+  question: What safety certifications are required to install a domestic gas boiler?
+  expected: refuse
+  expect_conditions: []

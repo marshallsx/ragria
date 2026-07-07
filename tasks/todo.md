@@ -63,10 +63,11 @@
 - **Refinement:** neighbour expansion (chunk_index ±1) added to `src/rag.py` so multi-part conditions (e.g. 21BA exceptions) reach Claude complete
 
 ## Phase 5 — Lightweight evals
-- [ ] Encode taxonomy questions as test cases with expected source areas + expected refusals
-- [ ] Script to run the set and record pass/fail per case
-- [ ] Short eval report (what passed, what didn't, where retrieval is weak)
-- **Verify:** eval script runs clean; report reflects real behaviour
+- [x] Encode taxonomy questions as test cases with expected source areas + expected refusals — `evals/cases.yaml` (10 cases; expected answer/refuse + expected conditions)
+- [x] Script to run the set and record pass/fail per case — `evals/run_evals.py` (deterministic: decision accuracy + retrieval/citation hit; writes `results_*.json`)
+- [x] Short eval report — `evals/report.md` (baseline 9/10, O4 fix tried+reverted, hybrid-retrieval recommendation, Opus vs Haiku A/B)
+- **Verify:** ✅ runner runs clean; ✅ report reflects real behaviour (0 hallucinations, 3/3 correct refusals, O4 the sole false refusal)
+- **Findings:** O4 vocabulary-gap false refusal → hybrid keyword+vector retrieval is the evidenced fix (deferred); Opus 4.8 justified by A/B (equal substance, cleaner citations)
 
 ## Phase 6 — (Later) Temporal / version awareness
 - [ ] Capture version + effective date per chunk

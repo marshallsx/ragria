@@ -1,0 +1,235 @@
+{
+  "summary": {
+    "label": "haiku",
+    "model": "claude-haiku-4-5",
+    "n": 10,
+    "decision_accuracy": "9/10",
+    "retrieval_hit_rate": "6/7",
+    "citation_hit_rate": "2/7",
+    "false_refusals": [
+      "O4"
+    ],
+    "correct_refusals": [
+      "D1",
+      "D2",
+      "S4"
+    ],
+    "false_answers": []
+  },
+  "rows": [
+    {
+      "id": "O1",
+      "category": "Obligations",
+      "expected": "answer",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": false,
+      "expect_conditions": [
+        "27"
+      ],
+      "retrieved": [
+        "14",
+        "27",
+        "28",
+        "4D"
+      ],
+      "cited": [
+        "27.11",
+        "27.11A",
+        "27.9",
+        "28.15"
+      ]
+    },
+    {
+      "id": "O2",
+      "category": "Obligations",
+      "expected": "answer",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "expect_conditions": [
+        "26",
+        "28"
+      ],
+      "retrieved": [
+        "1",
+        "26",
+        "28",
+        "56"
+      ],
+      "cited": [
+        "26"
+      ]
+    },
+    {
+      "id": "O3",
+      "category": "Obligations",
+      "expected": "answer",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": false,
+      "expect_conditions": [
+        "22C",
+        "23",
+        "31I"
+      ],
+      "retrieved": [
+        "22C",
+        "22D",
+        "31I"
+      ],
+      "cited": [
+        "22C.7",
+        "31I.6",
+        "31I.7"
+      ]
+    },
+    {
+      "id": "O4",
+      "category": "Obligations",
+      "expected": "answer",
+      "refused": true,
+      "decision_ok": false,
+      "ret_hit": false,
+      "cite_hit": false,
+      "expect_conditions": [
+        "21BA"
+      ],
+      "retrieved": [
+        "1",
+        "22",
+        "28AA",
+        "28AD",
+        "51",
+        "56"
+      ],
+      "cited": []
+    },
+    {
+      "id": "D1",
+      "category": "Deadlines",
+      "expected": "refuse",
+      "refused": true,
+      "decision_ok": true,
+      "ret_hit": null,
+      "cite_hit": null,
+      "expect_conditions": [],
+      "retrieved": [
+        "12.A",
+        "20",
+        "28",
+        "45A",
+        "49"
+      ],
+      "cited": []
+    },
+    {
+      "id": "D2",
+      "category": "Deadlines",
+      "expected": "refuse",
+      "refused": true,
+      "decision_ok": true,
+      "ret_hit": null,
+      "cite_hit": null,
+      "expect_conditions": [],
+      "retrieved": [
+        "20",
+        "24",
+        "24A",
+        "28AA",
+        "32A"
+      ],
+      "cited": []
+    },
+    {
+      "id": "S1",
+      "category": "Smoke",
+      "expected": "answer",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": false,
+      "expect_conditions": [
+        "21BA"
+      ],
+      "retrieved": [
+        "21BA",
+        "22",
+        "27",
+        "7A"
+      ],
+      "cited": [
+        "21BA.1"
+      ]
+    },
+    {
+      "id": "S2",
+      "category": "Smoke",
+      "expected": "answer",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "expect_conditions": [
+        "14",
+        "14A"
+      ],
+      "retrieved": [
+        "14",
+        "14A",
+        "22D",
+        "24"
+      ],
+      "cited": [
+        "14",
+        "14A.1",
+        "24.8"
+      ]
+    },
+    {
+      "id": "S3",
+      "category": "Smoke",
+      "expected": "answer",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": false,
+      "expect_conditions": [
+        "0",
+        "26",
+        "31G"
+      ],
+      "retrieved": [
+        "0",
+        "31G",
+        "46",
+        "56"
+      ],
+      "cited": [
+        "Condition 0"
+      ]
+    },
+    {
+      "id": "S4",
+      "category": "Smoke",
+      "expected": "refuse",
+      "refused": true,
+      "decision_ok": true,
+      "ret_hit": null,
+      "cite_hit": null,
+      "expect_conditions": [],
+      "retrieved": [
+        "31G",
+        "31H",
+        "33",
+        "41",
+        "48",
+        "59"
+      ],
+      "cited": []
+    }
+  ]
+}

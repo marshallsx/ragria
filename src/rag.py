@@ -158,7 +158,7 @@ def build_context(ordered: list[dict]) -> str:
     return "\n\n".join(parts)
 
 
-def answer_question(question: str, k: int = TOP_K, coll=None, client=None) -> dict:
+def answer_question(question: str, k: int = TOP_K, coll=None, client=None, model: str = MODEL) -> dict:
     """
     Retrieve, ground, and answer. Returns:
         {answer, citations, refused, reason, retrieved:[{condition,title,pages,distance}]}
@@ -196,14 +196,21 @@ def answer_question(question: str, k: int = TOP_K, coll=None, client=None) -> di
     user_content = f"Question: {question}\n\nRetrieved extracts:\n\n{context}"
 
     client = client or get_client()
-    resp = client.messages.create(
-        model=MODEL,
+    fmt = {"type": "json_schema", "schema": OUTPUT_SCHEMA}
+    kwargs = dict(
+        model=model,
         max_tokens=4096,
-        thinking={"type": "adaptive"},
         system=SYSTEM,
         messages=[{"role": "user", "content": user_content}],
-        output_config={"effort": "medium", "format": {"type": "json_schema", "schema": OUTPUT_SCHEMA}},
     )
+    # Adaptive thinking + effort are Opus/Sonnet-5 features; Haiku 4.5 rejects them
+    # (400) but supports structured output. Branch so the eval A/B can use either.
+    if "haiku" in model:
+        kwargs["output_config"] = {"format": fmt}
+    else:
+        kwargs["thinking"] = {"type": "adaptive"}
+        kwargs["output_config"] = {"effort": "medium", "format": fmt}
+    resp = client.messages.create(**kwargs)
 
     if resp.stop_reason == "refusal":
         return {
