@@ -36,6 +36,43 @@ EXAMPLES = [
 
 st.set_page_config(page_title="Regulatory Intelligence Assistant (RIA)", page_icon="⚡", layout="centered")
 
+# --- Brand theme to match scottdmarshall.com/ai-demo (Archivo font, orange headings) ---
+st.markdown(
+    """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800;900&display=swap');
+    html, body, .stApp, [data-testid="stAppViewContainer"],
+    .stMarkdown, p, li, label, input, textarea, button, .stButton button {
+        font-family: 'Archivo', sans-serif;
+    }
+    .stApp h1, .stApp h2, .stApp h3 {
+        color: #FF6600;
+        font-family: 'Archivo', sans-serif;
+        font-weight: 800;
+    }
+    /* All buttons orange with white text */
+    .stButton button, [data-testid="stBaseButton-secondary"], [data-testid="stBaseButton-primary"] {
+        background-color: #FF6600 !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        font-weight: 600;
+    }
+    .stButton button:hover, [data-testid="stBaseButton-secondary"]:hover, [data-testid="stBaseButton-primary"]:hover {
+        background-color: #E65C00 !important;   /* slightly darker on hover */
+        color: #FFFFFF !important;
+    }
+    .stButton button:focus, .stButton button:active {
+        background-color: #E65C00 !important;
+        color: #FFFFFF !important;
+        box-shadow: none !important;
+    }
+    /* Hide Streamlit chrome for a clean embed */
+    #MainMenu, footer, [data-testid="stToolbar"] { visibility: hidden; height: 0; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 @st.cache_resource(show_spinner=False)
 def _collection():

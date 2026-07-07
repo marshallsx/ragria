@@ -1,0 +1,13 @@
+# Theme to match scottdmarshall.com/ai-demo (dark: black bg, orange accent, white text).
+# Read by Streamlit locally and on Streamlit Community Cloud.
+
+[theme]
+base = "dark"
+primaryColor = "#FF6600"            # vivid orange — buttons, widgets, accents
+backgroundColor = "#000000"         # black page background
+secondaryBackgroundColor = "#141414"  # near-black for inputs / expanders / panels
+textColor = "#FFFFFF"               # white body text
+font = "sans serif"                 # base fallback; Archivo applied via CSS in app/main.py
+
+[browser]
+gatherUsageStats = false
