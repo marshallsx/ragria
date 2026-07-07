@@ -37,10 +37,10 @@
 - **Verify:** ✅ venv active (Py 3.14.4), ✅ packages import, ✅ `.env` loads (masked), ✅ key NOT in git status / NOT on GitHub
 
 ## Phase 1 — Get the corpus
-- [ ] Download Ofgem Standard Licence Conditions (electricity and/or gas supply) from Ofgem's public site
-- [ ] Save raw source files to `data/raw/`
-- [ ] Record provenance (source URL, retrieval date) — confirms public-only
-- **Verify:** files present, readable, provenance noted
+- [x] Download Ofgem Standard Licence Conditions (electricity and/or gas supply) from Ofgem's public site — electricity supply SLC, consolidated to 1 Aug 2025
+- [x] Save raw source files to `data/raw/` — `electricity-supply-slc-consolidated-2025-08.pdf` (611 pages, 3.7 MB)
+- [x] Record provenance (source URL, retrieval date) — confirms public-only — see `docs/provenance.md`
+- **Verify:** ✅ file present, ✅ readable (611 pages, real text via pdfplumber), ✅ provenance noted (electricity only for v0)
 
 ## Phase 2 — Ingestion pipeline (v0)
 - [ ] Load document(s): PDF/HTML → text
