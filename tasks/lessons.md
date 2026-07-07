@@ -30,6 +30,29 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   `25A. (Not used.)`). Net count stayed 107, masking the change. Watch totals when you
   change a matcher — a coincidental same-count can hide a swap.
 
+## Phase 3 — Retrieval + grounded generation
+
+- **Distance thresholds are a poor refusal mechanism with a weak embedder.** In-scope
+  questions scored best-distance 0.71–0.95; a clearly out-of-scope question scored 1.07 —
+  the bands nearly touch, so any single cutoff either wrongly refuses good questions or
+  lets bad ones through. The robust design is **LLM-judged refusal** (give the model the
+  extracts + strict "answer only from these" instructions, let it decide), with the
+  distance number kept only as a lenient backstop to skip API calls on egregious junk.
+
+- **Fixing the ingestion bug visibly improved retrieval.** Once 21BA "Backbilling" was
+  parsed as its own condition (Phase 2 fix), it went from rank 3 (buried in 21B) to
+  **rank 1** for the back-billing query. Retrieval quality is downstream of chunking
+  correctness — a citation/parsing bug is also a retrieval bug.
+
+- **Adaptive thinking + structured output on Opus 4.8:** use `thinking={"type":"adaptive"}`
+  (no `budget_tokens` on 4.7/4.8) and `output_config={"format": {json_schema}}`. With
+  thinking on, the first content block is a thinking block — extract the *text* block
+  (`next(b for b in resp.content if b.type=="text")`), not `content[0]`.
+
+- **The Max subscription does not cover API usage.** claude.ai / Claude Code run on the
+  subscription; this app calls the Anthropic API with the `sk-ant-` key and is billed
+  separately (pay-as-you-go). At PoC scale it's single-digit dollars regardless of model.
+
 - **ChromaDB default embedder = `all-MiniLM-L6-v2`, 256-token cap, CPU/onnxruntime.**
   One-time ~80MB model download on first use. Embedding 1133 chunks takes ~6 min on CPU
   (one-off; queries are fast). The 256-token limit drives chunk size (~175 words). It's

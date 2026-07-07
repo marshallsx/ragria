@@ -50,10 +50,10 @@
 - **Verify:** ✅ 1133 chunks (sensible); ✅ 3 chunks spot-checked (text+metadata correct); ✅ 0 boilerplate leaks; ✅ end-to-end smoke query works; ✅ parser completeness bug (missed 19AA/21BA/28AA/28AD) caught + fixed
 
 ## Phase 3 — Retrieval + grounded generation (v0)
-- [ ] Query → retrieve top-k relevant chunks
-- [ ] Build a grounded prompt: answer ONLY from retrieved context, cite source + section, refuse if no adequate match
-- [ ] Call Claude, return answer + citations
-- **Verify:** run 5 taxonomy questions; answers grounded + cited; an out-of-scope question triggers refusal, not invention
+- [x] Query → retrieve top-k relevant chunks — `src/rag.py`, k=6 from Chroma
+- [x] Build a grounded prompt: answer ONLY from retrieved context, cite source + section, refuse if no adequate match — LLM-judged refusal + lenient distance backstop
+- [x] Call Claude, return answer + citations — Opus 4.8, adaptive thinking, structured JSON output (`answer_question()` entry point)
+- **Verify:** ✅ 5 taxonomy questions answered, grounded + cited to correct conditions; ✅ out-of-scope (gas boiler) refused, not invented; ✅ 21BA "Backbilling" now retrieved at rank 1
 
 ## Phase 4 — Streamlit UI
 - [ ] Question input, answer display, citation list, clear "not in source material" state

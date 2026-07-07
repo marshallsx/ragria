@@ -29,8 +29,12 @@ A learning-first RAG proof-of-concept: a Q&A assistant grounded in **publicly av
 
 - Activate venv: `source venv/bin/activate`
 - Install deps: `pip install -r requirements.txt`
-- Run the app: `streamlit run app/main.py`
-- (Commands firm up as we build — update this section then.)
+- Run the app: `streamlit run app/main.py` (Phase 4)
+- Ingestion pipeline (run once, in order):
+  - `venv/bin/python src/extract_pages.py` — PDF → page cache (`data/interim/slc_pages.jsonl`)
+  - `venv/bin/python src/chunk.py` — cache → chunks (`data/interim/slc_chunks.jsonl`)
+  - `venv/bin/python src/embed.py` — chunks → ChromaDB (`chroma/`, ~6 min first run)
+- Ask a question (grounded answer + citations): `venv/bin/python src/rag.py "your question"`
 
 ## Scope
 
