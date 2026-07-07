@@ -99,11 +99,13 @@ if ask and question.strip():
                 st.markdown(f"- **Condition {c['condition']}** — {c['condition_title']} (pp. {c['pages']})")
 
     # --- Retrieved sources (transparency; removable later) ---
-    with st.expander(f"🔎 Retrieved sources (top {TOP_K}, nearest first)"):
-        st.caption("Lower distance = closer semantic match. Shown for transparency during the PoC.")
+    with st.expander(f"🔎 Retrieved sources (top {TOP_K}, hybrid rank)"):
+        st.caption("Hybrid retrieval (semantic + keyword). Number = vector distance "
+                   "(lower is closer); `kw` = surfaced by the keyword match. PoC transparency.")
         for m in result["retrieved"]:
+            dist = m["distance"] if m["distance"] is not None else "kw"
             st.markdown(
-                f"`{m['distance']}`  **Condition {m['condition']}** — {m['condition_title']} "
+                f"`{dist}`  **Condition {m['condition']}** — {m['condition_title']} "
                 f"(pp. {m['pages']})"
             )
 elif ask:

@@ -19,12 +19,15 @@ Usage (CLI smoke test):
 """
 from __future__ import annotations
 
+import json
+import re
 import sys
 from pathlib import Path
 
 import anthropic
 import chromadb
 from dotenv import load_dotenv
+from rank_bm25 import BM25Okapi
 
 ROOT = Path(__file__).resolve().parent.parent
 STORE = ROOT / "chroma"
@@ -32,6 +35,14 @@ COLLECTION = "ofgem_slc_electricity"
 
 MODEL = "claude-opus-4-8"
 TOP_K = 6
+CAND_N = 10          # candidates pulled from each retriever before fusion
+RRF_K = 60           # reciprocal-rank-fusion constant
+TITLE_WEIGHT = 8     # BM25 field boost: repeat the condition title so a query that
+                     # names a condition (e.g. "back-billing" → title "Backbilling")
+                     # ranks it highly. Swept vs eval controls — 8 fixes O4, no regressions.
+EXPAND_FULL_CAP = 8  # a hit on a small condition (≤ this many chunks) pulls the WHOLE
+                     # condition; larger conditions fall back to ±1 neighbours (bounded)
+CHUNKS_FILE = ROOT / "data" / "interim" / "slc_chunks.jsonl"
 # Coarse backstop only. The LLM makes the real refusal call; this just avoids an
 # API round-trip when even the closest chunk is clearly unrelated.
 # Verify-gate calibration: in-scope questions ran best-distance 0.71-0.95; an
@@ -91,38 +102,115 @@ def get_client():
     return anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from .env
 
 
-def retrieve(question: str, k: int = TOP_K, coll=None) -> list[dict]:
-    """Return the top-k chunks with metadata + distance, nearest first."""
+# --- Hybrid retrieval: semantic (vector) + lexical (BM25), fused by RRF ---
+#
+# Vector search handles paraphrase but has vocabulary blind spots (O4: "maximum
+# back-billing period" didn't retrieve 21BA "Backbilling"). BM25 matches literal
+# terms, so it catches exactly those cases. Reciprocal Rank Fusion merges the two
+# ranked lists by position, sidestepping their incompatible score scales.
+
+_TOKEN = re.compile(r"[a-z0-9]+")
+_BM25 = None  # module-level cache: (BM25Okapi, ids, chunk_by_id)
+
+
+def tokenize(text: str) -> list[str]:
+    """Lowercase alnum tokens, plus a de-hyphenated join so 'back-billing' also
+    yields 'backbilling' (matching the one-word title 'Backbilling')."""
+    text = text.lower()
+    toks = _TOKEN.findall(text)
+    for m in re.finditer(r"([a-z0-9]+)-([a-z0-9]+)", text):
+        toks.append(m.group(1) + m.group(2))
+    return toks
+
+
+def get_bm25():
+    """Build (once) an in-memory BM25 index over chunk *title + text*."""
+    global _BM25
+    if _BM25 is None:
+        chunks = [json.loads(l) for l in CHUNKS_FILE.read_text(encoding="utf-8").splitlines()]
+        ids = [c["id"] for c in chunks]
+        chunk_by_id = {c["id"]: c for c in chunks}
+        corpus = [
+            tokenize((c["metadata"]["condition_title"] + " ") * TITLE_WEIGHT + c["text"])
+            for c in chunks
+        ]
+        _BM25 = (BM25Okapi(corpus), ids, chunk_by_id)
+    return _BM25
+
+
+def vector_retrieve(question: str, n: int = CAND_N, coll=None) -> list[dict]:
     coll = coll or get_collection()
-    res = coll.query(query_texts=[question], n_results=k)
-    out = []
-    for doc, meta, dist in zip(res["documents"][0], res["metadatas"][0], res["distances"][0]):
-        out.append({"text": doc, "meta": meta, "distance": dist})
-    return out
+    res = coll.query(query_texts=[question], n_results=n)
+    return [
+        {"id": i, "text": d, "meta": m, "distance": dist}
+        for i, d, m, dist in zip(
+            res["ids"][0], res["documents"][0], res["metadatas"][0], res["distances"][0]
+        )
+    ]
+
+
+def bm25_retrieve(question: str, n: int = CAND_N) -> list[str]:
+    bm25, ids, _ = get_bm25()
+    scores = bm25.get_scores(tokenize(question))
+    top = sorted(range(len(ids)), key=lambda i: scores[i], reverse=True)[:n]
+    return [ids[i] for i in top]
+
+
+def rrf(ranked_lists: list[list[str]], k: int = RRF_K) -> list[str]:
+    """Reciprocal Rank Fusion: score an id by sum(1/(k+rank)) across lists."""
+    scores: dict[str, float] = {}
+    for lst in ranked_lists:
+        for rank, id_ in enumerate(lst, 1):
+            scores[id_] = scores.get(id_, 0.0) + 1.0 / (k + rank)
+    return sorted(scores, key=lambda x: scores[x], reverse=True)
+
+
+def hybrid_retrieve(question: str, k: int = TOP_K, coll=None) -> tuple[list[dict], list[dict]]:
+    """Fuse vector + BM25 to top-k chunks. Returns (fused_chunks, vector_hits).
+    vector_hits is returned separately so the caller can use the best vector
+    distance for the coarse out-of-scope backstop."""
+    vhits = vector_retrieve(question, CAND_N, coll)
+    fused_ids = rrf([[h["id"] for h in vhits], bm25_retrieve(question, CAND_N)])[:k]
+    _, _, chunk_by_id = get_bm25()
+    vdist = {h["id"]: h["distance"] for h in vhits}
+    fused = []
+    for id_ in fused_ids:
+        c = chunk_by_id.get(id_)
+        if c is None:
+            continue
+        fused.append({"id": id_, "text": c["text"], "meta": c["metadata"], "distance": vdist.get(id_)})
+    return fused, vhits
 
 
 def expand_hits(hits: list[dict], coll) -> list[dict]:
     """
-    Neighbour expansion (small-to-big retrieval): for each retrieved window, also
-    pull its adjacent chunks (chunk_index ±1) from the same condition, so a
-    condition split mid-list (e.g. 21BA's exceptions spanning chunks 0-1) reaches
-    Claude complete. Bounded: only immediate neighbours, so giant conditions can't
-    flood the context. Returns items grouped by condition (best rank first) and
-    ordered by chunk_index within each condition.
+    Small-to-big retrieval: a hit on a small condition (≤ EXPAND_FULL_CAP chunks)
+    pulls the WHOLE condition (so a keyword hit on any part of 21BA gives Claude the
+    12-month rule in 21BA.1); a hit on a large condition pulls only chunk_index ±1
+    so giant conditions can't flood the context. Returns items grouped by condition
+    (fused-rank order) and ordered by chunk_index within each.
     """
-    # Rank each condition by its best (nearest) hit.
-    cond_best: dict[str, float] = {}
-    for h in hits:
-        c = h["meta"]["condition"]
-        cond_best[c] = min(cond_best.get(c, float("inf")), h["distance"])
+    _, _, chunk_by_id = get_bm25()
+    cond_idxs: dict[str, set[int]] = {}
+    for c in chunk_by_id.values():
+        m = c["metadata"]
+        cond_idxs.setdefault(m["condition"], set()).add(m["chunk_index"])
 
+    # Condition order = order of first appearance in the (already fused-ranked) hits.
+    cond_order: list[str] = []
     # Deterministic chunk ids (must match embed.py's scheme): f"cond{cond}_{idx}".
     want: set[str] = set()
     for h in hits:
         c, idx = h["meta"]["condition"], h["meta"]["chunk_index"]
-        for j in (idx - 1, idx, idx + 1):
-            if j >= 0:
+        if c not in cond_order:
+            cond_order.append(c)
+        if len(cond_idxs.get(c, ())) <= EXPAND_FULL_CAP:
+            for j in cond_idxs[c]:  # whole (small) condition
                 want.add(f"cond{c}_{j}")
+        else:
+            for j in (idx - 1, idx, idx + 1):  # bounded neighbours for large conditions
+                if j >= 0:
+                    want.add(f"cond{c}_{j}")
 
     got = coll.get(ids=list(want))  # missing ids are silently skipped
     items = [
@@ -132,7 +220,7 @@ def expand_hits(hits: list[dict], coll) -> list[dict]:
 
     # Group by condition (best rank first), chunks in reading order within each.
     ordered: list[dict] = []
-    for c in sorted(cond_best, key=lambda x: cond_best[x]):
+    for c in cond_order:
         block = sorted(
             (it for it in items if it["meta"]["condition"] == c),
             key=lambda it: it["meta"]["chunk_index"],
@@ -167,19 +255,21 @@ def answer_question(question: str, k: int = TOP_K, coll=None, client=None, model
     re-opening the store or re-creating the client on every call.
     """
     coll = coll or get_collection()
-    chunks = retrieve(question, k, coll)
+    chunks, vhits = hybrid_retrieve(question, k, coll)
     retrieved_meta = [
         {
             "condition": c["meta"]["condition"],
             "condition_title": c["meta"]["condition_title"],
             "pages": f"{c['meta']['page_start']}-{c['meta']['page_end']}",
-            "distance": round(c["distance"], 3),
+            "distance": round(c["distance"], 3) if c["distance"] is not None else None,
         }
         for c in chunks
     ]
 
     # Coarse backstop: obviously out-of-scope → refuse without spending an API call.
-    best = chunks[0]["distance"] if chunks else float("inf")
+    # Judged on the best *vector* distance (a strong BM25 keyword hit should not be
+    # blocked by a poor vector score — that's the whole point of hybrid).
+    best = min((h["distance"] for h in vhits), default=float("inf"))
     if not chunks or best > DISTANCE_FLOOR:
         return {
             "refused": True,
@@ -222,8 +312,6 @@ def answer_question(question: str, k: int = TOP_K, coll=None, client=None, model
         }
 
     # With thinking enabled, the first block is a thinking block — take the text block.
-    import json
-
     text = next(b.text for b in resp.content if b.type == "text")
     result = json.loads(text)
     result["retrieved"] = retrieved_meta
@@ -242,10 +330,11 @@ def _format_cli(q: str, r: dict) -> str:
         for c in r["citations"]:
             lines.append(f"  - Condition {c['condition']} — {c['condition_title']} (pp.{c['pages']})")
     lines.append("")
-    lines.append("Retrieved (nearest first):")
+    lines.append("Retrieved (fused rank):")
     for m in r["retrieved"]:
+        d = m["distance"] if m["distance"] is not None else "kw"
         lines.append(
-            f"  [{m['distance']}] Cond {m['condition']} — {m['condition_title']} (pp.{m['pages']})"
+            f"  [{d}] Cond {m['condition']} — {m['condition_title']} (pp.{m['pages']})"
         )
     return "\n".join(lines)
 

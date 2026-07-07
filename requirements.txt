@@ -5,6 +5,9 @@
 # Vector store + built-in default embeddings (no PyTorch, no separate model)
 chromadb==1.5.9
 
+# Lexical retrieval for hybrid search (pure-Python BM25; Phase 5+ / O4 fix)
+rank_bm25==0.2.2
+
 # Grounded answer generation
 anthropic==0.116.0
 

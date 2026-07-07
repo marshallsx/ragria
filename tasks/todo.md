@@ -120,11 +120,15 @@ correct refusals. On GitHub, secret-safe throughout.
 - Measure fixes, don't assume — the "obvious" O4 fix didn't work.
 - Model capability differs by feature (Haiku rejects adaptive thinking/effort).
 
+### Post-v0 improvement — hybrid retrieval (O4 fixed)
+- **Implemented hybrid retrieval** (BM25 + vector, RRF fusion; title field-boost ×8;
+  whole-condition expansion for small conditions). O4 false refusal resolved.
+  **Eval: 9/10 → 10/10, retrieval 6/7 → 7/7, zero regressions, zero hallucinations.**
+
 ### Known limitations / open items
-- **O4 vocabulary-gap false refusal** — the one measured weakness; **hybrid keyword+vector
-  retrieval** is the evidenced fix and the highest-value next change.
 - Citation-format grader is strict (conflates "found" with "formatted"); tighten the
   schema field description + a normalising matcher.
+- Eval set is small (10 cases) — expand the taxonomy for a stronger signal.
 - Corpus is electricity **supply** only — complaints-handling / Guaranteed-Standards
   questions (D1/D2) are correctly out of scope; answering them = corpus expansion.
 - **Phase 6 (temporal/version awareness)** remains the intended differentiator, to build

@@ -44,6 +44,25 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   **rank 1** for the back-billing query. Retrieval quality is downstream of chunking
   correctness — a citation/parsing bug is also a retrieval bug.
 
+## Hybrid retrieval (O4 fix)
+
+- **Hybrid retrieval took three compounding pieces, each measured — not one silver bullet.**
+  (1) BM25 + vector fused by RRF; (2) but the verbose query diluted the keyword signal
+  (21BA ranked 36th), fixed by **title field-boost ×8** (the condition title is a
+  high-signal field); (3) plus **whole-condition expansion for small conditions** so the
+  keyword hit actually delivered the chunk with the "12 months" rule. Each step was swept
+  or eval-verified before the next. Result: 9/10 → 10/10, zero regressions.
+
+- **RRF sidesteps the score-scale problem.** Vector cosine distance (~0.8) and BM25 scores
+  (~15) are incomparable; Reciprocal Rank Fusion combines by *rank position*, so no
+  normalisation or weight tuning is needed.
+
+- **Stopword removal isn't free** — it degraded O1 in the sweep. Test corpus-specific
+  choices against controls; don't assume a "standard" NLP step helps.
+
+- **Watch O(n²) in throwaway experiments.** A BM25 sweep that called `get_scores` inside
+  the sort comparator hung; compute the score array once per query, then sort.
+
 ## Phase 5 — Evals
 
 - **Measuring a fix beats assuming it.** The "embed condition titles" fix for O4 *felt*
