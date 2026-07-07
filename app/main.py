@@ -8,6 +8,7 @@ panel of the retrieved sources (transparency during the PoC).
 
 Run: streamlit run app/main.py
 """
+import os
 import sys
 from pathlib import Path
 
@@ -35,6 +36,15 @@ EXAMPLES = [
 ]
 
 st.set_page_config(page_title="Regulatory Intelligence Assistant (RIA)", page_icon="⚡", layout="centered")
+
+# Make the Anthropic key available whether it's in a local .env (dev — handled by
+# rag.py's load_dotenv) or in Streamlit Cloud secrets (deploy). Belt-and-braces so the
+# SDK finds ANTHROPIC_API_KEY regardless of how the platform exposes secrets.
+try:
+    if not os.getenv("ANTHROPIC_API_KEY") and "ANTHROPIC_API_KEY" in st.secrets:
+        os.environ["ANTHROPIC_API_KEY"] = st.secrets["ANTHROPIC_API_KEY"]
+except Exception:  # noqa: BLE001 — no secrets.toml locally is fine
+    pass
 
 # --- Brand theme to match scottdmarshall.com/ai-demo (Archivo font, orange headings) ---
 st.markdown(
