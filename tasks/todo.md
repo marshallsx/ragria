@@ -56,10 +56,11 @@
 - **Verify:** ✅ 5 taxonomy questions answered, grounded + cited to correct conditions; ✅ out-of-scope (gas boiler) refused, not invented; ✅ 21BA "Backbilling" now retrieved at rank 1
 
 ## Phase 4 — Streamlit UI
-- [ ] Question input, answer display, citation list, clear "not in source material" state
-- [ ] Wire UI to the retrieval+generation function
-- [ ] Run locally (`streamlit run`)
-- **Verify:** end-to-end in the browser; citations visible; refusal visible
+- [x] Question input, answer display, citation list, clear "not in source material" state — `app/main.py`, single-turn form, example questions, provenance/disclaimer caption
+- [x] Wire UI to the retrieval+generation function — `answer_question()`, cached collection + client (`@st.cache_resource`)
+- [x] Run locally (`streamlit run`) — headless on :8501, retrieved-sources expander for transparency
+- **Verify:** ✅ end-to-end in browser (title "RIA"); ✅ answer + citations visible; ✅ out-of-scope refusal visible
+- **Refinement:** neighbour expansion (chunk_index ±1) added to `src/rag.py` so multi-part conditions (e.g. 21BA exceptions) reach Claude complete
 
 ## Phase 5 — Lightweight evals
 - [ ] Encode taxonomy questions as test cases with expected source areas + expected refusals

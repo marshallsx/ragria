@@ -44,6 +44,16 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   **rank 1** for the back-billing query. Retrieval quality is downstream of chunking
   correctness — a citation/parsing bug is also a retrieval bug.
 
+- **Small chunks clip multi-part conditions — fix with neighbour expansion.** The
+  back-billing answer honestly flagged that 21BA's exceptions were truncated: 21BA is 4
+  chunks and only chunk 0 (rule + start of exceptions) was retrieved; chunk 1 (rest of
+  the exceptions) wasn't in the top-6. Fix = **small-to-big retrieval**: after ranking on
+  small windows, pull each hit's adjacent chunks (chunk_index ±1) from the same condition
+  and feed Claude the completed, in-order text. Bounded to ±1 so giant conditions (e.g.
+  Cond 34 = 131 chunks) can't flood context. The model surfacing the limitation itself is
+  the signal that led to the fix — grounded honesty is a debugging aid, not just a safety
+  feature.
+
 - **Adaptive thinking + structured output on Opus 4.8:** use `thinking={"type":"adaptive"}`
   (no `budget_tokens` on 4.7/4.8) and `output_config={"format": {json_schema}}`. With
   thinking on, the first content block is a thinking block — extract the *text* block

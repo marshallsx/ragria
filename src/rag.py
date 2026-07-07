@@ -87,9 +87,13 @@ def get_collection():
     return client.get_collection(COLLECTION)
 
 
-def retrieve(question: str, k: int = TOP_K) -> list[dict]:
+def get_client():
+    return anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from .env
+
+
+def retrieve(question: str, k: int = TOP_K, coll=None) -> list[dict]:
     """Return the top-k chunks with metadata + distance, nearest first."""
-    coll = get_collection()
+    coll = coll or get_collection()
     res = coll.query(query_texts=[question], n_results=k)
     out = []
     for doc, meta, dist in zip(res["documents"][0], res["metadatas"][0], res["distances"][0]):
@@ -97,25 +101,73 @@ def retrieve(question: str, k: int = TOP_K) -> list[dict]:
     return out
 
 
-def build_context(chunks: list[dict]) -> str:
-    """Render retrieved chunks as labelled, citable extracts."""
+def expand_hits(hits: list[dict], coll) -> list[dict]:
+    """
+    Neighbour expansion (small-to-big retrieval): for each retrieved window, also
+    pull its adjacent chunks (chunk_index ±1) from the same condition, so a
+    condition split mid-list (e.g. 21BA's exceptions spanning chunks 0-1) reaches
+    Claude complete. Bounded: only immediate neighbours, so giant conditions can't
+    flood the context. Returns items grouped by condition (best rank first) and
+    ordered by chunk_index within each condition.
+    """
+    # Rank each condition by its best (nearest) hit.
+    cond_best: dict[str, float] = {}
+    for h in hits:
+        c = h["meta"]["condition"]
+        cond_best[c] = min(cond_best.get(c, float("inf")), h["distance"])
+
+    # Deterministic chunk ids (must match embed.py's scheme): f"cond{cond}_{idx}".
+    want: set[str] = set()
+    for h in hits:
+        c, idx = h["meta"]["condition"], h["meta"]["chunk_index"]
+        for j in (idx - 1, idx, idx + 1):
+            if j >= 0:
+                want.add(f"cond{c}_{j}")
+
+    got = coll.get(ids=list(want))  # missing ids are silently skipped
+    items = [
+        {"text": doc, "meta": meta}
+        for doc, meta in zip(got["documents"], got["metadatas"])
+    ]
+
+    # Group by condition (best rank first), chunks in reading order within each.
+    ordered: list[dict] = []
+    for c in sorted(cond_best, key=lambda x: cond_best[x]):
+        block = sorted(
+            (it for it in items if it["meta"]["condition"] == c),
+            key=lambda it: it["meta"]["chunk_index"],
+        )
+        ordered.extend(block)
+    return ordered
+
+
+def build_context(ordered: list[dict]) -> str:
+    """Render expanded chunks as labelled, citable extracts — one block per condition."""
+    from itertools import groupby
+
     parts = []
-    for i, c in enumerate(chunks, 1):
-        m = c["meta"]
+    for i, (_, group) in enumerate(groupby(ordered, key=lambda it: it["meta"]["condition"]), 1):
+        block = list(group)
+        m = block[0]["meta"]
         header = (
             f"[Extract {i}] Condition {m['condition']} — {m['condition_title']} "
             f"(Section {m['section']}, pp.{m['page_start']}-{m['page_end']})"
         )
-        parts.append(f"{header}\n{c['text']}")
+        body = " ".join(it["text"] for it in block)
+        parts.append(f"{header}\n{body}")
     return "\n\n".join(parts)
 
 
-def answer_question(question: str, k: int = TOP_K) -> dict:
+def answer_question(question: str, k: int = TOP_K, coll=None, client=None) -> dict:
     """
     Retrieve, ground, and answer. Returns:
         {answer, citations, refused, reason, retrieved:[{condition,title,pages,distance}]}
+
+    `coll` / `client` may be injected (e.g. cached by the Streamlit UI) to avoid
+    re-opening the store or re-creating the client on every call.
     """
-    chunks = retrieve(question, k)
+    coll = coll or get_collection()
+    chunks = retrieve(question, k, coll)
     retrieved_meta = [
         {
             "condition": c["meta"]["condition"],
@@ -140,10 +192,10 @@ def answer_question(question: str, k: int = TOP_K) -> dict:
             "retrieved": retrieved_meta,
         }
 
-    context = build_context(chunks)
+    context = build_context(expand_hits(chunks, coll))
     user_content = f"Question: {question}\n\nRetrieved extracts:\n\n{context}"
 
-    client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from .env
+    client = client or get_client()
     resp = client.messages.create(
         model=MODEL,
         max_tokens=4096,
