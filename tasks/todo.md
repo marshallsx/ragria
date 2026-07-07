@@ -83,7 +83,49 @@
 - Each phase has a verify gate; no item ticked until proven.
 - Destructive/irreversible actions flagged before running (none expected beyond standard git).
 
-## Review (to complete as we go)
-- _Decisions made:_
-- _What changed from plan:_
-- _Lessons (→ tasks/lessons.md):_
+## Review — v0 close-out (Phases 0–5 complete, 2026-07-07)
+
+**Outcome:** a demoable, eval-backed RAG assistant grounded in the Ofgem electricity
+supply SLCs — ingest → retrieve → grounded answer with condition-level citations →
+refuse when unsupported → Streamlit UI. Baseline eval: 9/10, 0 hallucinations, 3/3
+correct refusals. On GitHub, secret-safe throughout.
+
+### Decisions made
+- **Stack:** Python 3.14.4 (everything installed — no fallback to 3.12 needed);
+  ChromaDB built-in embedder (`all-MiniLM-L6-v2`, 256-token cap, no PyTorch);
+  Opus 4.8 for generation (adaptive thinking, structured JSON output); Streamlit.
+- **Corpus:** electricity supply SLCs only, consolidated 1 Aug 2025; dated PDF chosen
+  over the EPR "current" URL for reproducibility.
+- **Ingestion:** `pypdf` (not `pdfplumber`) for speed; page cache → chunk → embed as
+  separate re-runnable stages; **structure-aware chunking by Condition** (Option B);
+  ~175-word windows w/ 25-word overlap; **condition-level citations**.
+- **Retrieval/generation:** k=6; **LLM-judged refusal** (primary) + lenient distance
+  backstop; **neighbour expansion (±1)** so multi-part conditions arrive complete.
+- **Evals:** deterministic grading (decision accuracy + retrieval/citation hit);
+  taxonomy-driven cases; model A/B (Opus vs Haiku).
+
+### What changed from the plan
+- `pdfplumber` → `pypdf` (pdfplumber too slow; timed out / froze the terminal).
+- Added **neighbour expansion** (not originally planned) after multi-part conditions
+  (21BA exceptions) came back truncated.
+- **O4 fix journey:** parser bug found in Phase 2 (multi-letter conditions 19AA/21BA/
+  28AA/28AD silently merged) → fixed; later O4 "embed titles" fix tried, **measured,
+  reverted** (insufficient) → hybrid retrieval identified as the real fix, **deferred**.
+- Added `docs/query-taxonomy.md` as the eval seed; added the Opus-vs-Haiku A/B.
+
+### Lessons (full log: `tasks/lessons.md`)
+- Structure-aware chunking needs a completeness check; the end-to-end smoke query, not
+  unit stats, exposed the silent condition merge.
+- Distance thresholds are a poor refusal mechanism with a weak embedder → LLM-judged.
+- Measure fixes, don't assume — the "obvious" O4 fix didn't work.
+- Model capability differs by feature (Haiku rejects adaptive thinking/effort).
+
+### Known limitations / open items
+- **O4 vocabulary-gap false refusal** — the one measured weakness; **hybrid keyword+vector
+  retrieval** is the evidenced fix and the highest-value next change.
+- Citation-format grader is strict (conflates "found" with "formatted"); tighten the
+  schema field description + a normalising matcher.
+- Corpus is electricity **supply** only — complaints-handling / Guaranteed-Standards
+  questions (D1/D2) are correctly out of scope; answering them = corpus expansion.
+- **Phase 6 (temporal/version awareness)** remains the intended differentiator, to build
+  on these fundamentals.
