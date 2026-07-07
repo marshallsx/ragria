@@ -18,6 +18,12 @@ sys.path.insert(0, str(ROOT))
 
 from src.rag import STORE, TOP_K, answer_question, get_client, get_collection  # noqa: E402
 
+# --- Public-demo safeguards ---
+MAX_PER_SESSION = 10       # questions per browser session
+MAX_QUESTION_CHARS = 300   # input length cap
+MAX_PER_DAY = 300          # soft global daily cap (in-memory; resets on container restart).
+                           # The hard cost ceiling is the Anthropic Console spend limit.
+
 EXAMPLES = [
     ("Back-billing limit", "Can a supplier back-bill a domestic customer for consumption more than 12 months ago?"),
     ("Max back-billing period", "What is the maximum back-billing period for domestic customers?"),
@@ -39,6 +45,26 @@ def _collection():
 @st.cache_resource(show_spinner=False)
 def _client():
     return get_client()
+
+
+@st.cache_resource(show_spinner=False)
+def _usage():
+    # Shared across all sessions in this container; resets if the container restarts.
+    return {"date": None, "count": 0}
+
+
+def _reserve_daily_slot() -> bool:
+    """Increment the shared daily counter; False if the daily cap is reached."""
+    import datetime
+
+    today = datetime.date.today().isoformat()
+    u = _usage()
+    if u["date"] != today:
+        u["date"], u["count"] = today, 0
+    if u["count"] >= MAX_PER_DAY:
+        return False
+    u["count"] += 1
+    return True
 
 
 # --- Header ---
@@ -71,10 +97,26 @@ for start in range(0, len(EXAMPLES), PER_ROW):
             st.session_state.question = q
 
 # --- Question input ---
-question = st.text_input("Your question", key="question", placeholder="e.g. When can a supplier disconnect a domestic customer?")
+question = st.text_input(
+    "Your question", key="question", max_chars=MAX_QUESTION_CHARS,
+    placeholder="e.g. When can a supplier disconnect a domestic customer?",
+)
 ask = st.button("Ask", type="primary")
 
 if ask and question.strip():
+    # Per-session cap (Layer 1)
+    if st.session_state.get("asked", 0) >= MAX_PER_SESSION:
+        st.warning(
+            f"You've reached this demo's limit of {MAX_PER_SESSION} questions per session. "
+            "Refresh the page to start a new session, or get in touch with Scott to discuss."
+        )
+        st.stop()
+    # Global soft daily cap (Layer 3)
+    if not _reserve_daily_slot():
+        st.info("This demo has reached its daily question limit. Please try again tomorrow.")
+        st.stop()
+    st.session_state.asked = st.session_state.get("asked", 0) + 1
+
     try:
         with st.spinner("Retrieving relevant conditions and reading them…"):
             result = answer_question(question, coll=_collection(), client=_client())
@@ -109,5 +151,7 @@ if ask and question.strip():
                 f"`{dist}`  **Condition {m['condition']}** — {m['condition_title']} "
                 f"(pp. {m['pages']})"
             )
+
+    st.caption(f"Question {st.session_state.asked} of {MAX_PER_SESSION} this session.")
 elif ask:
     st.info("Type a question first, or pick an example above.")
