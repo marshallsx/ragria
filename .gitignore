@@ -6,11 +6,17 @@
 # --- Python virtual environment ---
 venv/
 
-# --- Source documents (public Ofgem data, but kept out of git) ---
-data/
+# --- Source documents ---
+# Raw PDFs are large and not needed at runtime — kept out of git.
+data/raw/
+# The page cache is only used to re-chunk; not needed at runtime.
+data/interim/slc_pages.jsonl
+# NOTE: data/interim/slc_chunks.jsonl (public Ofgem text, ~1.6MB) IS committed —
+# the deployed app's BM25 index needs it. It is intentionally not ignored here.
 
-# --- ChromaDB persisted vector store ---
-chroma/
+# --- ChromaDB vector store ---
+# The prebuilt store IS committed (bundled for deployment) — it's derived from
+# public Ofgem data. Only ignore stray/alternate stores.
 *.chroma
 chroma_store/
 
