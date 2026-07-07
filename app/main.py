@@ -20,6 +20,7 @@ from src.rag import STORE, TOP_K, answer_question, get_client, get_collection  #
 
 EXAMPLES = [
     ("Back-billing limit", "Can a supplier back-bill a domestic customer for consumption more than 12 months ago?"),
+    ("Max back-billing period", "What is the maximum back-billing period for domestic customers?"),
     ("Disconnection for debt", "What must we do before disconnecting a domestic customer for debt?"),
     ("Priority Services Register", "What are our Priority Services Register obligations for identifying and recording vulnerable customers?"),
     ("Blocking a switch", "Can a supplier block a customer from switching to another supplier?"),
