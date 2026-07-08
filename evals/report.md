@@ -116,27 +116,32 @@ date and a `expect_contains` content check (the introduction date must be surfac
 
 ## Phase 6 (increment 2) — temporal TEXT-CHANGE cases
 
-Condition 28 (Prepayment Meters) changed **once** in the held window — effective **8 Nov 2023**
-(the involuntary-PPM Code of Practice). We now hold two version-tagged consolidations (v2022 +
-v2025) and serve the version of a condition's text in force as of the date. Two cases (T4/T5)
-ask the **same** prepayment question before vs after the change; a new deterministic
+Two mapped text-change conditions, each with a verified single change and a held version on
+each side; RITA serves the version of a condition's text in force as of the date:
+- **Condition 28 (Prepayment Meters)** — changed **8 Nov 2023** (involuntary-PPM Code of Practice).
+- **Condition 0A (Treating Non-Domestic Customers Fairly)** — changed **1 Jul 2024** (Non-Domestic
+  Market Review; scope expanded from microbusiness-only to all non-domestic customers). Chosen
+  from the change-detector (`src/detect_changes.py` → `docs/change-map.md`), mod-history confirmed.
+
+Cases T4–T7 ask the **same** question before vs after each change; a deterministic
 `expect_version` check asserts which held version was served (independent of the model's prose).
 
-| Metric (15 cases total) | Result |
+| Metric (17 cases total) | Result |
 |---|---|
-| Decision accuracy | 15/15 |
-| Retrieval hit-rate | 12/12 |
-| Citation hit-rate | 12/12 |
-| Temporal content checks | 5/5 |
-| **Version-swap checks** | **2/2** |
+| Decision accuracy | 17/17 |
+| Retrieval hit-rate | 14/14 |
+| Citation hit-rate | 14/14 |
+| Temporal content checks | 7/7 |
+| **Version-swap checks** | **4/4** |
 | Hallucinations | 0 |
 
-- T4 (prepayment as of 2021) → served **v2022** pre-reform text, states "consolidation of
-  14 April 2022" ✅
-- T5 (prepayment as of 2024) → served **v2025** post-reform text (involuntary-PPM protections),
-  states "in force from 8 November 2023" ✅
+- T4 (prepayment 2021) → **v2022** pre-reform text; T5 (2024) → **v2025** involuntary-PPM text ✅
+- T6 (business fairness 2023) → **v2022** "Microbusiness" scope; T7 (2024) → **v2025** "Non-Domestic"
+  scope, states change effective "1 July 2024" ✅
 - All 13 prior cases unchanged — undated/current retrieval is filtered to the current version,
-  so behaviour is byte-identical; the historic text enters only via the deliberate swap.
+  so behaviour is byte-identical; historic text enters only via the deliberate swap.
+- **Citation normaliser** added: model-emitted `condition` refs are stripped of a stray
+  "Condition " prefix at the source (fixes a UI "Condition Condition 0A" render + grader misses).
 
 ## Artefacts
-`evals/cases.yaml` · `evals/run_evals.py` · `evals/results_{baseline,postfix,haiku,hybrid,temporal,textchange}.json`
+`evals/cases.yaml` · `evals/run_evals.py` · `src/detect_changes.py` · `docs/change-map.md` · `evals/results_{baseline,postfix,haiku,hybrid,temporal,textchange,ndf}.json`

@@ -38,6 +38,30 @@ MAPPED: dict[str, dict] = {
 # --- Text-change conditions. Segments are contiguous and gap-free by construction:
 # each [start, end) interval maps to the held version whose text applied then. ---
 TEXT_CHANGES: dict[str, dict] = {
+    "0A": {
+        "title": "Treating Non-Domestic Customers Fairly",
+        # Verified unchanged 2019-08-03 -> 2022-04-14 (detector I1 sim 1.0); single change
+        # effective 1 Jul 2024 (Non-Domestic Market Review). Earlier is outside our knowledge.
+        "earliest": date(2019, 8, 3),
+        "segments": [
+            {
+                "start": date(2019, 8, 3),
+                "end": date(2024, 7, 1),
+                "version": "2022-04-14",
+                "note": ("applied only to Micro Business Consumers — the condition was then "
+                         "titled 'Treating Microbusiness Consumers Fairly'"),
+            },
+            {
+                "start": date(2024, 7, 1),
+                "end": None,  # open — current
+                "version": "2025-08-01",
+                "note": ("expanded by the Non-Domestic Market Review (effective 1 July 2024) so "
+                         "the Standards of Conduct apply to ALL Non-Domestic Customers, not just "
+                         "microbusinesses; every 'Micro Business Consumer' reference became "
+                         "'Non-Domestic Customer'"),
+            },
+        ],
+    },
     "28": {
         "title": "Prepayment Meters",
         # Earliest date we can vouch for the text. Verified unchanged 2019-08-03 -> 2022-04-14

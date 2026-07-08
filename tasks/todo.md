@@ -70,16 +70,20 @@
 - **Findings:** O4 vocabulary-gap false refusal → hybrid keyword+vector retrieval is the evidenced fix (deferred); Opus 4.8 justified by A/B (equal substance, cleaner citations)
 
 ## Phase 6 — Temporal / version awareness (electricity supply SLCs)
-**Status:** INCREMENT 2 BUILT & VERIFIED (text-CHANGE: Condition 28 Prepayment Meters).
-Increment 1 (existence-boundary: 25E + 4D) also live. RITA now answers "as of a past date"
-with the version of a condition's TEXT that was in force then: for Condition 28 it serves the
-pre-reform v2022 text before 8 Nov 2023 and the post-reform v2025 text after, stating the
-consolidation/effective date it relied on, and still flags non-existence / unmapped conditions.
-Full corpus now holds two version-tagged consolidations (v2022 + v2025); "current" is derived
-as the latest held version (no hardcoded date anywhere). Eval **15/15** (decisions 15/15,
-retrieval 12/12, citations 12/12, content 5/5, version-swap 2/2, 0 hallucinations).
-Next increments: more mapped text-change / introduced conditions; multi-change conditions
-(e.g. SLC 47) once more historic versions are held; ingest v2019 for pre-2022 text changes.
+**Status:** INCREMENT 2 BUILT & VERIFIED (text-CHANGE: Condition 28 Prepayment Meters + 0A
+Treating Non-Domestic Customers Fairly). Increment 1 (existence-boundary: 25E + 4D) also live.
+RITA answers "as of a past date" with the version of a condition's TEXT in force then: Cond 28
+serves pre-reform v2022 text before 8 Nov 2023 / post-reform v2025 after; Cond 0A serves the
+microbusiness-scope v2022 text before 1 Jul 2024 / the all-non-domestic v2025 text after —
+each stating the consolidation/effective date it relied on, and still flagging non-existence /
+unmapped conditions. Corpus holds two version-tagged consolidations (v2022 + v2025); "current"
+is derived as the latest held version (no hardcoded date anywhere). A **change-detector**
+(`src/detect_changes.py` → `docs/change-map.md`) classifies every condition across held
+snapshots so mapped conditions are chosen from DATA (0A came from it, mod-history confirmed).
+Eval **17/17** (decisions 17/17, retrieval 14/14, citations 14/14, content 7/7, version-swap
+4/4, 0 hallucinations). Next: more mapped conditions (11 single-change candidates buildable now,
+22 introduced); ingest v2019 for +17 pre-2022 text-change candidates; multi-change (e.g. SLC 47,
+confirmed volatile) once enough versions are held.
 
 ### Correctness rule (non-negotiable)
 - Validity is PER CONDITION, and a mapped condition's timeline is CONTIGUOUS — no internal

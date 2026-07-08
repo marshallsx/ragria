@@ -105,7 +105,8 @@ OUTPUT_SCHEMA = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "condition": {"type": "string"},
+                    "condition": {"type": "string",
+                                  "description": "Bare condition number only, e.g. 0A, 21BA, 28 — no 'Condition' prefix."},
                     "condition_title": {"type": "string"},
                     "pages": {"type": "string"},
                 },
@@ -382,6 +383,10 @@ def answer_question(
     # With thinking enabled, the first block is a thinking block — take the text block.
     text = next(b.text for b in resp.content if b.type == "text")
     result = json.loads(text)
+    # Sanitise citation condition refs: strip a stray "Condition " prefix the model
+    # sometimes emits (else the UI renders "Condition Condition 0A" and graders miss).
+    for ci in result.get("citations", []):
+        ci["condition"] = re.sub(r"(?i)^\s*condition\s+", "", str(ci.get("condition", ""))).strip()
     result["as_of"] = as_of.isoformat()
     result["retrieved"] = retrieved_meta
     return result

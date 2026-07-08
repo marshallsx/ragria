@@ -112,3 +112,24 @@
   expect_conditions: ["28"]
   expect_version: "2025-08-01"
   expect_contains: "8 November 2023"
+
+# Condition 0A (Treating Non-Domestic Customers Fairly) changed on 1 Jul 2024
+# (Non-Domestic Market Review): scope expanded from Micro Business Consumers only to
+# all Non-Domestic Customers. Same question, before vs after.
+- id: T6
+  category: Temporal
+  question: What fair-treatment obligations do suppliers have towards business customers?
+  as_of: 2023-06-01
+  expected: answer
+  expect_conditions: ["0A"]
+  expect_version: "2022-04-14"
+  expect_contains: "14 April 2022"
+
+- id: T7
+  category: Temporal
+  question: What fair-treatment obligations do suppliers have towards business customers?
+  as_of: 2024-09-01
+  expected: answer
+  expect_conditions: ["0A"]
+  expect_version: "2025-08-01"
+  expect_contains: "1 July 2024"
