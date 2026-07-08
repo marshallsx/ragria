@@ -70,9 +70,10 @@
 - **Findings:** O4 vocabulary-gap false refusal → hybrid keyword+vector retrieval is the evidenced fix (deferred); Opus 4.8 justified by A/B (equal substance, cleaner citations)
 
 ## Phase 6 — Temporal / version awareness (electricity supply SLCs)
-**Status:** PLANNING — sign-off required before any code. The differentiator: answer
-"as of date X" from the version in force at X, cite version + effective dates, and
-NEVER present superseded text as current.
+**Status:** INCREMENT 1 BUILT & VERIFIED (existence-boundary: 25E + 4D). RITA answers "as of
+a past date", flags when a condition didn't exist / can't be dated, and never presents current
+text as historic. Eval 13/13. Next increments: more mapped conditions, text-CHANGE conditions
+(SLC 47), historic-text ingestion.
 
 ### Correctness rule (non-negotiable)
 - Validity is PER CONDITION, and a mapped condition's timeline is CONTIGUOUS — no internal
@@ -166,7 +167,7 @@ NEVER present superseded text as current.
 - [x] Verify gate (25E + 4D existence boundary) + temporal eval cases (T1–T3; 13/13 overall).
 - [x] Scope note: unmapped condition at a past date → caveat "current text only, historic
       position not confirmed" (never presents current text as historic).
-- [ ] Flip public copy to present tense once real (propose wording to Scott).
+- [x] Flip public copy to present tense (present-tense "as of a past date", scope-honest).
 - Deferred: ingest v2019/v2022 historic TEXT — only needed for text-CHANGE conditions (e.g.
   SLC 47 later); the existence-boundary demo doesn't need it (25E/4D didn't exist then).
 

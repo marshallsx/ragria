@@ -120,12 +120,12 @@ st.title("⚡ Regulatory Intelligence Trusted Assistant (RITA)")
 st.caption(
     "**RITA** is a proof-of-concept, scoped to **Ofgem electricity supply licence "
     "conditions** and grounded in the current consolidated version (1 August 2025). "
-    "Her defining goal is to answer against **historic versions** too — so you can ask "
-    "what the rules were *as of any given date* — on the way to covering the wider Ofgem "
-    "regulatory landscape. Unlike a generic AI, RITA answers only from the licence text "
-    "itself: when the answer isn't there she tells you plainly rather than inventing "
-    "(hallucinating) one, and every answer she gives is backed by specific citations. "
-    "_Informational only — not legal advice._"
+    "She can also answer **as of a past date** — pick a date and ask, and she'll tell you "
+    "whether a given protection was in force then and when it was introduced — with historic "
+    "coverage expanding condition by condition. Unlike a generic AI, RITA answers only from "
+    "the licence text: when the answer isn't there, or she can't verify the position on a "
+    "past date, she says so plainly rather than inventing (hallucinating) one — and every "
+    "answer is backed by specific citations. _Informational only — not legal advice._"
 )
 
 # --- Store present? ---
