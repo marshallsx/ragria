@@ -37,6 +37,14 @@ EXAMPLES = [
     ("Out of scope ↩", "What safety certifications are required to install a domestic gas boiler?"),
 ]
 
+# Temporal examples set the question AND a past "as of" date to showcase the time travel.
+# The same credit-balances question at 2021 vs 2024 is the striking before/after.
+TEMPORAL_EXAMPLES = [
+    ("Credit balances · 2021", "Do suppliers have to protect domestic customer credit balances?", date(2021, 6, 1)),
+    ("Credit balances · 2024", "Do suppliers have to protect domestic customer credit balances?", date(2024, 6, 1)),
+    ("Energy Bill Support · 2022", "Can the Secretary of State direct suppliers to make Energy Bill Support Scheme payments?", date(2022, 1, 1)),
+]
+
 st.set_page_config(page_title="Regulatory Intelligence Trusted Assistant (RITA)", page_icon="⚡", layout="centered")
 
 # Make the Anthropic key available whether it's in a local .env (dev — handled by
@@ -140,6 +148,8 @@ if not STORE.exists():
 
 if "question" not in st.session_state:
     st.session_state.question = ""
+if "as_of" not in st.session_state:
+    st.session_state.as_of = date.today()
 
 # --- Example questions ---
 st.write("**Try an example:**")
@@ -149,6 +159,14 @@ for start in range(0, len(EXAMPLES), PER_ROW):
     for col, (label, q) in zip(cols, EXAMPLES[start : start + PER_ROW]):
         if col.button(label, help=q, use_container_width=True):
             st.session_state.question = q
+            st.session_state.as_of = date.today()  # current-position examples
+
+st.write("**…or a historic “as of date” question:**")
+tcols = st.columns(len(TEMPORAL_EXAMPLES))
+for col, (label, q, d) in zip(tcols, TEMPORAL_EXAMPLES):
+    if col.button(label, help=f"{q}  —  as of {d.strftime('%d %b %Y').lstrip('0')}", use_container_width=True):
+        st.session_state.question = q
+        st.session_state.as_of = d  # sets both question and the date picker
 
 # --- Question input ---
 question = st.text_input(
@@ -156,7 +174,7 @@ question = st.text_input(
     placeholder="e.g. When can a supplier disconnect a domestic customer?",
 )
 as_of = st.date_input(
-    "⏳ As of date", value=date.today(), max_value=date.today(),
+    "⏳ As of date", key="as_of", max_value=date.today(),
     help="Ask what the rules were as of a past date. Leave at today for the current position.",
 )
 ask = st.button("Ask RITA", type="primary")
