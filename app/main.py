@@ -1,5 +1,5 @@
 """
-Phase 4 — Streamlit UI.
+Phase 4 - Streamlit UI.
 
 Single-turn Q&A over the Ofgem Electricity Supply Standard Licence Conditions,
 wired to src.rag.answer_question(). Shows the grounded answer, condition-level
@@ -50,13 +50,13 @@ TEMPORAL_EXAMPLES = [
 
 st.set_page_config(page_title="Regulatory Intelligence Trusted Assistant (RITA)", page_icon="⚡", layout="centered")
 
-# Make the Anthropic key available whether it's in a local .env (dev — handled by
+# Make the Anthropic key available whether it's in a local .env (dev - handled by
 # rag.py's load_dotenv) or in Streamlit Cloud secrets (deploy). Belt-and-braces so the
 # SDK finds ANTHROPIC_API_KEY regardless of how the platform exposes secrets.
 try:
     if not os.getenv("ANTHROPIC_API_KEY") and "ANTHROPIC_API_KEY" in st.secrets:
         os.environ["ANTHROPIC_API_KEY"] = st.secrets["ANTHROPIC_API_KEY"]
-except Exception:  # noqa: BLE001 — no secrets.toml locally is fine
+except Exception:  # noqa: BLE001 - no secrets.toml locally is fine
     pass
 
 # --- Brand theme to match scottdmarshall.com/ai-demo (Archivo font, orange headings) ---
@@ -133,12 +133,12 @@ st.caption(
     "**RITA** is a proof-of-concept, scoped to **Ofgem electricity supply licence "
     "conditions** and grounded in the current consolidated version "
     f"({temporal.current_version_str()}). "
-    "She can also answer **as of a past date** — pick a date and ask, and she'll tell you "
-    "whether a given protection was in force then and when it was introduced — with historic "
+    "She can also answer **as of a past date** - pick a date and ask, and she'll tell you "
+    "whether a given protection was in force then and when it was introduced - with historic "
     "coverage expanding condition by condition. Unlike a generic AI, RITA answers only from "
     "the licence text: when the answer isn't there, or she can't verify the position on a "
-    "past date, she says so plainly rather than inventing (hallucinating) one — and every "
-    "answer is backed by specific citations. _Informational only — not legal advice._"
+    "past date, she says so plainly rather than inventing (hallucinating) one - and every "
+    "answer is backed by specific citations. _Informational only - not legal advice._"
 )
 
 # --- Store present? ---
@@ -164,12 +164,12 @@ for start in range(0, len(EXAMPLES), PER_ROW):
             st.session_state.question = q
             st.session_state.as_of = date.today()  # current-position examples
 
-st.write("**…or a historic “as of date” question — same question, before vs after it existed:**")
+st.write("**…or a historic “as of date” question - same question, before vs after it existed:**")
 T_PER_ROW = 2  # each row = one condition's before/after
 for start in range(0, len(TEMPORAL_EXAMPLES), T_PER_ROW):
     tcols = st.columns(T_PER_ROW)
     for col, (label, q, d) in zip(tcols, TEMPORAL_EXAMPLES[start : start + T_PER_ROW]):
-        if col.button(label, help=f"{q}  —  as of {d.strftime('%d %b %Y').lstrip('0')}", use_container_width=True):
+        if col.button(label, help=f"{q}  -  as of {d.strftime('%d %b %Y').lstrip('0')}", use_container_width=True):
             st.session_state.question = q
             st.session_state.as_of = d  # sets both question and the date picker
 
@@ -201,7 +201,7 @@ if ask and question.strip():
     try:
         with st.spinner("Retrieving relevant conditions and reading them…"):
             result = answer_question(question, coll=_collection(), client=_client(), as_of=as_of)
-    except Exception as e:  # noqa: BLE001 — surface a friendly message, not a stack trace
+    except Exception as e:  # noqa: BLE001 - surface a friendly message, not a stack trace
         msg = str(e)
         if "api_key" in msg.lower() or "authentication" in msg.lower():
             st.error("Anthropic API key missing or invalid. Check your `.env` file.")
@@ -212,18 +212,18 @@ if ask and question.strip():
     st.divider()
 
     if as_of != date.today():
-        st.info(f"🕰️ Answering **as of {as_of.strftime('%d %B %Y').lstrip('0')}** — a historic date.")
+        st.info(f"🕰️ Answering **as of {as_of.strftime('%d %B %Y').lstrip('0')}** - a historic date.")
 
     # --- Answer or refusal ---
     if result["refused"]:
         st.warning("**Not in the source material.**")
-        st.write(result["reason"])
+        st.write(result["reason"].replace("—", "-"))
     else:
-        st.markdown(result["answer"])
+        st.markdown(result["answer"].replace("—", "-"))
         if result["citations"]:
             st.subheader("Citations")
             for c in result["citations"]:
-                st.markdown(f"- **Condition {c['condition']}** — {c['condition_title']} (pp. {c['pages']})")
+                st.markdown(f"- **Condition {c['condition']}** - {c['condition_title']} (pp. {c['pages']})")
 
     # --- Retrieved sources (transparency; removable later) ---
     with st.expander(f"🔎 Retrieved sources (top {TOP_K}, hybrid rank)"):
@@ -232,7 +232,7 @@ if ask and question.strip():
         for m in result["retrieved"]:
             dist = m["distance"] if m["distance"] is not None else "kw"
             st.markdown(
-                f"`{dist}`  **Condition {m['condition']}** — {m['condition_title']} "
+                f"`{dist}`  **Condition {m['condition']}** - {m['condition_title']} "
                 f"(pp. {m['pages']})"
             )
 
