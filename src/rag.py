@@ -31,9 +31,9 @@ from dotenv import load_dotenv
 from rank_bm25 import BM25Okapi
 
 try:  # works both as `src.rag` (app/evals) and `python src/rag.py`
-    from src import temporal
+    from src import temporal, versions
 except ImportError:
-    import temporal
+    import temporal, versions
 
 ROOT = Path(__file__).resolve().parent.parent
 STORE = ROOT / "chroma"
@@ -74,16 +74,22 @@ conditions you relied on. Do not add requirements that are not in the text.
 - Keep the answer concise and factual.
 
 Temporal awareness (dates):
-- You are given an "As-of date", and for relevant conditions, when they were introduced.
+- You are given an "As-of date", and for relevant conditions, when they were introduced \
+or when their text changed.
 - Answer as of that date. If a condition relevant to the question did NOT exist as of the \
 as-of date, say so plainly and give its introduction date — do NOT present its current \
 text as if it applied then.
+- Some conditions had their TEXT changed on a date. The Temporal facts tell you which \
+version's text was in force as of the as-of date and its effective range, and the \
+retrieved extract for that condition is ALREADY that version's text. Answer from that \
+extract, and state which consolidation/date you are relying on. Never present a later \
+version's text as applying before its change date.
 - If the user's question itself names a time period that straddles a condition's \
-introduction date, do not pick a side: say it changed on that date and give BOTH the \
-"before" (did not exist) and "after" states.
+introduction or text-change date, do not pick a side: say it changed on that date and \
+give BOTH the "before" and "after" states.
 - When answering for a past date, make the date explicit in your answer.
 - For a PAST as-of date, only make definite dated claims about conditions whose \
-introduction/effective dates are given in the Temporal facts above. For any OTHER \
+introduction/effective/change dates are given in the Temporal facts above. For any OTHER \
 condition, do not assert it applied as of that date — omit it, or note its historic \
 status as of that date is not confirmed.
 
@@ -145,15 +151,19 @@ def tokenize(text: str) -> list[str]:
 
 
 def get_bm25():
-    """Build (once) an in-memory BM25 index over chunk *title + text*."""
+    """Build (once) an in-memory BM25 index over the CURRENT version's chunk *title + text*.
+    Primary retrieval is over the current version only (historic text enters via the
+    deliberate per-condition swap in expand_hits), so BM25 is scored over current chunks;
+    chunk_by_id still holds ALL versions so the swap can fetch historic chunks by id."""
     global _BM25
     if _BM25 is None:
         chunks = [json.loads(l) for l in CHUNKS_FILE.read_text(encoding="utf-8").splitlines()]
-        ids = [c["id"] for c in chunks]
         chunk_by_id = {c["id"]: c for c in chunks}
+        current = [c for c in chunks if c["metadata"]["version_label"] == versions.CURRENT_LABEL]
+        ids = [c["id"] for c in current]
         corpus = [
             tokenize((c["metadata"]["condition_title"] + " ") * TITLE_WEIGHT + c["text"])
-            for c in chunks
+            for c in current
         ]
         _BM25 = (BM25Okapi(corpus), ids, chunk_by_id)
     return _BM25
@@ -161,7 +171,11 @@ def get_bm25():
 
 def vector_retrieve(question: str, n: int = CAND_N, coll=None) -> list[dict]:
     coll = coll or get_collection()
-    res = coll.query(query_texts=[question], n_results=n)
+    # Restrict to the current version; historic text enters only via expand_hits' swap.
+    res = coll.query(
+        query_texts=[question], n_results=n,
+        where={"version_label": versions.CURRENT_LABEL},
+    )
     return [
         {"id": i, "text": d, "meta": m, "distance": dist}
         for i, d, m, dist in zip(
@@ -203,35 +217,46 @@ def hybrid_retrieve(question: str, k: int = TOP_K, coll=None) -> tuple[list[dict
     return fused, vhits
 
 
-def expand_hits(hits: list[dict], coll) -> list[dict]:
+def expand_hits(hits: list[dict], coll, as_of: date) -> list[dict]:
     """
-    Small-to-big retrieval: a hit on a small condition (≤ EXPAND_FULL_CAP chunks)
-    pulls the WHOLE condition (so a keyword hit on any part of 21BA gives Claude the
-    12-month rule in 21BA.1); a hit on a large condition pulls only chunk_index ±1
-    so giant conditions can't flood the context. Returns items grouped by condition
+    Small-to-big retrieval, version-aware. For each hit condition we resolve which held
+    version's text applies as of `as_of` (temporal.version_for): unmapped / current-date
+    conditions stay on the current version; a mapped text-change condition on a past date
+    is SWAPPED to its historic version and served WHOLE (the complete historic condition).
+    On the current version, the original rule applies: a small condition
+    (≤ EXPAND_FULL_CAP chunks) is pulled whole; a large one pulls only chunk_index ±1 so
+    giant conditions can't flood the context. Returns items grouped by condition
     (fused-rank order) and ordered by chunk_index within each.
     """
     _, _, chunk_by_id = get_bm25()
-    cond_idxs: dict[str, set[int]] = {}
+    # chunk_index sets per (version_label, condition) — versions chunk to different sizes.
+    ver_cond_idxs: dict[tuple[str, str], set[int]] = {}
     for c in chunk_by_id.values():
         m = c["metadata"]
-        cond_idxs.setdefault(m["condition"], set()).add(m["chunk_index"])
+        ver_cond_idxs.setdefault((m["version_label"], m["condition"]), set()).add(m["chunk_index"])
 
     # Condition order = order of first appearance in the (already fused-ranked) hits.
     cond_order: list[str] = []
-    # Deterministic chunk ids (must match embed.py's scheme): f"cond{cond}_{idx}".
+    # Deterministic chunk ids (must match chunk.py's scheme): f"{version}__cond{cond}_{idx}".
     want: set[str] = set()
     for h in hits:
         c, idx = h["meta"]["condition"], h["meta"]["chunk_index"]
         if c not in cond_order:
             cond_order.append(c)
-        if len(cond_idxs.get(c, ())) <= EXPAND_FULL_CAP:
-            for j in cond_idxs[c]:  # whole (small) condition
-                want.add(f"cond{c}_{j}")
+        target = temporal.version_for(c, as_of)  # served version label, or None (before earliest)
+        if target is None:
+            continue  # historic text not held → serve nothing; the temporal note caveats it
+        idxs = ver_cond_idxs.get((target, c), set())
+        if target != versions.CURRENT_LABEL:
+            for j in idxs:  # swapped historic condition → whole held text
+                want.add(f"{target}__cond{c}_{j}")
+        elif len(idxs) <= EXPAND_FULL_CAP:
+            for j in idxs:  # whole (small) current condition
+                want.add(f"{target}__cond{c}_{j}")
         else:
             for j in (idx - 1, idx, idx + 1):  # bounded neighbours for large conditions
-                if j >= 0:
-                    want.add(f"cond{c}_{j}")
+                if j in idxs:
+                    want.add(f"{target}__cond{c}_{j}")
 
     got = coll.get(ids=list(want))  # missing ids are silently skipped
     items = [
@@ -258,9 +283,10 @@ def build_context(ordered: list[dict]) -> str:
     for i, (_, group) in enumerate(groupby(ordered, key=lambda it: it["meta"]["condition"]), 1):
         block = list(group)
         m = block[0]["meta"]
+        vdate = temporal.fmt(versions.BY_LABEL[m["version_label"]]["date"])
         header = (
             f"[Extract {i}] Condition {m['condition']} — {m['condition_title']} "
-            f"(Section {m['section']}, pp.{m['page_start']}-{m['page_end']})"
+            f"(consolidation {vdate}, Section {m['section']}, pp.{m['page_start']}-{m['page_end']})"
         )
         body = " ".join(it["text"] for it in block)
         parts.append(f"{header}\n{body}")
@@ -287,6 +313,8 @@ def answer_question(
             "condition_title": c["meta"]["condition_title"],
             "pages": f"{c['meta']['page_start']}-{c['meta']['page_end']}",
             "distance": round(c["distance"], 3) if c["distance"] is not None else None,
+            # The version whose text will actually be SERVED for this condition as of the date.
+            "version": temporal.version_for(c["meta"]["condition"], as_of),
         }
         for c in chunks
     ]
@@ -308,8 +336,9 @@ def answer_question(
             "retrieved": retrieved_meta,
         }
 
-    context = build_context(expand_hits(chunks, coll))
-    notes = temporal.temporal_notes({c["meta"]["condition"] for c in chunks}, as_of)
+    conds = {c["meta"]["condition"] for c in chunks}
+    context = build_context(expand_hits(chunks, coll, as_of))
+    notes = temporal.temporal_notes(conds, as_of) + temporal.text_change_notes(conds, as_of)
     parts = [
         f"Current licence version: consolidated to {temporal.current_version_str()}.",
         f"As-of date: {temporal.fmt(as_of)}",
@@ -373,8 +402,9 @@ def _format_cli(q: str, r: dict) -> str:
     lines.append("Retrieved (fused rank):")
     for m in r["retrieved"]:
         d = m["distance"] if m["distance"] is not None else "kw"
+        v = m.get("version") or "?"
         lines.append(
-            f"  [{d}] Cond {m['condition']} — {m['condition_title']} (pp.{m['pages']})"
+            f"  [{d}] Cond {m['condition']} — {m['condition_title']} (v{v}, pp.{m['pages']})"
         )
     return "\n".join(lines)
 

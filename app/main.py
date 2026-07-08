@@ -41,11 +41,14 @@ EXAMPLES = [
 # The same credit-balances question at 2021 vs 2024 is the striking before/after.
 _CCB_Q = "Do suppliers have to protect domestic customer credit balances?"
 _EBSS_Q = "Can the Secretary of State direct suppliers to make Energy Bill Support Scheme payments?"
+_PPM_Q = "What protections apply when a supplier installs a prepayment meter?"
 TEMPORAL_EXAMPLES = [
     ("Credit balances · 2021", _CCB_Q, date(2021, 6, 1)),      # before 4D (introduced 20 Sep 2023)
     ("Credit balances · 2024", _CCB_Q, date(2024, 6, 1)),      # after
     ("EBSS 2022", _EBSS_Q, date(2022, 1, 1)),  # before 25E (introduced 24 Sep 2022)
     ("EBSS 2023", _EBSS_Q, date(2023, 6, 1)),  # after
+    ("Prepayment · 2021", _PPM_Q, date(2021, 6, 1)),  # before Condition 28 text change (8 Nov 2023)
+    ("Prepayment · 2024", _PPM_Q, date(2024, 6, 1)),  # after — involuntary-PPM protections
 ]
 
 st.set_page_config(page_title="Regulatory Intelligence Trusted Assistant (RITA)", page_icon="⚡", layout="centered")
@@ -134,8 +137,9 @@ st.caption(
     "conditions** and grounded in the current consolidated version "
     f"({temporal.current_version_str()}). "
     "She can also answer **as of a past date** - pick a date and ask, and she'll tell you "
-    "whether a given protection was in force then and when it was introduced - with historic "
-    "coverage expanding condition by condition. Unlike a generic AI, RITA answers only from "
+    "whether a given protection was in force then, when it was introduced, and how its wording "
+    "has changed - with historic coverage expanding condition by condition. Unlike a generic AI, "
+    "RITA answers only from "
     "the licence text: when the answer isn't there, or she can't verify the position on a "
     "past date, she says so plainly rather than inventing (hallucinating) one - and every "
     "answer is backed by specific citations. _Informational only - not legal advice._"
@@ -164,7 +168,7 @@ for start in range(0, len(EXAMPLES), PER_ROW):
             st.session_state.question = q
             st.session_state.as_of = date.today()  # current-position examples
 
-st.write("**…or a historic “as of date” question - same question, before vs after it existed:**")
+st.write("**…or a historic “as of date” question - same question, before vs after a change:**")
 T_PER_ROW = 2  # each row = one condition's before/after
 for start in range(0, len(TEMPORAL_EXAMPLES), T_PER_ROW):
     tcols = st.columns(T_PER_ROW)

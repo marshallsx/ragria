@@ -70,10 +70,16 @@
 - **Findings:** O4 vocabulary-gap false refusal → hybrid keyword+vector retrieval is the evidenced fix (deferred); Opus 4.8 justified by A/B (equal substance, cleaner citations)
 
 ## Phase 6 — Temporal / version awareness (electricity supply SLCs)
-**Status:** INCREMENT 1 BUILT & VERIFIED (existence-boundary: 25E + 4D). RITA answers "as of
-a past date", flags when a condition didn't exist / can't be dated, and never presents current
-text as historic. Eval 13/13. Next increments: more mapped conditions, text-CHANGE conditions
-(SLC 47), historic-text ingestion.
+**Status:** INCREMENT 2 BUILT & VERIFIED (text-CHANGE: Condition 28 Prepayment Meters).
+Increment 1 (existence-boundary: 25E + 4D) also live. RITA now answers "as of a past date"
+with the version of a condition's TEXT that was in force then: for Condition 28 it serves the
+pre-reform v2022 text before 8 Nov 2023 and the post-reform v2025 text after, stating the
+consolidation/effective date it relied on, and still flags non-existence / unmapped conditions.
+Full corpus now holds two version-tagged consolidations (v2022 + v2025); "current" is derived
+as the latest held version (no hardcoded date anywhere). Eval **15/15** (decisions 15/15,
+retrieval 12/12, citations 12/12, content 5/5, version-swap 2/2, 0 hallucinations).
+Next increments: more mapped text-change / introduced conditions; multi-change conditions
+(e.g. SLC 47) once more historic versions are held; ingest v2019 for pre-2022 text changes.
 
 ### Correctness rule (non-negotiable)
 - Validity is PER CONDITION, and a mapped condition's timeline is CONTIGUOUS — no internal
@@ -170,6 +176,32 @@ text as historic. Eval 13/13. Next increments: more mapped conditions, text-CHAN
 - [x] Flip public copy to present tense (present-tense "as of a past date", scope-honest).
 - Deferred: ingest v2019/v2022 historic TEXT — only needed for text-CHANGE conditions (e.g.
   SLC 47 later); the existence-boundary demo doesn't need it (25E/4D didn't exist then).
+
+### Build steps (text-CHANGE increment — Condition 28 Prepayment Meters) ✅ BUILT & VERIFIED
+Data-scoping verdict: Condition 28's text changed **exactly once** in 2022→2025 — effective
+**8 Nov 2023** (involuntary-PPM Code of Practice merged 28B into 28). The March 2024 marked-up
+consolidation targets 28AD (Levelisation), and the May 2025 "extension to 2027" is a
+statement-in-writing, not a text change — so v2022 + v2025 bracket the single change gap-free.
+- [x] Verify single-change (not multi like SLC 47): confirmed via Ofgem modification history
+      + a per-condition diff across held versions (v2022 stable from 2019; changed by v2025).
+- [x] Version registry (`src/versions.py`): held consolidations v2022 + v2025, each with
+      label/date/url/authority; **`CURRENT` derived as the latest** (removed the last hardcode).
+- [x] Full v2022 ingestion (agreed): `extract_pages.py` → per-version caches; `chunk.py` tags
+      every chunk `version_label/version_date/source_authority/url` and **namespaces ids by
+      version** (`<label>__cond<n>_<idx>`); `embed.py` → 2133 chunks (1000 v2022 + 1133 v2025).
+- [x] Temporal module: `TEXT_CHANGES` timeline for Condition 28 (contiguous segments →
+      held version) + `version_for()` + `text_change_notes()`; existence-boundary path intact.
+- [x] Version-scoped retrieval (`rag.py`): primary vector+BM25 filtered to the CURRENT version
+      (undated behaviour byte-identical); a mapped text-change condition on a PAST date is
+      SWAPPED to its resolved historic version and served WHOLE; context header + citations
+      carry the consolidation date.
+- [x] UI: prepayment before/after example (2021 vs 2024); caption widened to "how its wording
+      has changed".
+- [x] Evals: T4 (2021→v2022, pre-reform) + T5 (2024→v2025, post-reform); added a deterministic
+      `expect_version` swap check. Full suite **15/15** (version-swap 2/2, 0 regressions).
+- [x] Provenance: v2022 source URL recorded (public-only); v2019 noted held-not-ingested.
+- Deferred: ingest v2019 (enables pre-2022 text-change conditions); multi-change conditions
+  (SLC 47) once enough historic versions are held to keep every interval gap-free.
 
 ### Resolved decisions
 - Validity: PER CONDITION, contiguous (no internal gaps); refusal only outside covered

@@ -90,3 +90,25 @@
   expected: answer
   expect_conditions: ["4D"]
   expect_contains: "20 September 2023"
+
+# Temporal (Phase 6) — text-CHANGE. Condition 28 (Prepayment Meters) changed on
+# 8 Nov 2023 (involuntary-PPM Code of Practice). Same question, before vs after:
+# expect_version proves the historic-text swap (v2022 vs v2025); expect_contains
+# proves the answer states the version/effective date it relied on.
+- id: T4
+  category: Temporal
+  question: What protections apply when a supplier installs a prepayment meter?
+  as_of: 2021-06-01
+  expected: answer
+  expect_conditions: ["28"]
+  expect_version: "2022-04-14"
+  expect_contains: "14 April 2022"
+
+- id: T5
+  category: Temporal
+  question: What protections apply when a supplier installs a prepayment meter?
+  as_of: 2024-06-01
+  expected: answer
+  expect_conditions: ["28"]
+  expect_version: "2025-08-01"
+  expect_contains: "8 November 2023"

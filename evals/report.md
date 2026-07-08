@@ -114,5 +114,29 @@ date and a `expect_contains` content check (the introduction date must be surfac
 - Unmapped condition at a past date → RITA states it can only show the current text and
   cannot confirm the historic position (verified by hand; not a graded case).
 
+## Phase 6 (increment 2) — temporal TEXT-CHANGE cases
+
+Condition 28 (Prepayment Meters) changed **once** in the held window — effective **8 Nov 2023**
+(the involuntary-PPM Code of Practice). We now hold two version-tagged consolidations (v2022 +
+v2025) and serve the version of a condition's text in force as of the date. Two cases (T4/T5)
+ask the **same** prepayment question before vs after the change; a new deterministic
+`expect_version` check asserts which held version was served (independent of the model's prose).
+
+| Metric (15 cases total) | Result |
+|---|---|
+| Decision accuracy | 15/15 |
+| Retrieval hit-rate | 12/12 |
+| Citation hit-rate | 12/12 |
+| Temporal content checks | 5/5 |
+| **Version-swap checks** | **2/2** |
+| Hallucinations | 0 |
+
+- T4 (prepayment as of 2021) → served **v2022** pre-reform text, states "consolidation of
+  14 April 2022" ✅
+- T5 (prepayment as of 2024) → served **v2025** post-reform text (involuntary-PPM protections),
+  states "in force from 8 November 2023" ✅
+- All 13 prior cases unchanged — undated/current retrieval is filtered to the current version,
+  so behaviour is byte-identical; the historic text enters only via the deliberate swap.
+
 ## Artefacts
-`evals/cases.yaml` · `evals/run_evals.py` · `evals/results_{baseline,postfix,haiku,hybrid,temporal}.json`
+`evals/cases.yaml` · `evals/run_evals.py` · `evals/results_{baseline,postfix,haiku,hybrid,temporal,textchange}.json`

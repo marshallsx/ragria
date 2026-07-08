@@ -50,12 +50,19 @@ def run(label: str, model: str) -> dict:
         cite_hit = bool(expect & cited) if c["expected"] == "answer" else None
         want = c.get("expect_contains")
         contains_ok = (want.lower() in (r.get("answer") or "").lower()) if want else None
+        # Version check (temporal text-change): the served version for an expected condition
+        # must match — a deterministic proof the historic-text swap happened, independent
+        # of the LLM's prose.
+        want_ver = c.get("expect_version")
+        served = {m["condition"]: m.get("version") for m in r["retrieved"]}
+        version_ok = any(served.get(cond) == want_ver for cond in expect) if want_ver else None
 
         rows.append({
             "id": c["id"], "category": c["category"], "expected": c["expected"],
             "as_of": as_of.isoformat() if as_of else None,
             "refused": r["refused"], "decision_ok": decision_ok,
             "ret_hit": ret_hit, "cite_hit": cite_hit, "contains_ok": contains_ok,
+            "version_ok": version_ok,
             "expect_conditions": c["expect_conditions"],
             "retrieved": sorted(retrieved), "cited": sorted(cited),
         })
@@ -71,6 +78,8 @@ def run(label: str, model: str) -> dict:
     false_answers = [r["id"] for r in rows if r["expected"] == "refuse" and not r["refused"]]
     content_rows = [r for r in rows if r["contains_ok"] is not None]
     content_ok = sum(bool(r["contains_ok"]) for r in content_rows)
+    version_rows = [r for r in rows if r["version_ok"] is not None]
+    version_ok_n = sum(bool(r["version_ok"]) for r in version_rows)
 
     summary = {
         "label": label, "model": model, "n": n,
@@ -78,6 +87,7 @@ def run(label: str, model: str) -> dict:
         "retrieval_hit_rate": f"{ret_hits}/{len(answer_rows)}",
         "citation_hit_rate": f"{cite_hits}/{len(answer_rows)}",
         "content_checks": f"{content_ok}/{len(content_rows)}",
+        "version_checks": f"{version_ok_n}/{len(version_rows)}",
         "false_refusals": false_refusals,
         "correct_refusals": correct_refusals,
         "false_answers": false_answers,
@@ -85,14 +95,15 @@ def run(label: str, model: str) -> dict:
 
     # --- print ---
     print(f"\n=== {label}  (model {model}) ===")
-    print(f"{'id':<4} {'cat':<11} {'exp':<7} {'decision':<9} {'ret':<4} {'cite':<5} {'cont':<5} retrieved -> cited")
+    print(f"{'id':<4} {'cat':<11} {'exp':<7} {'decision':<9} {'ret':<4} {'cite':<5} {'cont':<5} {'ver':<4} retrieved -> cited")
     for r in rows:
         dec = "OK" if r["decision_ok"] else "WRONG"
         ret = "-" if r["ret_hit"] is None else ("hit" if r["ret_hit"] else "MISS")
         cite = "-" if r["cite_hit"] is None else ("hit" if r["cite_hit"] else "miss")
         con = "-" if r["contains_ok"] is None else ("ok" if r["contains_ok"] else "MISS")
+        ver = "-" if r["version_ok"] is None else ("ok" if r["version_ok"] else "MISS")
         aso = f" @{r['as_of']}" if r.get("as_of") else ""
-        print(f"{r['id']:<4} {r['category']:<11} {r['expected']:<7} {dec:<9} {ret:<4} {cite:<5} {con:<5} "
+        print(f"{r['id']:<4} {r['category']:<11} {r['expected']:<7} {dec:<9} {ret:<4} {cite:<5} {con:<5} {ver:<4} "
               f"{r['retrieved']} -> {r['cited']}{aso}")
     print("-" * 70)
     for k, v in summary.items():

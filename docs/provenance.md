@@ -32,3 +32,38 @@ Centrica / British Gas internal, confidential, or proprietary material.
 - Every page repeats a header note + running title; strip these during chunking (Phase 2)
   so they don't pollute retrieval.
 - Scope for v0: **electricity only** (gas noted for later).
+
+---
+
+## 2. Electricity Supply — SLCs, consolidated to 14 April 2022 (historic version)
+
+Ingested in Phase 6 (temporal / version awareness) as the **pre-reform** side of the
+Condition 28 (Prepayment Meters) text change of 8 November 2023.
+
+| Field | Value |
+|---|---|
+| **Local file** | `data/raw/electricity-supply-slc-consolidated-2022-04-14.pdf` |
+| **Document** | Standard conditions of the electricity supply licence (consolidated) |
+| **Issuer** | Ofgem / Gas and Electricity Markets Authority (Electricity Act 1989) |
+| **Consolidated to** | 14 April 2022 |
+| **Source URL** | https://www.ofgem.gov.uk/sites/default/files/2022-05/Electricity%20Supply%20Standard%20Consolidated%20Licence%20Conditions.pdf |
+| **Retrieved** | 2026-07-08 |
+| **Size / pages** | 3.2 MB · 550 pages |
+| **Format** | PDF, extractable text (verified via pypdf) |
+| **Licence / access** | Publicly available on Ofgem's website |
+
+**Notes:**
+- Same "not formal Public Register documents / should not be relied on" caveat as the
+  current version; used here for reproducibility of the historic text.
+- Verified: Condition 28's text is unchanged 3 Aug 2019 → 14 Apr 2022, so this snapshot
+  correctly represents the pre-reform text for the whole period up to 8 Nov 2023.
+
+## 3. Electricity Supply — SLCs, consolidated to 3 August 2019 (held, not yet ingested)
+
+| Field | Value |
+|---|---|
+| **Local file** | `data/raw/electricity-supply-slc-consolidated-2019-08-03.pdf` |
+| **Consolidated to** | 3 August 2019 |
+| **Size / pages** | 4.2 MB · 484 pages |
+| **Status** | On disk, **not ingested**. Condition 28 was unchanged 2019 → 2022, so v2022
+  already covers the pre-change period; retained for future text-change increments. |

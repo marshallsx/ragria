@@ -19,14 +19,15 @@ import re
 import sys
 from pathlib import Path
 
+try:  # works both as `src.*` and as `python src/chunk.py`
+    from src import versions
+except ImportError:
+    import versions
+
 ROOT = Path(__file__).resolve().parent.parent
-CACHE = ROOT / "data" / "interim" / "slc_pages.jsonl"
-OUT = ROOT / "data" / "interim" / "slc_chunks.jsonl"
+INTERIM = ROOT / "data" / "interim"
+OUT = INTERIM / "slc_chunks.jsonl"
 
-SOURCE_FILE = "electricity-supply-slc-consolidated-2025-08.pdf"
-DOC_TITLE = "Electricity Supply Standard Licence Conditions (consolidated to 1 August 2025)"
-
-BODY_START_PAGE = 7          # cover=1, ToC=2..6
 TARGET_WORDS = 175           # ~ under the 256-token embedder cap
 OVERLAP_WORDS = 25
 
@@ -53,19 +54,19 @@ def is_boiler(line: str) -> bool:
     return False
 
 
-def load_pages() -> list[dict]:
-    recs = [json.loads(x) for x in CACHE.read_text(encoding="utf-8").splitlines()]
+def load_pages(cache: Path) -> list[dict]:
+    recs = [json.loads(x) for x in cache.read_text(encoding="utf-8").splitlines()]
     return sorted(recs, key=lambda r: r["page"])
 
 
-def parse_conditions(pages: list[dict]) -> list[dict]:
+def parse_conditions(pages: list[dict], body_start: int) -> list[dict]:
     """Walk body lines, grouping text under the current Condition."""
     conditions: list[dict] = []
     cur = None
     section = None
 
     for rec in pages:
-        if rec["page"] < BODY_START_PAGE:
+        if rec["page"] < body_start:
             continue
         page = rec["page"]
         for raw_line in rec["text"].split("\n"):
@@ -113,7 +114,10 @@ def window(words: list[str], size: int, overlap: int):
         i += step
 
 
-def build_chunks(conditions: list[dict]) -> list[dict]:
+def build_chunks(conditions: list[dict], v: dict) -> list[dict]:
+    """Chunks for one held version `v`, tagged with its version metadata. Chunk ids
+    are namespaced by version (`<label>__cond<n>_<idx>`) so the same condition in
+    different versions never collides in the store."""
     chunks: list[dict] = []
     for c in conditions:
         text = " ".join(c["lines"]).strip()
@@ -123,11 +127,15 @@ def build_chunks(conditions: list[dict]) -> list[dict]:
         for idx, w in enumerate(window(words, TARGET_WORDS, OVERLAP_WORDS)):
             chunk_text = " ".join(w)
             chunks.append({
-                "id": f"cond{c['condition']}_{idx}",
+                "id": f"{v['label']}__cond{c['condition']}_{idx}",
                 "text": chunk_text,
                 "metadata": {
-                    "source": SOURCE_FILE,
-                    "doc_title": DOC_TITLE,
+                    "source": v["pdf"],
+                    "doc_title": v["doc_title"],
+                    "version_label": v["label"],
+                    "version_date": v["label"],           # ISO; label doubles as the date
+                    "source_authority": v["authority"],   # consolidated (reference) vs EPR (definitive)
+                    "url": v["url"],
                     "section": c["section"] or "",
                     "condition": c["condition"],
                     "condition_title": c["condition_title"],
@@ -141,33 +149,39 @@ def build_chunks(conditions: list[dict]) -> list[dict]:
 
 
 def main() -> int:
-    if not CACHE.exists():
-        print(f"ERROR: cache not found: {CACHE}. Run src/extract_pages.py first.", flush=True)
-        return 1
+    all_chunks: list[dict] = []
+    per_version: list[tuple[str, int, int]] = []
 
-    pages = load_pages()
-    conditions = parse_conditions(pages)
-    chunks = build_chunks(conditions)
+    for v in versions.VERSIONS:
+        cache = INTERIM / v["cache"]
+        if not cache.exists():
+            print(f"ERROR: cache not found: {cache}. Run src/extract_pages.py first.", flush=True)
+            return 1
+        pages = load_pages(cache)
+        conditions = parse_conditions(pages, v["body_start"])
+        chunks = build_chunks(conditions, v)
+        all_chunks.extend(chunks)
+        per_version.append((v["label"], len(conditions), len(chunks)))
 
     with OUT.open("w", encoding="utf-8") as f:
-        for ch in chunks:
+        for ch in all_chunks:
             f.write(json.dumps(ch, ensure_ascii=False) + "\n")
 
     # --- Stats for the verify gate ---
-    per_cond: dict[str, int] = {}
-    for ch in chunks:
-        per_cond[ch["metadata"]["condition"]] = per_cond.get(ch["metadata"]["condition"], 0) + 1
-    word_counts = [ch["metadata"]["n_words"] for ch in chunks]
-    multi = {k: v for k, v in per_cond.items() if v > 1}
-
+    word_counts = [ch["metadata"]["n_words"] for ch in all_chunks]
     print("--- CHUNKING DONE ---", flush=True)
-    print(f"conditions parsed : {len(conditions)}", flush=True)
-    print(f"chunks written    : {len(chunks)} -> {OUT.relative_to(ROOT)}", flush=True)
-    print(f"words/chunk       : min={min(word_counts)} max={max(word_counts)} "
+    for label, n_cond, n_chunk in per_version:
+        print(f"  {label}: {n_cond} conditions -> {n_chunk} chunks", flush=True)
+    print(f"total chunks written : {len(all_chunks)} -> {OUT.relative_to(ROOT)}", flush=True)
+    print(f"words/chunk          : min={min(word_counts)} max={max(word_counts)} "
           f"mean={sum(word_counts)//len(word_counts)}", flush=True)
-    print(f"conditions that sub-split (>1 chunk): {len(multi)}", flush=True)
-    top = sorted(multi.items(), key=lambda kv: kv[1], reverse=True)[:5]
-    print(f"  biggest: {top}", flush=True)
+
+    # Spot-check the demo condition (28) side by side across versions.
+    for label, _, _ in per_version:
+        c28 = [ch for ch in all_chunks
+               if ch["metadata"]["version_label"] == label and ch["metadata"]["condition"] == "28"]
+        chars = sum(len(ch["text"]) for ch in c28)
+        print(f"  Condition 28 @ {label}: {len(c28)} chunks, ~{chars} chars", flush=True)
     return 0
 
 
