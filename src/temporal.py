@@ -31,6 +31,17 @@ def fmt(d: date) -> str:
     return d.strftime("%d %B %Y").lstrip("0")
 
 
+# SINGLE SOURCE OF TRUTH for the CURRENT (latest held) version. "Current" is a role, not a
+# fixed date — when a newer consolidation is ingested, update this one place (or, once the
+# multi-version registry exists, derive it as the latest held version). Never reintroduce
+# "1 August 2025" literals elsewhere in the serving path.
+CURRENT_VERSION_DATE = date(2025, 8, 1)
+
+
+def current_version_str() -> str:
+    return fmt(CURRENT_VERSION_DATE)  # e.g. "1 August 2025"
+
+
 def existed(condition: str, as_of: date) -> bool | None:
     """True/False if the condition is mapped, else None (unmapped → unknown)."""
     m = MAPPED.get(condition)
@@ -47,8 +58,9 @@ def scope_note(as_of: date) -> str | None:
     mapped = ", ".join(f"Condition {c}" for c in sorted(MAPPED))
     return (
         f"IMPORTANT (historic query, as of {fmt(as_of)}): verified historical coverage exists "
-        f"ONLY for {mapped}. For ANY other condition, you have only its CURRENT (1 August 2025) "
-        f"text — you must NOT present that as the position as of {fmt(as_of)}. State plainly that "
+        f"ONLY for {mapped}. For ANY other condition, you have only its CURRENT "
+        f"({current_version_str()}) text — you must NOT present that as the position as of "
+        f"{fmt(as_of)}. State plainly that "
         f"you can only show the current text and cannot confirm whether it applied unchanged on "
         f"that date (the condition may have been modified since)."
     )

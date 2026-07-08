@@ -59,7 +59,8 @@ DISTANCE_FLOOR = 1.6
 load_dotenv(ROOT / ".env")
 
 SYSTEM = """You are a regulatory research assistant for the Ofgem Electricity Supply \
-Standard Licence Conditions (consolidated to 1 August 2025).
+Standard Licence Conditions. The current licence version and the as-of date are given in \
+the user message.
 
 You are given a user question and a set of numbered extracts retrieved from that \
 document. Each extract is labelled with its Condition number, title, and page range.
@@ -309,7 +310,10 @@ def answer_question(
 
     context = build_context(expand_hits(chunks, coll))
     notes = temporal.temporal_notes({c["meta"]["condition"] for c in chunks}, as_of)
-    parts = [f"As-of date: {temporal.fmt(as_of)}"]
+    parts = [
+        f"Current licence version: consolidated to {temporal.current_version_str()}.",
+        f"As-of date: {temporal.fmt(as_of)}",
+    ]
     scope = temporal.scope_note(as_of)
     if scope:
         parts.append(scope)

@@ -18,6 +18,7 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from src import temporal  # noqa: E402
 from src.rag import STORE, TOP_K, answer_question, get_client, get_collection  # noqa: E402
 
 # --- Public-demo safeguards ---
@@ -119,7 +120,8 @@ def _reserve_daily_slot() -> bool:
 st.title("⚡ Regulatory Intelligence Trusted Assistant (RITA)")
 st.caption(
     "**RITA** is a proof-of-concept, scoped to **Ofgem electricity supply licence "
-    "conditions** and grounded in the current consolidated version (1 August 2025). "
+    "conditions** and grounded in the current consolidated version "
+    f"({temporal.current_version_str()}). "
     "She can also answer **as of a past date** — pick a date and ask, and she'll tell you "
     "whether a given protection was in force then and when it was introduced — with historic "
     "coverage expanding condition by condition. Unlike a generic AI, RITA answers only from "
