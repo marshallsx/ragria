@@ -70,20 +70,24 @@
 - **Findings:** O4 vocabulary-gap false refusal → hybrid keyword+vector retrieval is the evidenced fix (deferred); Opus 4.8 justified by A/B (equal substance, cleaner citations)
 
 ## Phase 6 — Temporal / version awareness (electricity supply SLCs)
-**Status:** INCREMENT 2 BUILT & VERIFIED (text-CHANGE: Condition 28 Prepayment Meters + 0A
-Treating Non-Domestic Customers Fairly). Increment 1 (existence-boundary: 25E + 4D) also live.
-RITA answers "as of a past date" with the version of a condition's TEXT in force then: Cond 28
-serves pre-reform v2022 text before 8 Nov 2023 / post-reform v2025 after; Cond 0A serves the
-microbusiness-scope v2022 text before 1 Jul 2024 / the all-non-domestic v2025 text after —
-each stating the consolidation/effective date it relied on, and still flagging non-existence /
-unmapped conditions. Corpus holds two version-tagged consolidations (v2022 + v2025); "current"
-is derived as the latest held version (no hardcoded date anywhere). A **change-detector**
-(`src/detect_changes.py` → `docs/change-map.md`) classifies every condition across held
-snapshots so mapped conditions are chosen from DATA (0A came from it, mod-history confirmed).
-Eval **17/17** (decisions 17/17, retrieval 14/14, citations 14/14, content 7/7, version-swap
-4/4, 0 hallucinations). Next: more mapped conditions (11 single-change candidates buildable now,
-22 introduced); ingest v2019 for +17 pre-2022 text-change candidates; multi-change (e.g. SLC 47,
-confirmed volatile) once enough versions are held.
+**Status:** INCREMENT 2 BUILT & VERIFIED. RITA answers "as of a past date" with the version of a
+condition's TEXT in force then, across **three** mapped text-change conditions plus the two
+existence-boundary conditions (25E + 4D, increment 1):
+- **Cond 28 (Prepayment Meters)** — pre-reform v2022 before 8 Nov 2023 / post-reform v2025 after.
+- **Cond 0A (Treating Non-Domestic Customers Fairly)** — microbusiness-scope v2022 before 1 Jul
+  2024 / all-non-domestic v2025 after.
+- **Cond 21B (Billing based on meter readings)** — **v2019** before 31 Dec 2020 / v2025 after
+  (paragraph 21B.5A, smart-meter monthly billing; first mapping to serve v2019).
+Each states the consolidation/effective date it relied on, and still flags non-existence /
+unmapped conditions. Corpus holds **three** version-tagged consolidations (**v2019 + v2022 +
+v2025**); "current" is derived as the latest held version (no hardcoded date anywhere). A
+**change-detector** (`src/detect_changes.py` → `docs/change-map.md`) classifies every condition
+across held snapshots so mapped conditions are chosen from DATA (0A and 21B both came from it,
+mod-history confirmed; 28A was investigated and rejected — spent condition, immaterial change).
+Eval **19/19** (decisions 19/19, retrieval 16/16, citations 16/16, content 9/9, version-swap 6/6,
+0 hallucinations). Next: map more conditions (billing 31H, SoLR 8, more introduced), or add an
+"expired/ceased condition" category (e.g. 28A, spent 30 Jun 2021); multi-change (e.g. SLC 47,
+confirmed volatile) once enough intermediate versions are held.
 
 ### Correctness rule (non-negotiable)
 - Validity is PER CONDITION, and a mapped condition's timeline is CONTIGUOUS — no internal

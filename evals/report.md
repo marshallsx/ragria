@@ -116,28 +116,34 @@ date and a `expect_contains` content check (the introduction date must be surfac
 
 ## Phase 6 (increment 2) — temporal TEXT-CHANGE cases
 
-Two mapped text-change conditions, each with a verified single change and a held version on
-each side; RITA serves the version of a condition's text in force as of the date:
+Three mapped text-change conditions, each with a verified single change and a held version on
+each side; RITA serves the version of a condition's text in force as of the date. The corpus
+now holds **three** version-tagged consolidations (v2019 + v2022 + v2025):
 - **Condition 28 (Prepayment Meters)** — changed **8 Nov 2023** (involuntary-PPM Code of Practice).
 - **Condition 0A (Treating Non-Domestic Customers Fairly)** — changed **1 Jul 2024** (Non-Domestic
-  Market Review; scope expanded from microbusiness-only to all non-domestic customers). Chosen
-  from the change-detector (`src/detect_changes.py` → `docs/change-map.md`), mod-history confirmed.
+  Market Review; scope expanded from microbusiness-only to all non-domestic customers).
+- **Condition 21B (Billing based on meter readings)** — changed **31 Dec 2020** (Clean Energy
+  Package; inserted 21B.5A, smart-meter monthly billing info). Its **before** side is served from
+  the **v2019** consolidation — the first mapping to use v2019.
 
-Cases T4–T7 ask the **same** question before vs after each change; a deterministic
-`expect_version` check asserts which held version was served (independent of the model's prose).
+0A and 21B were both surfaced by the change-detector (`src/detect_changes.py` → `docs/change-map.md`)
+and confirmed against Ofgem's modification history before mapping.
 
-| Metric (17 cases total) | Result |
+Cases T4–T9 ask the **same** question before vs after each change; a deterministic `expect_version`
+check asserts which held version was served (independent of the model's prose).
+
+| Metric (19 cases total) | Result |
 |---|---|
-| Decision accuracy | 17/17 |
-| Retrieval hit-rate | 14/14 |
-| Citation hit-rate | 14/14 |
-| Temporal content checks | 7/7 |
-| **Version-swap checks** | **4/4** |
+| Decision accuracy | 19/19 |
+| Retrieval hit-rate | 16/16 |
+| Citation hit-rate | 16/16 |
+| Temporal content checks | 9/9 |
+| **Version-swap checks** | **6/6** |
 | Hallucinations | 0 |
 
-- T4 (prepayment 2021) → **v2022** pre-reform text; T5 (2024) → **v2025** involuntary-PPM text ✅
-- T6 (business fairness 2023) → **v2022** "Microbusiness" scope; T7 (2024) → **v2025** "Non-Domestic"
-  scope, states change effective "1 July 2024" ✅
+- T4 (prepayment 2021) → **v2022** pre-reform; T5 (2024) → **v2025** involuntary-PPM ✅
+- T6 (business fairness 2023) → **v2022** microbusiness scope; T7 (2024) → **v2025** all non-domestic ✅
+- T8 (meter billing 2020) → **v2019** (pre-21B.5A); T9 (2022) → **v2025** (states change "31 December 2020") ✅
 - All 13 prior cases unchanged — undated/current retrieval is filtered to the current version,
   so behaviour is byte-identical; historic text enters only via the deliberate swap.
 - **Citation normaliser** added: model-emitted `condition` refs are stripped of a stray

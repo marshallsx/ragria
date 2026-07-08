@@ -133,3 +133,24 @@
   expect_conditions: ["0A"]
   expect_version: "2025-08-01"
   expect_contains: "1 July 2024"
+
+# Condition 21B (Billing based on meter readings) changed on 31 Dec 2020 (Clean Energy
+# Package): inserted 21B.5A (smart-meter customers offered monthly billing info). The
+# BEFORE side is served from the v2019 consolidation - exercises the v2019 ingestion.
+- id: T8
+  category: Temporal
+  question: What billing information must a supplier provide to a domestic customer based on meter readings?
+  as_of: 2020-06-01
+  expected: answer
+  expect_conditions: ["21B"]
+  expect_version: "2019-08-03"
+  expect_contains: "3 August 2019"
+
+- id: T9
+  category: Temporal
+  question: What billing information must a supplier provide to a domestic customer based on meter readings?
+  as_of: 2022-06-01
+  expected: answer
+  expect_conditions: ["21B"]
+  expect_version: "2025-08-01"
+  expect_contains: "31 December 2020"

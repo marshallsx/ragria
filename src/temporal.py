@@ -38,6 +38,32 @@ MAPPED: dict[str, dict] = {
 # --- Text-change conditions. Segments are contiguous and gap-free by construction:
 # each [start, end) interval maps to the held version whose text applied then. ---
 TEXT_CHANGES: dict[str, dict] = {
+    "21B": {
+        "title": "Billing based on meter readings",
+        # Verified single change: paragraph 21B.5A inserted, effective 31 Dec 2020 (SI 2020/1401,
+        # Clean Energy Package transposition). Text then identical v2022 == v2025. The BEFORE side
+        # lives in v2019 - the first mapping to use the 2019 consolidation.
+        "earliest": date(2019, 8, 3),
+        "segments": [
+            {
+                "start": date(2019, 8, 3),
+                "end": date(2020, 12, 31),
+                "version": "2019-08-03",
+                "note": ("before paragraph 21B.5A was inserted - suppliers were not yet required to "
+                         "offer smart-meter (remote-reading) domestic customers monthly billing "
+                         "information based on actual consumption"),
+            },
+            {
+                "start": date(2020, 12, 31),
+                "end": None,  # open - current (text unchanged from v2022 through v2025)
+                "version": "2025-08-01",
+                "note": ("paragraph 21B.5A added (effective 31 December 2020, Clean Energy Package / "
+                         "Electricity Directive transposition): where a domestic customer has a meter "
+                         "with remote-reading enabled (a smart meter), the supplier must offer to "
+                         "provide monthly billing information based on actual consumption"),
+            },
+        ],
+    },
     "0A": {
         "title": "Treating Non-Domestic Customers Fairly",
         # Verified unchanged 2019-08-03 -> 2022-04-14 (detector I1 sim 1.0); single change

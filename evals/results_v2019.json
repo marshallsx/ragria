@@ -1,0 +1,483 @@
+{
+  "summary": {
+    "label": "v2019",
+    "model": "claude-opus-4-8",
+    "n": 19,
+    "decision_accuracy": "19/19",
+    "retrieval_hit_rate": "16/16",
+    "citation_hit_rate": "16/16",
+    "content_checks": "9/9",
+    "version_checks": "6/6",
+    "false_refusals": [],
+    "correct_refusals": [
+      "D1",
+      "D2",
+      "S4"
+    ],
+    "false_answers": []
+  },
+  "rows": [
+    {
+      "id": "O1",
+      "category": "Obligations",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "expect_conditions": [
+        "27"
+      ],
+      "retrieved": [
+        "27",
+        "27A",
+        "28AD",
+        "4D"
+      ],
+      "cited": [
+        "27"
+      ]
+    },
+    {
+      "id": "O2",
+      "category": "Obligations",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "expect_conditions": [
+        "26",
+        "28"
+      ],
+      "retrieved": [
+        "1",
+        "26",
+        "28"
+      ],
+      "cited": [
+        "26",
+        "28"
+      ]
+    },
+    {
+      "id": "O3",
+      "category": "Obligations",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "expect_conditions": [
+        "22C",
+        "23",
+        "31I"
+      ],
+      "retrieved": [
+        "22C",
+        "23",
+        "31I",
+        "7A"
+      ],
+      "cited": [
+        "22C",
+        "23",
+        "31I",
+        "7A"
+      ]
+    },
+    {
+      "id": "O4",
+      "category": "Obligations",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "expect_conditions": [
+        "21BA"
+      ],
+      "retrieved": [
+        "21BA",
+        "22",
+        "28AA",
+        "28AD",
+        "51"
+      ],
+      "cited": [
+        "21BA"
+      ]
+    },
+    {
+      "id": "D1",
+      "category": "Deadlines",
+      "expected": "refuse",
+      "as_of": null,
+      "refused": true,
+      "decision_ok": true,
+      "ret_hit": null,
+      "cite_hit": null,
+      "contains_ok": null,
+      "version_ok": null,
+      "expect_conditions": [],
+      "retrieved": [
+        "1",
+        "12.A",
+        "20",
+        "28",
+        "31G"
+      ],
+      "cited": []
+    },
+    {
+      "id": "D2",
+      "category": "Deadlines",
+      "expected": "refuse",
+      "as_of": null,
+      "refused": true,
+      "decision_ok": true,
+      "ret_hit": null,
+      "cite_hit": null,
+      "contains_ok": null,
+      "version_ok": null,
+      "expect_conditions": [],
+      "retrieved": [
+        "24",
+        "28AA",
+        "31F",
+        "34",
+        "41"
+      ],
+      "cited": []
+    },
+    {
+      "id": "S1",
+      "category": "Smoke",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "expect_conditions": [
+        "21BA"
+      ],
+      "retrieved": [
+        "1",
+        "21BA",
+        "22",
+        "27",
+        "37"
+      ],
+      "cited": [
+        "21BA"
+      ]
+    },
+    {
+      "id": "S2",
+      "category": "Smoke",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "expect_conditions": [
+        "14",
+        "14A"
+      ],
+      "retrieved": [
+        "14",
+        "14A",
+        "24",
+        "31F"
+      ],
+      "cited": [
+        "14",
+        "14A",
+        "24"
+      ]
+    },
+    {
+      "id": "S3",
+      "category": "Smoke",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "expect_conditions": [
+        "0",
+        "26",
+        "31G"
+      ],
+      "retrieved": [
+        "0",
+        "31G"
+      ],
+      "cited": [
+        "0",
+        "31G"
+      ]
+    },
+    {
+      "id": "S4",
+      "category": "Smoke",
+      "expected": "refuse",
+      "as_of": null,
+      "refused": true,
+      "decision_ok": true,
+      "ret_hit": null,
+      "cite_hit": null,
+      "contains_ok": null,
+      "version_ok": null,
+      "expect_conditions": [],
+      "retrieved": [
+        "28",
+        "31F",
+        "33",
+        "41",
+        "48",
+        "59"
+      ],
+      "cited": []
+    },
+    {
+      "id": "T1",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2021-06-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": null,
+      "expect_conditions": [
+        "4D"
+      ],
+      "retrieved": [
+        "30",
+        "4D"
+      ],
+      "cited": [
+        "30",
+        "4D"
+      ]
+    },
+    {
+      "id": "T2",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2022-01-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": null,
+      "expect_conditions": [
+        "25E"
+      ],
+      "retrieved": [
+        "25E",
+        "37",
+        "59"
+      ],
+      "cited": [
+        "25E"
+      ]
+    },
+    {
+      "id": "T3",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": null,
+      "expect_conditions": [
+        "4D"
+      ],
+      "retrieved": [
+        "1",
+        "4D"
+      ],
+      "cited": [
+        "4D"
+      ]
+    },
+    {
+      "id": "T4",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2021-06-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": true,
+      "expect_conditions": [
+        "28"
+      ],
+      "retrieved": [
+        "12",
+        "25B",
+        "27A",
+        "28"
+      ],
+      "cited": [
+        "28"
+      ]
+    },
+    {
+      "id": "T5",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2024-06-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": true,
+      "expect_conditions": [
+        "28"
+      ],
+      "retrieved": [
+        "12",
+        "25B",
+        "27A",
+        "28"
+      ],
+      "cited": [
+        "25B",
+        "27A",
+        "28"
+      ]
+    },
+    {
+      "id": "T6",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2023-06-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": true,
+      "expect_conditions": [
+        "0A"
+      ],
+      "retrieved": [
+        "0",
+        "0A",
+        "12.A",
+        "14",
+        "19D",
+        "42"
+      ],
+      "cited": [
+        "0A"
+      ]
+    },
+    {
+      "id": "T7",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2024-09-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": true,
+      "expect_conditions": [
+        "0A"
+      ],
+      "retrieved": [
+        "0",
+        "0A",
+        "12.A",
+        "14",
+        "19D",
+        "42"
+      ],
+      "cited": [
+        "0A"
+      ]
+    },
+    {
+      "id": "T8",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2020-06-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": true,
+      "expect_conditions": [
+        "21B"
+      ],
+      "retrieved": [
+        "21B",
+        "25B",
+        "26",
+        "31H"
+      ],
+      "cited": [
+        "21B"
+      ]
+    },
+    {
+      "id": "T9",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2022-06-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": true,
+      "expect_conditions": [
+        "21B"
+      ],
+      "retrieved": [
+        "21B",
+        "25B",
+        "26",
+        "31H"
+      ],
+      "cited": [
+        "21B"
+      ]
+    }
+  ]
+}

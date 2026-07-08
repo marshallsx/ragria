@@ -43,6 +43,7 @@ _CCB_Q = "Do suppliers have to protect domestic customer credit balances?"
 _EBSS_Q = "Can the Secretary of State direct suppliers to make Energy Bill Support Scheme payments?"
 _PPM_Q = "What protections apply when a supplier installs a prepayment meter?"
 _NDF_Q = "What fair-treatment obligations do suppliers have towards business customers?"
+_BMR_Q = "What billing information must a supplier provide to a domestic customer based on meter readings?"
 TEMPORAL_GROUPS = [
     {
         "heading": "Was this protection in force yet?",
@@ -56,10 +57,12 @@ TEMPORAL_GROUPS = [
     },
     {
         "heading": "Same rule, stronger protections over time",
-        "sub": "the wording was expanded - RITA serves the version in force on the date",
+        "sub": "a new obligation was added - RITA serves the version in force on the date",
         "examples": [
             ("Prepayment · 2021", _PPM_Q, date(2021, 6, 1)),  # before Cond 28 text change (8 Nov 2023)
             ("Prepayment · 2024", _PPM_Q, date(2024, 6, 1)),  # after - involuntary-PPM protections
+            ("Meter billing · 2020", _BMR_Q, date(2020, 6, 1)),  # before Cond 21B 21B.5A (31 Dec 2020)
+            ("Meter billing · 2022", _BMR_Q, date(2022, 6, 1)),  # after - smart-meter monthly billing info
         ],
     },
     {

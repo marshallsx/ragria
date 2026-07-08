@@ -6,18 +6,26 @@ Single source of truth for the consolidated licence versions we have INGESTED.
 so ingesting a newer consolidation later is a one-line change (add an entry) and
 everything downstream (temporal facts, retrieval filter, UI caption) follows.
 
-Each version is a dated Ofgem consolidation. We hold two that bracket the
-Condition 28 (Prepayment Meters) text change of 8 November 2023:
-  - v2022 (14 Apr 2022) — the pre-reform text
-  - v2025 (1 Aug 2025)  — the current, post-reform text
-v2019 (3 Aug 2019) is on disk but not yet ingested (Condition 28 was unchanged
-2019→2022, so v2022 already covers the whole pre-change period).
+Each version is a dated Ofgem consolidation. We hold three:
+  - v2019 (3 Aug 2019)  — earliest; opens up pre-2022 (2019→2022) text-change conditions
+  - v2022 (14 Apr 2022) — pre-reform side of the Condition 28 / 0A changes
+  - v2025 (1 Aug 2025)  — the current text (derived as CURRENT)
 """
 from __future__ import annotations
 
 from datetime import date
 
 VERSIONS: list[dict] = [
+    {
+        "label": "2019-08-03",
+        "date": date(2019, 8, 3),
+        "pdf": "electricity-supply-slc-consolidated-2019-08-03.pdf",
+        "cache": "slc_pages_2019-08-03.jsonl",
+        "doc_title": "Electricity Supply Standard Licence Conditions (consolidated to 3 August 2019)",
+        "authority": "consolidated",
+        "url": "https://www.ofgem.gov.uk/sites/default/files/docs/2020/07/electricity_supply_standard_license_conditions.pdf",
+        "body_start": 7,  # cover=1, ToC=2..6 (same front-matter structure as v2022/v2025)
+    },
     {
         "label": "2022-04-14",
         "date": date(2022, 4, 14),

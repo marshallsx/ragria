@@ -58,12 +58,24 @@ Condition 28 (Prepayment Meters) text change of 8 November 2023.
 - Verified: Condition 28's text is unchanged 3 Aug 2019 → 14 Apr 2022, so this snapshot
   correctly represents the pre-reform text for the whole period up to 8 Nov 2023.
 
-## 3. Electricity Supply — SLCs, consolidated to 3 August 2019 (held, not yet ingested)
+## 3. Electricity Supply — SLCs, consolidated to 3 August 2019 (historic version)
+
+Ingested to open up **pre-2022** text-change conditions (those that changed between the
+3 Aug 2019 and 14 Apr 2022 consolidations).
 
 | Field | Value |
 |---|---|
 | **Local file** | `data/raw/electricity-supply-slc-consolidated-2019-08-03.pdf` |
+| **Document** | Standard conditions of the electricity supply licence (consolidated) |
+| **Issuer** | Ofgem / Gas and Electricity Markets Authority (Electricity Act 1989) |
 | **Consolidated to** | 3 August 2019 |
+| **Source URL** | https://www.ofgem.gov.uk/sites/default/files/docs/2020/07/electricity_supply_standard_license_conditions.pdf |
+| **Retrieved** | 2026-07-08 |
 | **Size / pages** | 4.2 MB · 484 pages |
-| **Status** | On disk, **not ingested**. Condition 28 was unchanged 2019 → 2022, so v2022
-  already covers the pre-change period; retained for future text-change increments. |
+| **Format** | PDF, extractable text (verified via pypdf) |
+| **Licence / access** | Publicly available on Ofgem's website |
+
+**Notes:**
+- Same "not formal Public Register documents / should not be relied on" caveat as the
+  other consolidations; used for reproducibility of the historic text.
+- Ingested as version-tagged chunks alongside v2022 and v2025 (89 conditions → 918 chunks).
