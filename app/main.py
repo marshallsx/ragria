@@ -35,7 +35,7 @@ EXAMPLES = [
     ("Out of scope ↩", "What safety certifications are required to install a domestic gas boiler?"),
 ]
 
-st.set_page_config(page_title="Regulatory Intelligence Assistant (RIA)", page_icon="⚡", layout="centered")
+st.set_page_config(page_title="Regulatory Intelligence Trusted Assistant (RITA)", page_icon="⚡", layout="centered")
 
 # Make the Anthropic key available whether it's in a local .env (dev — handled by
 # rag.py's load_dotenv) or in Streamlit Cloud secrets (deploy). Belt-and-braces so the
@@ -115,11 +115,15 @@ def _reserve_daily_slot() -> bool:
 
 
 # --- Header ---
-st.title("⚡ Regulatory Intelligence Assistant (RIA)")
+st.title("⚡ Regulatory Intelligence Trusted Assistant (RITA)")
 st.caption(
-    "Grounded in **public Ofgem Electricity Supply Standard Licence Conditions**, "
-    "consolidated to 1 August 2025. Answers come only from the source text, with "
-    "citations — and the assistant refuses when the answer isn't there. "
+    "**RITA** is a proof-of-concept, scoped to **Ofgem electricity supply licence "
+    "conditions** and grounded in the current consolidated version (1 August 2025). "
+    "Her defining goal is to answer against **historic versions** too — so you can ask "
+    "what the rules were *as of any given date* — on the way to covering the wider Ofgem "
+    "regulatory landscape. Unlike a generic AI, RITA answers only from the licence text "
+    "itself: when the answer isn't there she tells you plainly rather than inventing "
+    "(hallucinating) one, and every answer she gives is backed by specific citations. "
     "_Informational only — not legal advice._"
 )
 
@@ -148,7 +152,7 @@ question = st.text_input(
     "Your question", key="question", max_chars=MAX_QUESTION_CHARS,
     placeholder="e.g. When can a supplier disconnect a domestic customer?",
 )
-ask = st.button("Ask", type="primary")
+ask = st.button("Ask RITA", type="primary")
 
 if ask and question.strip():
     # Per-session cap (Layer 1)
