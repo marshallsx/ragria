@@ -94,5 +94,25 @@ viable on substance if cost ever dominates, ideally after the schema improvement
 4. **Eval set is small (10 cases).** 10/10 is a strong signal, not proof — expand the
    taxonomy to stress more conditions and more paraphrase variants.
 
+## Phase 6 — temporal ("as of date") cases
+
+Three temporal cases added (T1–T3), existence-boundary for the two mapped conditions
+(25E introduced 24 Sep 2022; 4D introduced 20 Sep 2023). The runner passes an `as_of`
+date and a `expect_contains` content check (the introduction date must be surfaced).
+
+| Metric (13 cases total) | Result |
+|---|---|
+| Decision accuracy | 13/13 |
+| Retrieval hit-rate | 10/10 |
+| Citation hit-rate | 10/10 |
+| Temporal content checks | 3/3 |
+| Hallucinations | 0 |
+
+- T1 (4D as of 2021) / T2 (25E as of 2022) → "did not exist… introduced [date]" ✅
+- T3 (4D today) → current text + introduction date ✅
+- The 10 non-temporal cases are unchanged (the temporal layer is invisible when undated).
+- Unmapped condition at a past date → RITA states it can only show the current text and
+  cannot confirm the historic position (verified by hand; not a graded case).
+
 ## Artefacts
-`evals/cases.yaml` · `evals/run_evals.py` · `evals/results_{baseline,postfix,haiku,hybrid}.json`
+`evals/cases.yaml` · `evals/run_evals.py` · `evals/results_{baseline,postfix,haiku,hybrid,temporal}.json`

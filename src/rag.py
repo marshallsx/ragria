@@ -310,6 +310,9 @@ def answer_question(
     context = build_context(expand_hits(chunks, coll))
     notes = temporal.temporal_notes({c["meta"]["condition"] for c in chunks}, as_of)
     parts = [f"As-of date: {temporal.fmt(as_of)}"]
+    scope = temporal.scope_note(as_of)
+    if scope:
+        parts.append(scope)
     if notes:
         parts.append("Temporal facts (authoritative):\n" + "\n".join(f"- {n}" for n in notes))
     parts.append(f"Question: {question}")

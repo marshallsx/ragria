@@ -39,6 +39,21 @@ def existed(condition: str, as_of: date) -> bool | None:
     return as_of >= m["introduced"]
 
 
+def scope_note(as_of: date) -> str | None:
+    """For a PAST date, state which conditions have verified history and require the model
+    to caveat all others (so current text is never passed off as the historic position)."""
+    if as_of >= date.today():
+        return None
+    mapped = ", ".join(f"Condition {c}" for c in sorted(MAPPED))
+    return (
+        f"IMPORTANT (historic query, as of {fmt(as_of)}): verified historical coverage exists "
+        f"ONLY for {mapped}. For ANY other condition, you have only its CURRENT (1 August 2025) "
+        f"text — you must NOT present that as the position as of {fmt(as_of)}. State plainly that "
+        f"you can only show the current text and cannot confirm whether it applied unchanged on "
+        f"that date (the condition may have been modified since)."
+    )
+
+
 def temporal_notes(conditions: set[str], as_of: date) -> list[str]:
     """Plain facts for each mapped condition among the retrieved ones, given the date."""
     notes = []

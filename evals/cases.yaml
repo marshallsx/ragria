@@ -65,3 +65,28 @@
   question: What safety certifications are required to install a domestic gas boiler?
   expected: refuse
   expect_conditions: []
+
+# Temporal (Phase 6) — existence-boundary. `as_of` sets the date; `expect_contains`
+# checks the introduction date is surfaced (i.e. the temporal fact was used).
+- id: T1
+  category: Temporal
+  question: Do suppliers have to protect or ringfence domestic customer credit balances?
+  as_of: 2021-06-01
+  expected: answer
+  expect_conditions: ["4D"]
+  expect_contains: "20 September 2023"
+
+- id: T2
+  category: Temporal
+  question: Can the Secretary of State direct suppliers to make Energy Bill Support Scheme payments?
+  as_of: 2022-01-01
+  expected: answer
+  expect_conditions: ["25E"]
+  expect_contains: "24 September 2022"
+
+- id: T3
+  category: Temporal
+  question: Do suppliers have to protect domestic customer credit balances?
+  expected: answer
+  expect_conditions: ["4D"]
+  expect_contains: "20 September 2023"

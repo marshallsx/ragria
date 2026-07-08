@@ -144,12 +144,14 @@ NEVER present superseded text as current.
     requires …"), and invite a precise date.
 - Extract the date/period from the question (LLM); if none, use the picker (default today).
 
-### Verify gate (4D + 25E — existence boundary)
-- [ ] "25E / 4D as of a date BEFORE its introduction" → "did not exist in the licence as of
-      that date; introduced [date]" (correct for the whole pre-introduction period).
-- [ ] "25E / 4D as of today" → the current text + introduction/effective date cited.
-- [ ] A current-date query answers from v2025 (current), never a superseded version.
-- [ ] A dated query on an UNMAPPED condition → RITA refuses / says it can't date that yet.
+### Verify gate (4D + 25E — existence boundary) ✅ PASSED
+- [x] "25E / 4D as of a date BEFORE its introduction" → "did not exist… introduced [date]"
+      (evals T1/T2 + CLI).
+- [x] "25E / 4D as of today" → current text + introduction date (eval T3 + CLI).
+- [x] Current-date / undated query answers from current, never superseded (10/10 evals unchanged).
+- [x] Dated query on an UNMAPPED condition → RITA flags it can only show the CURRENT text and
+      cannot confirm the historic position (honest caveat, not current-as-historic).
+- Full eval: 13/13 decisions, 10/10 retrieval + citation, 3/3 temporal content, 0 hallucinations.
 
 ### Build steps (existence-boundary increment — tick as we go)
 - [x] Pin 4D's exact introduction date — **20 Sep 2023** (Decision OFG1163 pub 26 Jul 2023
@@ -161,8 +163,10 @@ NEVER present superseded text as current.
       pre-existence → "did not exist / introduced [date]"; straddling period → both states;
       unmapped conditions not asserted for past dates). CLI-verified for 25E & 4D.
 - [x] UI "⏳ As of date" picker (default today, max today) + historic-date banner.
-- [ ] Verify gate (25E + 4D existence boundary) + temporal eval cases.
-- [ ] Flip public copy to present tense once real.
+- [x] Verify gate (25E + 4D existence boundary) + temporal eval cases (T1–T3; 13/13 overall).
+- [x] Scope note: unmapped condition at a past date → caveat "current text only, historic
+      position not confirmed" (never presents current text as historic).
+- [ ] Flip public copy to present tense once real (propose wording to Scott).
 - Deferred: ingest v2019/v2022 historic TEXT — only needed for text-CHANGE conditions (e.g.
   SLC 47 later); the existence-boundary demo doesn't need it (25E/4D didn't exist then).
 
