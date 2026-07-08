@@ -39,10 +39,13 @@ EXAMPLES = [
 
 # Temporal examples set the question AND a past "as of" date to showcase the time travel.
 # The same credit-balances question at 2021 vs 2024 is the striking before/after.
+_CCB_Q = "Do suppliers have to protect domestic customer credit balances?"
+_EBSS_Q = "Can the Secretary of State direct suppliers to make Energy Bill Support Scheme payments?"
 TEMPORAL_EXAMPLES = [
-    ("Credit balances · 2021", "Do suppliers have to protect domestic customer credit balances?", date(2021, 6, 1)),
-    ("Credit balances · 2024", "Do suppliers have to protect domestic customer credit balances?", date(2024, 6, 1)),
-    ("Energy Bill Support · 2022", "Can the Secretary of State direct suppliers to make Energy Bill Support Scheme payments?", date(2022, 1, 1)),
+    ("Credit balances · 2021", _CCB_Q, date(2021, 6, 1)),      # before 4D (introduced 20 Sep 2023)
+    ("Credit balances · 2024", _CCB_Q, date(2024, 6, 1)),      # after
+    ("EBSS 2022", _EBSS_Q, date(2022, 1, 1)),  # before 25E (introduced 24 Sep 2022)
+    ("EBSS 2023", _EBSS_Q, date(2023, 6, 1)),  # after
 ]
 
 st.set_page_config(page_title="Regulatory Intelligence Trusted Assistant (RITA)", page_icon="⚡", layout="centered")
@@ -161,12 +164,14 @@ for start in range(0, len(EXAMPLES), PER_ROW):
             st.session_state.question = q
             st.session_state.as_of = date.today()  # current-position examples
 
-st.write("**…or a historic “as of date” question:**")
-tcols = st.columns(len(TEMPORAL_EXAMPLES))
-for col, (label, q, d) in zip(tcols, TEMPORAL_EXAMPLES):
-    if col.button(label, help=f"{q}  —  as of {d.strftime('%d %b %Y').lstrip('0')}", use_container_width=True):
-        st.session_state.question = q
-        st.session_state.as_of = d  # sets both question and the date picker
+st.write("**…or a historic “as of date” question — same question, before vs after it existed:**")
+T_PER_ROW = 2  # each row = one condition's before/after
+for start in range(0, len(TEMPORAL_EXAMPLES), T_PER_ROW):
+    tcols = st.columns(T_PER_ROW)
+    for col, (label, q, d) in zip(tcols, TEMPORAL_EXAMPLES[start : start + T_PER_ROW]):
+        if col.button(label, help=f"{q}  —  as of {d.strftime('%d %b %Y').lstrip('0')}", use_container_width=True):
+            st.session_state.question = q
+            st.session_state.as_of = d  # sets both question and the date picker
 
 # --- Question input ---
 question = st.text_input(
