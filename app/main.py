@@ -38,17 +38,38 @@ EXAMPLES = [
 ]
 
 # Temporal examples set the question AND a past "as of" date to showcase the time travel.
-# The same credit-balances question at 2021 vs 2024 is the striking before/after.
+# Grouped into the three kinds of change RITA can answer across, each with its own heading.
 _CCB_Q = "Do suppliers have to protect domestic customer credit balances?"
 _EBSS_Q = "Can the Secretary of State direct suppliers to make Energy Bill Support Scheme payments?"
 _PPM_Q = "What protections apply when a supplier installs a prepayment meter?"
-TEMPORAL_EXAMPLES = [
-    ("Credit balances · 2021", _CCB_Q, date(2021, 6, 1)),      # before 4D (introduced 20 Sep 2023)
-    ("Credit balances · 2024", _CCB_Q, date(2024, 6, 1)),      # after
-    ("EBSS 2022", _EBSS_Q, date(2022, 1, 1)),  # before 25E (introduced 24 Sep 2022)
-    ("EBSS 2023", _EBSS_Q, date(2023, 6, 1)),  # after
-    ("Prepayment · 2021", _PPM_Q, date(2021, 6, 1)),  # before Condition 28 text change (8 Nov 2023)
-    ("Prepayment · 2024", _PPM_Q, date(2024, 6, 1)),  # after — involuntary-PPM protections
+_NDF_Q = "What fair-treatment obligations do suppliers have towards business customers?"
+TEMPORAL_GROUPS = [
+    {
+        "heading": "Was this protection in force yet?",
+        "sub": "a rule that was introduced later - RITA says whether it existed then and when it came in",
+        "examples": [
+            ("Credit balances · 2021", _CCB_Q, date(2021, 6, 1)),  # before 4D (introduced 20 Sep 2023)
+            ("Credit balances · 2024", _CCB_Q, date(2024, 6, 1)),  # after
+            ("EBSS 2022", _EBSS_Q, date(2022, 1, 1)),              # before 25E (introduced 24 Sep 2022)
+            ("EBSS 2023", _EBSS_Q, date(2023, 6, 1)),              # after
+        ],
+    },
+    {
+        "heading": "Same rule, stronger protections over time",
+        "sub": "the wording was expanded - RITA serves the version in force on the date",
+        "examples": [
+            ("Prepayment · 2021", _PPM_Q, date(2021, 6, 1)),  # before Cond 28 text change (8 Nov 2023)
+            ("Prepayment · 2024", _PPM_Q, date(2024, 6, 1)),  # after - involuntary-PPM protections
+        ],
+    },
+    {
+        "heading": "Same rule, wider coverage over time",
+        "sub": "who it protects was broadened - RITA serves the version in force on the date",
+        "examples": [
+            ("Business fairness · 2023", _NDF_Q, date(2023, 6, 1)),  # before 0A change (1 Jul 2024): microbusiness only
+            ("Business fairness · 2025", _NDF_Q, date(2025, 1, 1)),  # after - all non-domestic customers
+        ],
+    },
 ]
 
 st.set_page_config(page_title="Regulatory Intelligence Trusted Assistant (RITA)", page_icon="⚡", layout="centered")
@@ -168,14 +189,17 @@ for start in range(0, len(EXAMPLES), PER_ROW):
             st.session_state.question = q
             st.session_state.as_of = date.today()  # current-position examples
 
-st.write("**…or a historic “as of date” question - same question, before vs after a change:**")
+st.write("**…or ask a historic “as of date” question - the same question answered at different dates. "
+         "RITA handles three kinds of change:**")
 T_PER_ROW = 2  # each row = one condition's before/after
-for start in range(0, len(TEMPORAL_EXAMPLES), T_PER_ROW):
-    tcols = st.columns(T_PER_ROW)
-    for col, (label, q, d) in zip(tcols, TEMPORAL_EXAMPLES[start : start + T_PER_ROW]):
-        if col.button(label, help=f"{q}  -  as of {d.strftime('%d %b %Y').lstrip('0')}", use_container_width=True):
-            st.session_state.question = q
-            st.session_state.as_of = d  # sets both question and the date picker
+for group in TEMPORAL_GROUPS:
+    st.markdown(f"**{group['heading']}**  \n_{group['sub']}_")
+    for start in range(0, len(group["examples"]), T_PER_ROW):
+        tcols = st.columns(T_PER_ROW)
+        for col, (label, q, d) in zip(tcols, group["examples"][start : start + T_PER_ROW]):
+            if col.button(label, help=f"{q}  -  as of {d.strftime('%d %b %Y').lstrip('0')}", use_container_width=True):
+                st.session_state.question = q
+                st.session_state.as_of = d  # sets both question and the date picker
 
 # --- Question input ---
 question = st.text_input(
