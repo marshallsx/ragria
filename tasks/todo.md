@@ -69,10 +69,111 @@
 - **Verify:** ✅ runner runs clean; ✅ report reflects real behaviour (0 hallucinations, 3/3 correct refusals, O4 the sole false refusal)
 - **Findings:** O4 vocabulary-gap false refusal → hybrid keyword+vector retrieval is the evidenced fix (deferred); Opus 4.8 justified by A/B (equal substance, cleaner citations)
 
-## Phase 6 — (Later) Temporal / version awareness
-- [ ] Capture version + effective date per chunk
-- [ ] Support "as of date X" queries; never cite a superseded version
-- *Out of scope for v0 — the moat, built once fundamentals are solid.*
+## Phase 6 — Temporal / version awareness (electricity supply SLCs)
+**Status:** PLANNING — sign-off required before any code. The differentiator: answer
+"as of date X" from the version in force at X, cite version + effective dates, and
+NEVER present superseded text as current.
+
+### Correctness rule (non-negotiable)
+- Validity is PER CONDITION, and a mapped condition's timeline is CONTIGUOUS — no internal
+  gaps. A condition is in force for its whole life; the only question is which TEXT applied
+  on date X. We only map conditions whose change history we can make gap-free.
+- REFUSAL applies only to genuinely-unknown territory: dates before our earliest knowledge,
+  the future, or conditions we have NOT mapped — never a hole inside a mapped condition's life.
+- The cleanest gap-free case is an INTRODUCED condition (an "existence boundary"): it did
+  not exist before its introduction date, and exists after — inherently single-event, and
+  correct for the entire pre-introduction period with no intermediate versions to hold.
+- Why per-condition, not per-version: a whole-version "nothing changed yet" window is tiny
+  (Ofgem modified the supply licence constantly), so almost every date would refuse.
+
+### Scope — AGREED: per-condition, scoped to two clean INTRODUCED conditions
+- HELD VERSIONS (3 real consolidations; all-conditions TEXT ingested so RITA has the body):
+  v2019 (3 Aug 2019), v2022 (14 Apr 2022), v2025 (1 Aug 2025, current).
+- DEMO CONDITIONS (dated guarantee) — both introduced after 2022, verified absent in v2019
+  & v2022, present in v2025 (existence-boundary demo):
+  - **25E — Power to direct Energy Bill Support Scheme Payments** — introduced 24 Sep 2022.
+  - **4D — Protecting Domestic Customer Credit Balances** — introduced ~Jun 2023 (exact date TBC).
+- SLC 47 DEFERRED: verified too volatile (multiple MHHS rewrites 2019→2025; would need many
+  intermediate versions for a gap-free timeline). Revisit later as "scale-by-data" work.
+- Conditions NOT mapped: undated/current answers only; a dated query REFUSES.
+- Electricity **supply** SLCs only. No gas.
+- DEFAULT BEHAVIOUR: a question with NO date is always answered **as of today** (= the
+  current version, v2025) — exactly as RITA behaves now. The "as of date" picker defaults
+  to today; supplying an EARLIER date is the only thing that triggers historic resolution.
+  So existing (undated) usage and evals are unchanged.
+
+### Data — sources (downloaded to data/raw/, gitignored)
+- Consolidations (readable body text): v2019 (3 Aug 2019, 484pp), v2022 (14 Apr 2022,
+  550pp), v2025 (1 Aug 2025, 611pp). Consolidated PDFs labelled "not to be relied on".
+- 25E introduction: effective **24 Sep 2022** (EBSS supplier licence decision notice).
+- 4D introduction: ~**Jun 2023** (Strengthening Financial Resilience; FRP modified 1 Jun
+  2023) — pin exact effective date from the modification notice before/at build.
+- Authoritative effective dates: Ofgem modification notices / EPR (epr.ofgem.gov.uk).
+- Note: 4D had minor errata (Sep 2023, Jul 2024) — corrections; existence-boundary demo is
+  correct regardless. Holding errata versions is later refinement.
+
+### Metadata per chunk (add to existing schema)
+- `version_label` (e.g. `2019-08-03` / `2022-04-14` / `2025-08-01`) + `version_date`.
+- `source_authority` — consolidated (reference) vs EPR (definitive); upgradable field.
+- `url`.
+- Per-mapped-condition timeline held alongside (e.g. 25E: did not exist before 2022-09-24,
+  in force from 2022-09-24) — maps "as of date X" → "did not exist" / the held in-force
+  text; unmapped conditions REFUSE on a dated query.
+
+### Retrieval — "as of date X" (per condition)
+- For a verified condition, resolve the held version carrying its in-force text at X; if
+  none is held for X → REFUSE.
+- Restrict retrieval (vector + BM25 + neighbour expansion) to that version's chunks, then
+  answer + cite the version + the condition's effective range.
+- Non-verified condition + a date supplied → REFUSE (no dated guarantee yet).
+- Undated / default = current version (v2025).
+
+### UI
+- "As of date" picker (default = today).
+- Banner showing which version answered + its effective range; explicit uncertainty state
+  when the date isn't covered.
+
+### Date interpretation — imprecise / ambiguous dates (never guess a side)
+- Precise date (picker) → resolve directly (the picker exists precisely to be unambiguous).
+- A period mentioned in the question (e.g. "in 2022") is resolved against the queried
+  condition's change points:
+  - wholly on ONE side of every change → answer for that single state (e.g. "in 2021" for
+    25E → did not exist all year);
+  - STRADDLES a change/introduction boundary → do NOT pick a side. Surface the boundary and
+    give BOTH states (e.g. "25E was introduced 24 Sep 2022: before → didn't exist; from →
+    requires …"), and invite a precise date.
+- Extract the date/period from the question (LLM); if none, use the picker (default today).
+
+### Verify gate (4D + 25E — existence boundary)
+- [ ] "25E / 4D as of a date BEFORE its introduction" → "did not exist in the licence as of
+      that date; introduced [date]" (correct for the whole pre-introduction period).
+- [ ] "25E / 4D as of today" → the current text + introduction/effective date cited.
+- [ ] A current-date query answers from v2025 (current), never a superseded version.
+- [ ] A dated query on an UNMAPPED condition → RITA refuses / says it can't date that yet.
+
+### Build steps (after sign-off — tick as we go)
+- [ ] Pin 4D's exact introduction effective date from the modification notice.
+- [ ] Version-config-driven ingestion; parse + version-tag v2019, v2022, v2025 (all-conditions
+      text, version-scoped chunk ids). Verify each parses cleanly.
+- [ ] Per-condition timelines for mapped conditions (25E introduced 2022-09-24; 4D ~2023-06).
+      Date resolver: pre-introduction → "did not exist"; on/after → current text; unmapped
+      condition + a date → refuse.
+- [ ] UI "as of date" picker + banner ("in force since…" / "did not exist as of X" /
+      "can't date that condition yet").
+- [ ] Version/date-aware prompt + citations (cite condition + introduction/effective date).
+- [ ] Verify gate (4D + 25E existence boundary) + temporal eval cases.
+- [ ] Flip public copy to present tense once real.
+
+### Resolved decisions
+- Validity: PER CONDITION, contiguous (no internal gaps); refusal only outside covered
+  period / unmapped conditions. ✅
+- Demo conditions: 25E (introduced 24 Sep 2022) + 4D (introduced ~Jun 2023), existence
+  boundary. SLC 47 deferred (too volatile). ✅
+- Held versions: v2019, v2022, v2025 (all-conditions text, version-tagged). ✅
+- Default: no date ⇒ answered as of TODAY (current version, v2025) — unchanged behaviour. ✅
+
+### Remaining to confirm (data — before build)
+- Pin 4D's exact introduction effective date (from the modification notice).
 
 ---
 
