@@ -10,6 +10,7 @@ Run: streamlit run app/main.py
 """
 import os
 import sys
+from datetime import date
 from pathlib import Path
 
 import streamlit as st
@@ -152,6 +153,10 @@ question = st.text_input(
     "Your question", key="question", max_chars=MAX_QUESTION_CHARS,
     placeholder="e.g. When can a supplier disconnect a domestic customer?",
 )
+as_of = st.date_input(
+    "⏳ As of date", value=date.today(), max_value=date.today(),
+    help="Ask what the rules were as of a past date. Leave at today for the current position.",
+)
 ask = st.button("Ask RITA", type="primary")
 
 if ask and question.strip():
@@ -170,7 +175,7 @@ if ask and question.strip():
 
     try:
         with st.spinner("Retrieving relevant conditions and reading them…"):
-            result = answer_question(question, coll=_collection(), client=_client())
+            result = answer_question(question, coll=_collection(), client=_client(), as_of=as_of)
     except Exception as e:  # noqa: BLE001 — surface a friendly message, not a stack trace
         msg = str(e)
         if "api_key" in msg.lower() or "authentication" in msg.lower():
@@ -180,6 +185,9 @@ if ask and question.strip():
         st.stop()
 
     st.divider()
+
+    if as_of != date.today():
+        st.info(f"🕰️ Answering **as of {as_of.strftime('%d %B %Y').lstrip('0')}** — a historic date.")
 
     # --- Answer or refusal ---
     if result["refused"]:

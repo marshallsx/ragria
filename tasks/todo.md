@@ -92,7 +92,7 @@ NEVER present superseded text as current.
 - DEMO CONDITIONS (dated guarantee) — both introduced after 2022, verified absent in v2019
   & v2022, present in v2025 (existence-boundary demo):
   - **25E — Power to direct Energy Bill Support Scheme Payments** — introduced 24 Sep 2022.
-  - **4D — Protecting Domestic Customer Credit Balances** — introduced ~Jun 2023 (exact date TBC).
+  - **4D — Protecting Domestic Customer Credit Balances** — introduced 20 Sep 2023.
 - SLC 47 DEFERRED: verified too volatile (multiple MHHS rewrites 2019→2025; would need many
   intermediate versions for a gap-free timeline). Revisit later as "scale-by-data" work.
 - Conditions NOT mapped: undated/current answers only; a dated query REFUSES.
@@ -106,8 +106,8 @@ NEVER present superseded text as current.
 - Consolidations (readable body text): v2019 (3 Aug 2019, 484pp), v2022 (14 Apr 2022,
   550pp), v2025 (1 Aug 2025, 611pp). Consolidated PDFs labelled "not to be relied on".
 - 25E introduction: effective **24 Sep 2022** (EBSS supplier licence decision notice).
-- 4D introduction: ~**Jun 2023** (Strengthening Financial Resilience; FRP modified 1 Jun
-  2023) — pin exact effective date from the modification notice before/at build.
+- 4D introduction: effective **20 Sep 2023** (Decision OFG1163 published 26 Jul 2023, "56
+  days after" → 20 Sep 2023; confirmed by the 20 Sep 2023 erratum notice).
 - Authoritative effective dates: Ofgem modification notices / EPR (epr.ofgem.gov.uk).
 - Note: 4D had minor errata (Sep 2023, Jul 2024) — corrections; existence-boundary demo is
   correct regardless. Holding errata versions is later refinement.
@@ -151,29 +151,28 @@ NEVER present superseded text as current.
 - [ ] A current-date query answers from v2025 (current), never a superseded version.
 - [ ] A dated query on an UNMAPPED condition → RITA refuses / says it can't date that yet.
 
-### Build steps (after sign-off — tick as we go)
-- [ ] Pin 4D's exact introduction effective date from the modification notice.
-- [ ] Version-config-driven ingestion; parse + version-tag v2019, v2022, v2025 (all-conditions
-      text, version-scoped chunk ids). Verify each parses cleanly.
-- [ ] Per-condition timelines for mapped conditions (25E introduced 2022-09-24; 4D ~2023-06).
-      Date resolver: pre-introduction → "did not exist"; on/after → current text; unmapped
-      condition + a date → refuse.
-- [ ] UI "as of date" picker + banner ("in force since…" / "did not exist as of X" /
-      "can't date that condition yet").
-- [ ] Version/date-aware prompt + citations (cite condition + introduction/effective date).
-- [ ] Verify gate (4D + 25E existence boundary) + temporal eval cases.
+### Build steps (existence-boundary increment — tick as we go)
+- [x] Pin 4D's exact introduction date — **20 Sep 2023** (Decision OFG1163 pub 26 Jul 2023
+      + "56 days"; confirmed by the 20 Sep 2023 erratum).
+- [x] Temporal module (`src/temporal.py`): mapped-condition timelines (25E 2022-09-24; 4D
+      2023-09-20) + `existed()` / `temporal_notes()`.
+- [x] `answer_question` gains an `as_of` date (default today); injects temporal facts +
+      system-prompt rules (never present current text as applying before a condition existed;
+      pre-existence → "did not exist / introduced [date]"; straddling period → both states;
+      unmapped conditions not asserted for past dates). CLI-verified for 25E & 4D.
+- [x] UI "⏳ As of date" picker (default today, max today) + historic-date banner.
+- [ ] Verify gate (25E + 4D existence boundary) + temporal eval cases.
 - [ ] Flip public copy to present tense once real.
+- Deferred: ingest v2019/v2022 historic TEXT — only needed for text-CHANGE conditions (e.g.
+  SLC 47 later); the existence-boundary demo doesn't need it (25E/4D didn't exist then).
 
 ### Resolved decisions
 - Validity: PER CONDITION, contiguous (no internal gaps); refusal only outside covered
   period / unmapped conditions. ✅
-- Demo conditions: 25E (introduced 24 Sep 2022) + 4D (introduced ~Jun 2023), existence
+- Demo conditions: 25E (introduced 24 Sep 2022) + 4D (introduced 20 Sep 2023), existence
   boundary. SLC 47 deferred (too volatile). ✅
-- Held versions: v2019, v2022, v2025 (all-conditions text, version-tagged). ✅
+- Held versions available in data/raw: v2019, v2022, v2025 (historic-text ingestion deferred). ✅
 - Default: no date ⇒ answered as of TODAY (current version, v2025) — unchanged behaviour. ✅
-
-### Remaining to confirm (data — before build)
-- Pin 4D's exact introduction effective date (from the modification notice).
 
 ---
 

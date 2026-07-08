@@ -22,12 +22,18 @@ from __future__ import annotations
 import json
 import re
 import sys
+from datetime import date
 from pathlib import Path
 
 import anthropic
 import chromadb
 from dotenv import load_dotenv
 from rank_bm25 import BM25Okapi
+
+try:  # works both as `src.rag` (app/evals) and `python src/rag.py`
+    from src import temporal
+except ImportError:
+    import temporal
 
 ROOT = Path(__file__).resolve().parent.parent
 STORE = ROOT / "chroma"
@@ -65,6 +71,20 @@ refused to true, leave answer empty, and in reason briefly say what was missing.
 - When you answer, ground every statement in the extracts and cite the specific \
 conditions you relied on. Do not add requirements that are not in the text.
 - Keep the answer concise and factual.
+
+Temporal awareness (dates):
+- You are given an "As-of date", and for relevant conditions, when they were introduced.
+- Answer as of that date. If a condition relevant to the question did NOT exist as of the \
+as-of date, say so plainly and give its introduction date — do NOT present its current \
+text as if it applied then.
+- If the user's question itself names a time period that straddles a condition's \
+introduction date, do not pick a side: say it changed on that date and give BOTH the \
+"before" (did not exist) and "after" states.
+- When answering for a past date, make the date explicit in your answer.
+- For a PAST as-of date, only make definite dated claims about conditions whose \
+introduction/effective dates are given in the Temporal facts above. For any OTHER \
+condition, do not assert it applied as of that date — omit it, or note its historic \
+status as of that date is not confirmed.
 
 Return your response in the required structured format."""
 
@@ -246,14 +266,18 @@ def build_context(ordered: list[dict]) -> str:
     return "\n\n".join(parts)
 
 
-def answer_question(question: str, k: int = TOP_K, coll=None, client=None, model: str = MODEL) -> dict:
+def answer_question(
+    question: str, k: int = TOP_K, coll=None, client=None, model: str = MODEL, as_of: date | None = None
+) -> dict:
     """
     Retrieve, ground, and answer. Returns:
-        {answer, citations, refused, reason, retrieved:[{condition,title,pages,distance}]}
+        {answer, citations, refused, reason, as_of, retrieved:[{condition,title,pages,distance}]}
 
+    `as_of` is the effective date to answer as of (default = today → current behaviour).
     `coll` / `client` may be injected (e.g. cached by the Streamlit UI) to avoid
     re-opening the store or re-creating the client on every call.
     """
+    as_of = as_of or date.today()
     coll = coll or get_collection()
     chunks, vhits = hybrid_retrieve(question, k, coll)
     retrieved_meta = [
@@ -279,11 +303,18 @@ def answer_question(question: str, k: int = TOP_K, coll=None, client=None, model
                 "No sufficiently relevant section was found in the electricity supply "
                 "licence conditions for this question."
             ),
+            "as_of": as_of.isoformat(),
             "retrieved": retrieved_meta,
         }
 
     context = build_context(expand_hits(chunks, coll))
-    user_content = f"Question: {question}\n\nRetrieved extracts:\n\n{context}"
+    notes = temporal.temporal_notes({c["meta"]["condition"] for c in chunks}, as_of)
+    parts = [f"As-of date: {temporal.fmt(as_of)}"]
+    if notes:
+        parts.append("Temporal facts (authoritative):\n" + "\n".join(f"- {n}" for n in notes))
+    parts.append(f"Question: {question}")
+    parts.append(f"Retrieved extracts:\n\n{context}")
+    user_content = "\n\n".join(parts)
 
     client = client or get_client()
     fmt = {"type": "json_schema", "schema": OUTPUT_SCHEMA}
@@ -308,18 +339,20 @@ def answer_question(question: str, k: int = TOP_K, coll=None, client=None, model
             "answer": "",
             "citations": [],
             "reason": "The request was declined by a safety filter.",
+            "as_of": as_of.isoformat(),
             "retrieved": retrieved_meta,
         }
 
     # With thinking enabled, the first block is a thinking block — take the text block.
     text = next(b.text for b in resp.content if b.type == "text")
     result = json.loads(text)
+    result["as_of"] = as_of.isoformat()
     result["retrieved"] = retrieved_meta
     return result
 
 
 def _format_cli(q: str, r: dict) -> str:
-    lines = [f"Q: {q}", ""]
+    lines = [f"Q: {q}", f"(as of {r.get('as_of', 'today')})", ""]
     if r["refused"]:
         lines.append("REFUSED — not in source material")
         lines.append(f"  reason: {r['reason']}")
@@ -340,8 +373,12 @@ def _format_cli(q: str, r: dict) -> str:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print('Usage: venv/bin/python src/rag.py "your question"')
+    args = sys.argv[1:]
+    if not args:
+        print('Usage: venv/bin/python src/rag.py "your question" [YYYY-MM-DD]')
         sys.exit(1)
-    q = " ".join(sys.argv[1:])
-    print(_format_cli(q, answer_question(q)))
+    as_of = None
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", args[-1]):
+        as_of = date.fromisoformat(args.pop())
+    q = " ".join(args)
+    print(_format_cli(q, answer_question(q, as_of=as_of)))
