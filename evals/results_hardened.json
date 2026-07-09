@@ -1,0 +1,966 @@
+{
+  "summary": {
+    "label": "hardened",
+    "model": "claude-opus-4-8",
+    "n": 31,
+    "judge": true,
+    "decision_accuracy": "30/31",
+    "retrieval_hit_rate": "25/26",
+    "recall@1": "19/26",
+    "recall@3": "24/26",
+    "recall@6": "25/26",
+    "mean_rank": 1.36,
+    "citation_hit_rate": "24/26",
+    "content_checks": "12/12",
+    "version_checks": "8/8",
+    "history_checks": "2/2",
+    "faithfulness": "25/25",
+    "unfaithful": [],
+    "false_refusals": [
+      "P1"
+    ],
+    "correct_refusals": [
+      "D1",
+      "D2",
+      "S4",
+      "R1",
+      "R2"
+    ],
+    "false_answers": []
+  },
+  "rows": [
+    {
+      "id": "O1",
+      "category": "Obligations",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 2,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to the retrieved extracts: SLC 27.9 (reasonable steps to recover via prepayment), 27.9A (disconnection includes credit/load limiting), 27.10 and 27.11 (winter/vulnerability protections), 27.11A (ascertain scope), 27.8/27.8A (ability to pay), 27.8B/27.11B (guidance), and 31G debt advice reference all appear in Extract 2. The as-of date and consolidation date match the source material. No unsupported facts asserted.",
+      "expect_conditions": [
+        "27"
+      ],
+      "retrieved": [
+        "27A",
+        "27",
+        "27",
+        "4D",
+        "27",
+        "28AD"
+      ],
+      "cited": [
+        "27"
+      ]
+    },
+    {
+      "id": "O2",
+      "category": "Obligations",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to the retrieved extracts: Condition 26 obligations (26.1-26.7), definitions of Minimum Details and Personal Characteristics, data protection compliance, and the Condition 28.7(e) PSR check for involuntary prepayment meters. The version/date statements match the source material.",
+      "expect_conditions": [
+        "26",
+        "28"
+      ],
+      "retrieved": [
+        "26",
+        "26",
+        "26",
+        "28",
+        "1",
+        "26"
+      ],
+      "cited": [
+        "26",
+        "28"
+      ]
+    },
+    {
+      "id": "O3",
+      "category": "Obligations",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims are traceable to the source material. The Domestic Statement of Renewal Terms requirements (31I.1(c), 31I.6, 31I.7), the notice timing/informed-choice provisions (31I.2), the 23.2A exception, the note that no fixed number of days is specified for domestic, and the Micro Business 60-day rule with associated items (7A.8) are all supported by the extracts. The as-of version references are consistent with the source.",
+      "expect_conditions": [
+        "22C",
+        "23",
+        "31I"
+      ],
+      "retrieved": [
+        "22C",
+        "31I",
+        "23",
+        "22C",
+        "7A",
+        "7A"
+      ],
+      "cited": [
+        "22C",
+        "23",
+        "31I",
+        "7A"
+      ]
+    },
+    {
+      "id": "O4",
+      "category": "Obligations",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 2,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to Extract 2 (Condition 21BA): the 12-month back-billing limit, paragraph 21BA.1 text on units and standing charges, and the exceptions in 21BA.2. Version/as-of statements match the source material.",
+      "expect_conditions": [
+        "21BA"
+      ],
+      "retrieved": [
+        "51",
+        "21BA",
+        "22",
+        "28AA",
+        "28AD",
+        "28AD"
+      ],
+      "cited": [
+        "21BA"
+      ]
+    },
+    {
+      "id": "D1",
+      "category": "Deadlines",
+      "expected": "refuse",
+      "as_of": null,
+      "refused": true,
+      "decision_ok": true,
+      "ret_hit": null,
+      "rank": null,
+      "cite_hit": null,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": null,
+      "faith_note": null,
+      "expect_conditions": [],
+      "retrieved": [
+        "20",
+        "1",
+        "28",
+        "31G",
+        "12.A",
+        "1"
+      ],
+      "cited": []
+    },
+    {
+      "id": "D2",
+      "category": "Deadlines",
+      "expected": "refuse",
+      "as_of": null,
+      "refused": true,
+      "decision_ok": true,
+      "ret_hit": null,
+      "rank": null,
+      "cite_hit": null,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": null,
+      "faith_note": null,
+      "expect_conditions": [],
+      "retrieved": [
+        "24",
+        "31F",
+        "28AA",
+        "34",
+        "24",
+        "41"
+      ],
+      "cited": []
+    },
+    {
+      "id": "S1",
+      "category": "Smoke",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 3,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to the source: the 12-month backbilling rule and exceptions match Condition 21BA.1 and 21BA.2, and the version/as-of dates match the stated source metadata.",
+      "expect_conditions": [
+        "21BA"
+      ],
+      "retrieved": [
+        "22",
+        "1",
+        "21BA",
+        "22",
+        "37",
+        "27"
+      ],
+      "cited": [
+        "21BA"
+      ]
+    },
+    {
+      "id": "S2",
+      "category": "Smoke",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to the extracts: Condition 14.1 general prohibition, 14.4/14.5/14.6 domestic blocking rules, 14.2/14.2A/14.2B/14.3 non-domestic rules, and 24.8 fixed-term switching without termination fee. The \u00a3500 figure, prepayment meter exceptions, Green Deal charges, and notification requirements are all supported.",
+      "expect_conditions": [
+        "14",
+        "14A"
+      ],
+      "retrieved": [
+        "14A",
+        "14",
+        "14A",
+        "24",
+        "31F",
+        "14"
+      ],
+      "cited": [
+        "14",
+        "24"
+      ]
+    },
+    {
+      "id": "S3",
+      "category": "Smoke",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to the extracts: Condition 0 objective, Standards of Conduct, vulnerable situation identification and definition (0.1-0.9), and Condition 31G enquiry service provisions (31G.1-31G.3D). Version and as-of dates match the source.",
+      "expect_conditions": [
+        "0",
+        "26",
+        "31G"
+      ],
+      "retrieved": [
+        "0",
+        "0",
+        "0",
+        "31G",
+        "31G",
+        "31G"
+      ],
+      "cited": [
+        "0",
+        "31G"
+      ]
+    },
+    {
+      "id": "S4",
+      "category": "Smoke",
+      "expected": "refuse",
+      "as_of": null,
+      "refused": true,
+      "decision_ok": true,
+      "ret_hit": null,
+      "rank": null,
+      "cite_hit": null,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": null,
+      "faith_note": null,
+      "expect_conditions": [],
+      "retrieved": [
+        "41",
+        "48",
+        "33",
+        "31F",
+        "59",
+        "28"
+      ],
+      "cited": []
+    },
+    {
+      "id": "T1",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2021-06-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims are supported: Condition 4D introduced 20 Sep 2023 and didn't exist on 1 June 2021 (per temporal facts); the description of 4D mechanisms matches Extract 1; Condition 30 concerns Renewables Obligation ringfencing per Extract 2; and the answer correctly notes it only has current text for Condition 30 and cannot confirm 2021 applicability, consistent with the historic-query instruction.",
+      "expect_conditions": [
+        "4D"
+      ],
+      "retrieved": [
+        "4D",
+        "4D",
+        "4D",
+        "4D",
+        "4D",
+        "30"
+      ],
+      "cited": [
+        "30",
+        "4D"
+      ]
+    },
+    {
+      "id": "T2",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2022-01-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims are supported: the source states Condition 25E was introduced 24 September 2022 and did not exist as of 1 January 2022. The description of the current 25E text matches Extract 1. Condition 59 is correctly described from Extract 2, and the answer appropriately declines to confirm its historic status.",
+      "expect_conditions": [
+        "25E"
+      ],
+      "retrieved": [
+        "25E",
+        "59",
+        "25E",
+        "59",
+        "25E",
+        "37"
+      ],
+      "cited": [
+        "25E"
+      ]
+    },
+    {
+      "id": "T3",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to source: dates and in-force status match temporal facts; 4D.1-4D.7 obligations, Protected Amount formula, Relevant Period coverage, definition of Protect, the support arrangement types (trust account, SBLC, First Demand Guarantee), the 4B.23 direction trigger, and Fixed Direct Debit Domestic Customers scope are all supported by the extracts.",
+      "expect_conditions": [
+        "4D"
+      ],
+      "retrieved": [
+        "4D",
+        "4D",
+        "4D",
+        "4D",
+        "4D",
+        "1"
+      ],
+      "cited": [
+        "4D"
+      ]
+    },
+    {
+      "id": "T4",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2021-06-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": true,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to the source. Condition 28 protections (28.1, 28.1A-B, 28.2, 28.3) are accurately drawn from Extract 1, and the answer correctly cites the 14 April 2022 consolidation effective 3 August 2019 to 8 November 2023 per the temporal facts. It correctly notes the pre-reform status (no involuntary-prepayment-meter Code of Practice yet). It properly caveats that SLC 27A, 12, and 25B are only shown as current (1 August 2025) text and cannot be confirmed for 1 June 2021, consistent with the instructions.",
+      "expect_conditions": [
+        "28"
+      ],
+      "retrieved": [
+        "28",
+        "28",
+        "28",
+        "12",
+        "27A",
+        "25B"
+      ],
+      "cited": [
+        "28"
+      ]
+    },
+    {
+      "id": "T5",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2024-06-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": true,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to the source. Condition 28 details (28.1, 28.2, 28.3, 28.4, 28.17, 28.18, 28.19-28.20, 28.21, 28.22) match extract 1. The 27A cross-reference (27A.7A-C) matches extract 3, and the answer correctly caveats that 27A is only current text and cannot be confirmed for 1 June 2024. The Condition 28 version/date framing matches the authoritative temporal facts (text in force since 8 November 2023, consolidated to 1 August 2025). No hallucinated facts.",
+      "expect_conditions": [
+        "28"
+      ],
+      "retrieved": [
+        "28",
+        "28",
+        "28",
+        "12",
+        "27A",
+        "25B"
+      ],
+      "cited": [
+        "27A",
+        "28"
+      ]
+    },
+    {
+      "id": "T6",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2023-06-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": true,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to the source. Condition 0A details (title, 14 April 2022 version, in force 3 Aug 2019\u20131 Jul 2024, Micro Business Consumer scope, Standards of Conduct, Designated Activities, scope on charges, 'Fair' definition) match the temporal facts and Extract 1. The caveat about Conditions 42 and 12A only having current text is consistent with the instructions. No hallucinations.",
+      "expect_conditions": [
+        "0A"
+      ],
+      "retrieved": [
+        "0A",
+        "12.A",
+        "19D",
+        "42",
+        "0",
+        "14"
+      ],
+      "cited": [
+        "0A"
+      ]
+    },
+    {
+      "id": "T7",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2024-09-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": true,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All factual claims trace to the source. Condition 0A content, objective, Standards of Conduct, scope, and 'Fair' definition match Extract 1. The temporal framing (text changed 1 July 2024, in-force version = 1 August 2025 consolidation, expanded to all Non-Domestic Customers) matches the authoritative temporal facts. Condition 42 (smart metering for Micro Business Consumers) and Condition 12A (theft of electricity) fair/transparent/professional conduct references match Extracts 4 and 2, and the answer correctly caveats that it only has current text for those non-verified conditions.",
+      "expect_conditions": [
+        "0A"
+      ],
+      "retrieved": [
+        "0A",
+        "12.A",
+        "19D",
+        "42",
+        "0",
+        "14"
+      ],
+      "cited": [
+        "0A"
+      ]
+    },
+    {
+      "id": "T8",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2020-06-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": true,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to the source: the 21B paragraphs match Extract 1, the effective version (3 August 2019) and the 21B.5A insertion date (31 December 2020) match the temporal facts, and the answer correctly declines to confirm Condition 31H applied on 1 June 2020.",
+      "expect_conditions": [
+        "21B"
+      ],
+      "retrieved": [
+        "21B",
+        "31H",
+        "21B",
+        "25B",
+        "21B",
+        "26"
+      ],
+      "cited": [
+        "21B"
+      ]
+    },
+    {
+      "id": "T9",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2022-06-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": true,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to Condition 21B extract and temporal facts. The paragraph references (21B.1, 21B.2, 21B.4, 21B.5, 21B.5A, 21B.7, 21B.8, 21B.9) match the retrieved text. The 31 December 2020 effective date and Electricity Directive transposition for 21B.5A are supported by the temporal facts. The version/date statements (1 June 2022, 1 August 2025 consolidation) are supported. The answer appropriately declines to rely on Condition 31H's current text for the historic date, consistent with the instructions.",
+      "expect_conditions": [
+        "21B"
+      ],
+      "retrieved": [
+        "21B",
+        "31H",
+        "21B",
+        "25B",
+        "21B",
+        "26"
+      ],
+      "cited": [
+        "21B"
+      ]
+    },
+    {
+      "id": "P1",
+      "category": "Paraphrase",
+      "expected": "answer",
+      "as_of": null,
+      "refused": true,
+      "decision_ok": false,
+      "ret_hit": true,
+      "rank": 2,
+      "cite_hit": false,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": null,
+      "faith_note": null,
+      "expect_conditions": [
+        "27"
+      ],
+      "retrieved": [
+        "14A",
+        "27",
+        "12.A",
+        "31F",
+        "12.A",
+        "12.A"
+      ],
+      "cited": []
+    },
+    {
+      "id": "P2",
+      "category": "Paraphrase",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 2,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to Extract 2 (Condition 21BA): the 12-month backbilling limit, prepayment meter inclusion, application to Micro Business Consumers, and the four exceptions in 21BA.2 are all accurately represented.",
+      "expect_conditions": [
+        "21BA"
+      ],
+      "retrieved": [
+        "9",
+        "21BA",
+        "34",
+        "22",
+        "34",
+        "24A"
+      ],
+      "cited": [
+        "21BA"
+      ]
+    },
+    {
+      "id": "P3",
+      "category": "Paraphrase",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": false,
+      "rank": null,
+      "cite_hit": false,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All factual claims trace to source material: Condition 0's identification duty (0.3(d)(i)-(ii)), Vulnerable Situation definition (0.9), Condition 31G enquiry service and prioritisation (31G.3A-3B), and Condition 32's Priority Services Register reporting (32.2(e)). The as-of version (1 August 2025) is correctly stated, and the answer honestly notes the extracts lack detailed recording rules for the register.",
+      "expect_conditions": [
+        "26"
+      ],
+      "retrieved": [
+        "31G",
+        "28",
+        "27",
+        "32",
+        "0",
+        "56"
+      ],
+      "cited": [
+        "0",
+        "31G",
+        "32"
+      ]
+    },
+    {
+      "id": "P4",
+      "category": "Paraphrase",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 4,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims are traceable to the source. Condition 14 general prohibition (14.1), non-domestic blocking grounds (14.2, 14.2A) and limits (14.2B) are accurately described, including that no blocking grounds exist for Domestic Customers. Condition 14A claims about no charge for transfer costs, termination fees exception, and fast switching (14A.6-14A.8) match the extracts. Version and as-of dates are correctly stated.",
+      "expect_conditions": [
+        "14",
+        "14A"
+      ],
+      "retrieved": [
+        "8",
+        "45",
+        "12",
+        "14",
+        "11B",
+        "14A"
+      ],
+      "cited": [
+        "14",
+        "14A"
+      ]
+    },
+    {
+      "id": "P5",
+      "category": "Paraphrase",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to the source: 27.3 prohibitions (a)/(b), 27.4 reasonable amount, Condition 1 definition, and 22.7(c) exception referencing paragraphs 3 and 4 of condition 27. The framing that the licence defines prohibitions rather than a positive list is accurate. Version and as-of date consistent.",
+      "expect_conditions": [
+        "27"
+      ],
+      "retrieved": [
+        "27",
+        "27",
+        "22",
+        "27",
+        "27",
+        "1"
+      ],
+      "cited": [
+        "1",
+        "22",
+        "27"
+      ]
+    },
+    {
+      "id": "P6",
+      "category": "Paraphrase",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to the source extracts. The Domestic Statement of Renewal Terms requirement (31I.1(c)), the form/timing and content requirements (31I.2, 31I.3), the specific inclusions (31I.6), the separate-document requirement (31I.7), and the 22C.5 additional Notice for further fixed term periods are all supported. Version and as-of dates match. The micro business note is accurate framing referencing Condition 7A.",
+      "expect_conditions": [
+        "22C",
+        "23",
+        "31I"
+      ],
+      "retrieved": [
+        "22C",
+        "31I",
+        "22C",
+        "7A",
+        "22C",
+        "22C"
+      ],
+      "cited": [
+        "22C",
+        "31I"
+      ]
+    },
+    {
+      "id": "R1",
+      "category": "Refusal",
+      "expected": "refuse",
+      "as_of": null,
+      "refused": true,
+      "decision_ok": true,
+      "ret_hit": null,
+      "rank": null,
+      "cite_hit": null,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": null,
+      "faith_note": null,
+      "expect_conditions": [],
+      "retrieved": [
+        "14A",
+        "15",
+        "12.A",
+        "15",
+        "14A",
+        "28AD"
+      ],
+      "cited": []
+    },
+    {
+      "id": "R2",
+      "category": "Refusal",
+      "expected": "refuse",
+      "as_of": null,
+      "refused": true,
+      "decision_ok": true,
+      "ret_hit": null,
+      "rank": null,
+      "cite_hit": null,
+      "contains_ok": null,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": null,
+      "faith_note": null,
+      "expect_conditions": [],
+      "retrieved": [
+        "21",
+        "1",
+        "60",
+        "1",
+        "34",
+        "1"
+      ],
+      "cited": []
+    },
+    {
+      "id": "E1",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2023-06-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": null,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to the source. The Condition 28 content matches Extract 1, the effective version/dates (14 April 2022, 3 August 2019 until 8 November 2023) and the 8 November 2023 text change plus the involuntary-PPM Code of Practice point match the temporal facts. The answer appropriately declines to detail the post-8-Nov-2023 text and correctly caveats Conditions 27 and 12 as only being current text.",
+      "expect_conditions": [
+        "28"
+      ],
+      "retrieved": [
+        "28",
+        "28",
+        "27",
+        "12",
+        "28",
+        "28"
+      ],
+      "cited": [
+        "28"
+      ]
+    },
+    {
+      "id": "E2",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": null,
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": null,
+      "version_ok": true,
+      "history_ok": true,
+      "faithful": true,
+      "faith_note": "All factual claims trace to the source material. The information obligations (SLC 28.1), safety/reasonable practicability provisions (28.2-28.4), Involuntary Prepayment Meter definition and Consent requirements (28.21-28.22), Involuntary Prepayment Meter Credit (27A.7A-27A.7C), debt completion assessment (28.17-28.18), and replacement meter provision (25B.13) are all supported by the retrieved extracts. The version/date framing (1 August 2025 consolidation, effective 8 November 2023, as of 9 July 2026) matches the temporal facts.",
+      "expect_conditions": [
+        "28"
+      ],
+      "retrieved": [
+        "28",
+        "28",
+        "28",
+        "12",
+        "27A",
+        "25B"
+      ],
+      "cited": [
+        "25B",
+        "27A",
+        "28"
+      ]
+    },
+    {
+      "id": "E3",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2025-03-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": true,
+      "history_ok": null,
+      "faithful": true,
+      "faith_note": "All claims trace to the source. Condition 0A details (0A.1-0A.9) match Extract 1. The temporal framing about the 1 July 2024 Non-Domestic Market Review and text in force as of 1 March 2025 matches the authoritative temporal facts. The disclaimer about Condition 42 being only available in current text correctly follows the historic-query instruction. No hallucinated facts.",
+      "expect_conditions": [
+        "0A"
+      ],
+      "retrieved": [
+        "0A",
+        "12.A",
+        "19D",
+        "42",
+        "0",
+        "14"
+      ],
+      "cited": [
+        "0A"
+      ]
+    },
+    {
+      "id": "E4",
+      "category": "Temporal",
+      "expected": "answer",
+      "as_of": "2024-01-01",
+      "refused": false,
+      "decision_ok": true,
+      "ret_hit": true,
+      "rank": 1,
+      "cite_hit": true,
+      "contains_ok": true,
+      "version_ok": null,
+      "history_ok": true,
+      "faithful": true,
+      "faith_note": "All claims trace to the source: Condition 25E introduction date (24 Sept 2022) and in-force status on 1 Jan 2024 come from temporal facts; the substantive content (25E.1-25E.5, Relevant Matters, Energy Bill Support Scheme Payment definition) matches Extract 1. The note about the consolidation text is accurate.",
+      "expect_conditions": [
+        "25E"
+      ],
+      "retrieved": [
+        "25E",
+        "59",
+        "25E",
+        "59",
+        "25E",
+        "37"
+      ],
+      "cited": [
+        "25E"
+      ]
+    }
+  ]
+}

@@ -149,5 +149,50 @@ check asserts which held version was served (independent of the model's prose).
 - **Citation normaliser** added: model-emitted `condition` refs are stripped of a stray
   "Condition " prefix at the source (fixes a UI "Condition Condition 0A" render + grader misses).
 
+## Eval hardening (rigor pass)
+
+The case set was grown **19 → 31** (+6 paraphrase variants, +2 out-of-scope refusals, +4 temporal
+edge cases: a *straddle* period, an *undated-mapped* query, and *after-change* dates), and three
+richer metrics were added to `run_evals.py`:
+- **Retrieval depth** — the *rank* of the first expected condition → recall@1/@3/@6 + mean rank
+  (not just binary hit/miss).
+- **Faithfulness / groundedness** — an independent Claude call judges whether *every* claim in the
+  answer is supported by the material the model was given (a direct hallucination measure).
+- **History-view check** — asserts a "what changed" view of the expected kind is produced.
+
+### Headline (31 cases, Opus 4.8)
+
+| Metric | Result |
+|---|---|
+| Decision accuracy | **30/31** |
+| Retrieval hit-rate | 25/26 |
+| Recall@1 / @3 / @6 | **19/26 · 24/26 · 25/26** |
+| Mean rank | **1.36** |
+| Citation hit-rate | 24/26 |
+| Content / Version / History checks | 12/12 · 8/8 · 2/2 |
+| **Faithfulness (independent judge)** | **25/25 — 0 hallucinations** |
+| Refusals correct / false answers | 5/5 · 0 |
+
+### The faithfulness-judge trap (lesson)
+First pass scored **10/25** — a false alarm. The judge only saw the retrieved *extracts*, so it
+flagged every legitimate dated claim (e.g. "introduced 20 September 2023", "as of 1 August 2025")
+as unsupported, because those are grounded in the **injected temporal facts** and the
+**current-version/as-of framing**, not in the licence extracts. Feeding the judge the *full* grounding
+the model saw fixed it to a true **25/25**. Takeaway: a groundedness judge must receive exactly the
+context the generator had, not a subset.
+
+### Genuine weaknesses surfaced (next-fix candidates)
+The expanded set caught two real issues the original 19 missed:
+- **P1 — false refusal.** *"Before cutting off a household's electricity over an unpaid bill, what
+  steps must the supplier take?"* retrieved Condition 27 (rank 2) but RIA **refused** — a
+  refusal-calibration / chunk-selection gap on a valid paraphrase.
+- **P3 — retrieval miss.** *"…find and record customers who need extra help due to vulnerability?"*
+  **missed Condition 26 (Priority Services Register)** — a vocabulary gap ("extra help / vulnerability"
+  ↔ "Priority Services Register"), the same class as the original O4. It still answered *faithfully*
+  from the Standards of Conduct, just not from the PSR condition.
+
+Both are retrieval/refusal-tuning work for a later pass; the value here is that the harness now
+**catches** them.
+
 ## Artefacts
-`evals/cases.yaml` · `evals/run_evals.py` · `src/detect_changes.py` · `docs/change-map.md` · `evals/results_{baseline,postfix,haiku,hybrid,temporal,textchange,ndf}.json`
+`evals/cases.yaml` · `evals/run_evals.py` · `src/detect_changes.py` · `docs/change-map.md` · `evals/results_{baseline,postfix,haiku,hybrid,temporal,textchange,ndf,history,hardened}.json`

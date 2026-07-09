@@ -154,3 +154,81 @@
   expect_conditions: ["21B"]
   expect_version: "2025-08-01"
   expect_contains: "31 December 2020"
+
+# --- Eval hardening (Phase 2 rigor): paraphrase robustness, more refusals, temporal edges ---
+
+# Paraphrases of answerable questions (retrieval must survive rewording).
+- id: P1
+  category: Paraphrase
+  question: Before cutting off a household's electricity over an unpaid bill, what steps must the supplier take?
+  expected: answer
+  expect_conditions: ["27"]
+- id: P2
+  category: Paraphrase
+  question: If a customer was undercharged for energy used more than a year ago, can the supplier still recover it?
+  expected: answer
+  expect_conditions: ["21BA"]
+- id: P3
+  category: Paraphrase
+  question: How must a supplier find and record customers who need extra help due to vulnerability?
+  expected: answer
+  expect_conditions: ["26"]
+- id: P4
+  category: Paraphrase
+  question: Can my energy supplier stop me from leaving to join a competitor?
+  expected: answer
+  expect_conditions: ["14", "14A"]
+- id: P5
+  category: Paraphrase
+  question: When can a supplier ask a domestic customer for a security deposit?
+  expected: answer
+  expect_conditions: ["27"]
+- id: P6
+  category: Paraphrase
+  question: What must a supplier tell a customer before their fixed-term tariff comes to an end?
+  expected: answer
+  expect_conditions: ["22C", "23", "31I"]
+
+# Out-of-scope refusals (electricity SUPPLY licence only).
+- id: R1
+  category: Refusal
+  question: What are a distribution network operator's obligations to customers during a power cut?
+  expected: refuse
+  expect_conditions: []
+- id: R2
+  category: Refusal
+  question: What must a company do to get a licence to generate electricity?
+  expected: refuse
+  expect_conditions: []
+
+# Temporal edge cases.
+- id: E1  # straddle: the question names a period spanning Cond 28's 8 Nov 2023 change
+  category: Temporal
+  question: What were the prepayment meter protections during 2023, and did they change that year?
+  as_of: 2023-06-01
+  expected: answer
+  expect_conditions: ["28"]
+  expect_contains: "8 November 2023"
+- id: E2  # undated query on a mapped condition -> current version + a history view
+  category: Temporal
+  question: What protections apply when a supplier installs a prepayment meter?
+  expected: answer
+  expect_conditions: ["28"]
+  expect_version: "2025-08-01"
+  expect_history: "text-change"
+- id: E3  # text-change condition AFTER its change
+  category: Temporal
+  question: What fair-treatment obligations do suppliers have towards business customers?
+  as_of: 2025-03-01
+  expected: answer
+  expect_conditions: ["0A"]
+  expect_version: "2025-08-01"
+  expect_contains: "1 July 2024"
+- id: E4  # introduced condition AFTER its introduction
+  category: Temporal
+  question: Can the Secretary of State direct suppliers to make Energy Bill Support Scheme payments?
+  as_of: 2024-01-01
+  expected: answer
+  expect_conditions: ["25E"]
+  expect_contains: "24 September 2022"
+  expect_history: "introduced"

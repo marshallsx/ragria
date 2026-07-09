@@ -391,6 +391,10 @@ def answer_question(
     result["retrieved"] = retrieved_meta
     # "What changed" views for any mapped condition among the citations (for the UI panel).
     result["history"] = history.views_for(result.get("citations", []), as_of)
+    result["context"] = context          # retrieved extracts only
+    result["temporal_facts"] = notes     # authoritative dated facts injected into the prompt
+    result["prompt"] = user_content      # the FULL grounding the model saw (framing + dates + extracts);
+                                         # the eval faithfulness judge checks the answer against all of it
     return result
 
 
