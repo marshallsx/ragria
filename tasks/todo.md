@@ -86,13 +86,14 @@ across held snapshots so mapped conditions are chosen from DATA (0A and 21B both
 mod-history confirmed; 28A was investigated and rejected — spent condition, immaterial change).
 Eval **19/19** on the core temporal set. A **hardened suite** (31 cases: +paraphrases, +refusals,
 +temporal edges) with retrieval rank/recall@k, an independent **faithfulness LLM-judge**, and a
-history-view check now measures quality: **30/31 decisions, recall@1 19/26, mean rank 1.36,
-faithfulness 25/25 (0 hallucinations), 0 false answers** — and surfaced two real weaknesses to fix
-later (**P1** false refusal on a disconnection paraphrase; **P3** retrieval miss of Cond 26 on a
-"vulnerability" paraphrase — a vocabulary gap like O4). See `evals/report.md`.
-Next: fix P1/P3 (refusal calibration + retrieval vocabulary); map more conditions (billing 31H, SoLR
-8, more introduced), or add an "expired/ceased condition" category (e.g. 28A, spent 30 Jun 2021);
-multi-change (e.g. SLC 47, confirmed volatile) once enough intermediate versions are held.
+history-view check measures quality: **31/31 decisions, retrieval + citation 26/26, recall@1 20/26,
+faithfulness 26/26 (0 hallucinations), 0 false answers**. It surfaced two real weaknesses which were
+then FIXED: **P1** (false refusal — large-condition expansion: top-2 matched conditions now served
+whole) and **P3** (retrieval miss of Cond 26 — lay→licence query synonym expansion, e.g. "cutting
+off"→disconnection, "extra help/vulnerable"→priority services register). See `evals/report.md`.
+Next: map more conditions (billing 31H, SoLR 8, more introduced), or add an "expired/ceased
+condition" category (e.g. 28A, spent 30 Jun 2021); multi-change (e.g. SLC 47, confirmed volatile)
+once enough intermediate versions are held.
 
 ### Correctness rule (non-negotiable)
 - Validity is PER CONDITION, and a mapped condition's timeline is CONTIGUOUS — no internal

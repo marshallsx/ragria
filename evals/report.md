@@ -160,18 +160,18 @@ richer metrics were added to `run_evals.py`:
   answer is supported by the material the model was given (a direct hallucination measure).
 - **History-view check** — asserts a "what changed" view of the expected kind is produced.
 
-### Headline (31 cases, Opus 4.8)
+### Headline (31 cases, Opus 4.8 — after the P1/P3 retrieval fix below)
 
-| Metric | Result |
-|---|---|
-| Decision accuracy | **30/31** |
-| Retrieval hit-rate | 25/26 |
-| Recall@1 / @3 / @6 | **19/26 · 24/26 · 25/26** |
-| Mean rank | **1.36** |
-| Citation hit-rate | 24/26 |
-| Content / Version / History checks | 12/12 · 8/8 · 2/2 |
-| **Faithfulness (independent judge)** | **25/25 — 0 hallucinations** |
-| Refusals correct / false answers | 5/5 · 0 |
+| Metric | Before fix | **After fix** |
+|---|---|---|
+| Decision accuracy | 30/31 | **31/31** |
+| Retrieval hit-rate | 25/26 | **26/26** |
+| Recall@1 / @3 / @6 | 19 / 24 / 25 | **20 / 25 / 26** (of 26) |
+| Mean rank | 1.36 | **1.38** |
+| Citation hit-rate | 24/26 | **26/26** |
+| Content / Version / History checks | 12/12 · 8/8 · 2/2 | **12/12 · 8/8 · 2/2** |
+| **Faithfulness (independent judge)** | 25/25 | **26/26 — 0 hallucinations** |
+| Refusals correct / false answers | 5/5 · 0 | **5/5 · 0** |
 
 ### The faithfulness-judge trap (lesson)
 First pass scored **10/25** — a false alarm. The judge only saw the retrieved *extracts*, so it
@@ -181,18 +181,28 @@ as unsupported, because those are grounded in the **injected temporal facts** an
 the model saw fixed it to a true **25/25**. Takeaway: a groundedness judge must receive exactly the
 context the generator had, not a subset.
 
-### Genuine weaknesses surfaced (next-fix candidates)
-The expanded set caught two real issues the original 19 missed:
-- **P1 — false refusal.** *"Before cutting off a household's electricity over an unpaid bill, what
-  steps must the supplier take?"* retrieved Condition 27 (rank 2) but RIA **refused** — a
-  refusal-calibration / chunk-selection gap on a valid paraphrase.
-- **P3 — retrieval miss.** *"…find and record customers who need extra help due to vulnerability?"*
-  **missed Condition 26 (Priority Services Register)** — a vocabulary gap ("extra help / vulnerability"
-  ↔ "Priority Services Register"), the same class as the original O4. It still answered *faithfully*
-  from the Standards of Conduct, just not from the PSR condition.
+### Two weaknesses surfaced — and fixed
+The expanded set caught two real issues the original 19 missed, each with a distinct root cause:
 
-Both are retrieval/refusal-tuning work for a later pass; the value here is that the harness now
-**catches** them.
+- **P1 — false refusal (an *expansion* problem).** *"Before cutting off a household's electricity
+  over an unpaid bill…"* retrieved Condition 27 but **refused**. Cause: Cond 27 is large (17 chunks),
+  so it only got ±1-neighbour expansion; the query matched a *peripheral* chunk (the direct-debit
+  tail), so the disconnection-steps text was never served — RIA correctly refused on the text it saw.
+- **P3 — retrieval miss (a *recall/vocabulary* problem).** *"…find and record customers who need
+  extra help due to vulnerability?"* **missed Condition 26 (Priority Services Register)** entirely —
+  its title shares no words with the lay phrasing (widening the candidate pool didn't help: stuck at
+  fused rank 14).
+
+**Fixes (both in `src/rag.py`):**
+1. **Full-expand a strongly-matched large condition** — the top-2 matched conditions are served
+   whole even if large (bounded at 30 chunks, so monsters like Cond 34/1/28AD stay ±1). P1's
+   disconnection steps are now served regardless of which chunk matched.
+2. **Lay→licence query synonym expansion** (BM25 query side only) — e.g. "cutting off"→disconnection,
+   "extra help / vulnerable"→priority services register. Cond 26 jumps to **rank 1** for P3, and it's
+   a general plain-language-robustness feature (Cond 26 in S3 improved too).
+
+Result: **31/31 decisions, 26/26 retrieval + citation, 26/26 faithful, 0 regressions** — the harness
+both *caught* the issues and *verified* the fix.
 
 ## Artefacts
 `evals/cases.yaml` · `evals/run_evals.py` · `src/detect_changes.py` · `docs/change-map.md` · `evals/results_{baseline,postfix,haiku,hybrid,temporal,textchange,ndf,history,hardened}.json`

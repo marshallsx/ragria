@@ -48,6 +48,10 @@ TITLE_WEIGHT = 8     # BM25 field boost: repeat the condition title so a query t
                      # ranks it highly. Swept vs eval controls — 8 fixes O4, no regressions.
 EXPAND_FULL_CAP = 8  # a hit on a small condition (≤ this many chunks) pulls the WHOLE
                      # condition; larger conditions fall back to ±1 neighbours (bounded)
+LARGE_TOP_N = 2      # ALSO fully expand the top-N matched conditions even if large, so a
+                     # peripheral match on a big condition (e.g. 27, 17 chunks) still serves
+                     # its relevant part — the P1 false-refusal fix...
+LARGE_MAX_CHUNKS = 30  # ...but never a monster (34=131, 1=68, 28AD=58 chunks) — those stay ±1
 CHUNKS_FILE = ROOT / "data" / "interim" / "slc_chunks.jsonl"
 # Coarse backstop only. The LLM makes the real refusal call; this just avoids an
 # API round-trip when even the closest chunk is clearly unrelated.
@@ -140,6 +144,24 @@ def get_client():
 _TOKEN = re.compile(r"[a-z0-9]+")
 _BM25 = None  # module-level cache: (BM25Okapi, ids, chunk_by_id)
 
+# Lay-language → licence-vocabulary aliases, added to the BM25 QUERY ONLY (never the corpus),
+# so everyday phrasing reaches the right condition when the licence uses formal terms. Each key
+# is a phrase to look for in the raw question; its tokens are appended to the query.
+QUERY_ALIASES = {
+    "cut off": ["disconnect", "disconnection"],
+    "cutting off": ["disconnect", "disconnection"],
+    "switch off": ["disconnect", "disconnection"],
+    "unpaid bill": ["debt", "nonpayment", "arrears"],
+    "not paid": ["debt", "nonpayment"],
+    "extra help": ["priority", "services", "register"],
+    "additional support": ["priority", "services", "register"],
+    "vulnerable": ["priority", "services", "register"],
+    "vulnerability": ["priority", "services", "register"],
+    "change supplier": ["customer", "transfer"],
+    "switching supplier": ["customer", "transfer"],
+    "pay as you go": ["prepayment"],
+}
+
 
 def tokenize(text: str) -> list[str]:
     """Lowercase alnum tokens, plus a de-hyphenated join so 'back-billing' also
@@ -148,6 +170,17 @@ def tokenize(text: str) -> list[str]:
     toks = _TOKEN.findall(text)
     for m in re.finditer(r"([a-z0-9]+)-([a-z0-9]+)", text):
         toks.append(m.group(1) + m.group(2))
+    return toks
+
+
+def expand_query(question: str) -> list[str]:
+    """Query tokens + lay→licence alias tokens (BM25 side only), so 'cutting off' reaches
+    'disconnection' and 'extra help / vulnerable' reaches 'Priority Services Register'."""
+    toks = tokenize(question)
+    ql = question.lower()
+    for phrase, extra in QUERY_ALIASES.items():
+        if phrase in ql:
+            toks.extend(extra)
     return toks
 
 
@@ -187,7 +220,7 @@ def vector_retrieve(question: str, n: int = CAND_N, coll=None) -> list[dict]:
 
 def bm25_retrieve(question: str, n: int = CAND_N) -> list[str]:
     bm25, ids, _ = get_bm25()
-    scores = bm25.get_scores(tokenize(question))
+    scores = bm25.get_scores(expand_query(question))  # lay→licence alias-expanded query
     top = sorted(range(len(ids)), key=lambda i: scores[i], reverse=True)[:n]
     return [ids[i] for i in top]
 
@@ -238,24 +271,29 @@ def expand_hits(hits: list[dict], coll, as_of: date) -> list[dict]:
 
     # Condition order = order of first appearance in the (already fused-ranked) hits.
     cond_order: list[str] = []
+    for h in hits:
+        if h["meta"]["condition"] not in cond_order:
+            cond_order.append(h["meta"]["condition"])
+    top_conds = set(cond_order[:LARGE_TOP_N])  # strongest-matched conditions get full expansion
+
     # Deterministic chunk ids (must match chunk.py's scheme): f"{version}__cond{cond}_{idx}".
     want: set[str] = set()
     for h in hits:
         c, idx = h["meta"]["condition"], h["meta"]["chunk_index"]
-        if c not in cond_order:
-            cond_order.append(c)
         target = temporal.version_for(c, as_of)  # served version label, or None (before earliest)
         if target is None:
             continue  # historic text not held → serve nothing; the temporal note caveats it
         idxs = ver_cond_idxs.get((target, c), set())
-        if target != versions.CURRENT_LABEL:
-            for j in idxs:  # swapped historic condition → whole held text
-                want.add(f"{target}__cond{c}_{j}")
-        elif len(idxs) <= EXPAND_FULL_CAP:
-            for j in idxs:  # whole (small) current condition
+        full = (
+            target != versions.CURRENT_LABEL                       # swapped historic → whole held text
+            or len(idxs) <= EXPAND_FULL_CAP                        # small current condition → whole
+            or (c in top_conds and len(idxs) <= LARGE_MAX_CHUNKS)  # strongly-matched large → whole
+        )
+        if full:
+            for j in idxs:
                 want.add(f"{target}__cond{c}_{j}")
         else:
-            for j in (idx - 1, idx, idx + 1):  # bounded neighbours for large conditions
+            for j in (idx - 1, idx, idx + 1):  # bounded neighbours for a large, lower-ranked condition
                 if j in idxs:
                     want.add(f"{target}__cond{c}_{j}")
 
