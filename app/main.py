@@ -38,7 +38,7 @@ EXAMPLES = [
 ]
 
 # Temporal examples set the question AND a past "as of" date to showcase the time travel.
-# Grouped into the three kinds of change RITA can answer across, each with its own heading.
+# Grouped into the three kinds of change RIA can answer across, each with its own heading.
 _CCB_Q = "Do suppliers have to protect domestic customer credit balances?"
 _EBSS_Q = "Can the Secretary of State direct suppliers to make Energy Bill Support Scheme payments?"
 _PPM_Q = "What protections apply when a supplier installs a prepayment meter?"
@@ -47,7 +47,7 @@ _BMR_Q = "What billing information must a supplier provide to a domestic custome
 TEMPORAL_GROUPS = [
     {
         "heading": "Was this protection in force yet?",
-        "sub": "a rule that was introduced later - RITA says whether it existed then and when it came in",
+        "sub": "a rule that was introduced later - RIA says whether it existed then and when it came in",
         "examples": [
             ("Credit balances · 2021", _CCB_Q, date(2021, 6, 1)),  # before 4D (introduced 20 Sep 2023)
             ("Credit balances · 2024", _CCB_Q, date(2024, 6, 1)),  # after
@@ -57,7 +57,7 @@ TEMPORAL_GROUPS = [
     },
     {
         "heading": "Same rule, stronger protections over time",
-        "sub": "a new obligation was added - RITA serves the version in force on the date",
+        "sub": "a new obligation was added - RIA serves the version in force on the date",
         "examples": [
             ("Prepayment · 2021", _PPM_Q, date(2021, 6, 1)),  # before Cond 28 text change (8 Nov 2023)
             ("Prepayment · 2024", _PPM_Q, date(2024, 6, 1)),  # after - involuntary-PPM protections
@@ -67,7 +67,7 @@ TEMPORAL_GROUPS = [
     },
     {
         "heading": "Same rule, wider coverage over time",
-        "sub": "who it protects was broadened - RITA serves the version in force on the date",
+        "sub": "who it protects was broadened - RIA serves the version in force on the date",
         "examples": [
             ("Business fairness · 2023", _NDF_Q, date(2023, 6, 1)),  # before 0A change (1 Jul 2024): microbusiness only
             ("Business fairness · 2025", _NDF_Q, date(2025, 1, 1)),  # after - all non-domestic customers
@@ -75,7 +75,7 @@ TEMPORAL_GROUPS = [
     },
 ]
 
-st.set_page_config(page_title="Regulatory Intelligence Trusted Assistant (RITA)", page_icon="⚡", layout="centered")
+st.set_page_config(page_title="Regulatory Intelligence Assistant (RIA)", page_icon="⚡", layout="centered")
 
 # Make the Anthropic key available whether it's in a local .env (dev - handled by
 # rag.py's load_dotenv) or in Streamlit Cloud secrets (deploy). Belt-and-braces so the
@@ -155,15 +155,15 @@ def _reserve_daily_slot() -> bool:
 
 
 # --- Header ---
-st.title("⚡ Regulatory Intelligence Trusted Assistant (RITA)")
+st.title("⚡ Regulatory Intelligence Assistant (RIA)")
 st.caption(
-    "**RITA** is a proof-of-concept, scoped to **Ofgem electricity supply licence "
+    "**RIA** is a proof-of-concept, scoped to **Ofgem electricity supply licence "
     "conditions** and grounded in the current consolidated version "
     f"({temporal.current_version_str()}). "
     "She can also answer **as of a past date** - pick a date and ask, and she'll tell you "
     "whether a given protection was in force then, when it was introduced, and how its wording "
     "has changed - with historic coverage expanding condition by condition. Unlike a generic AI, "
-    "RITA answers only from "
+    "RIA answers only from "
     "the licence text: when the answer isn't there, or she can't verify the position on a "
     "past date, she says so plainly rather than inventing (hallucinating) one - and every "
     "answer is backed by specific citations. _Informational only - not legal advice._"
@@ -193,7 +193,7 @@ for start in range(0, len(EXAMPLES), PER_ROW):
             st.session_state.as_of = date.today()  # current-position examples
 
 st.write("**…or ask a historic “as of date” question - the same question answered at different dates. "
-         "RITA handles three kinds of change:**")
+         "RIA handles three kinds of change:**")
 T_PER_ROW = 2  # each row = one condition's before/after
 for group in TEMPORAL_GROUPS:
     st.markdown(f"**{group['heading']}**  \n_{group['sub']}_")
@@ -213,7 +213,7 @@ as_of = st.date_input(
     "⏳ As of date", key="as_of", max_value=date.today(),
     help="Ask what the rules were as of a past date. Leave at today for the current position.",
 )
-ask = st.button("Ask RITA", type="primary")
+ask = st.button("Ask RIA", type="primary")
 
 if ask and question.strip():
     # Per-session cap (Layer 1)
