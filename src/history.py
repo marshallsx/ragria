@@ -19,9 +19,9 @@ from datetime import date
 from pathlib import Path
 
 try:  # works as `src.history` (app/evals) and `import history` (python src/*)
-    from src import temporal
+    from src import temporal, versions
 except ImportError:
-    import temporal
+    import temporal, versions
 
 ROOT = Path(__file__).resolve().parent.parent
 CHUNKS_FILE = ROOT / "data" / "interim" / "slc_chunks.jsonl"
@@ -146,6 +146,56 @@ def _introduced_view(cond: str, as_of: date) -> dict:
             {"date": "earlier", "label": "did not exist", "note": "not in the licence"},
             {"date": temporal.fmt(m["introduced"]), "label": "introduced", "note": m["title"]},
         ],
+    }
+
+
+def _side_by_side(old: str, new: str) -> tuple[list[dict], list[dict]]:
+    """Full-text word-level diff → (left_segments, right_segments). Left carries the OLD text
+    with deletions marked; right carries the NEW text with additions marked; unchanged text
+    ('eq') appears on both. For a side-by-side compare view (whole text, not just changed bits)."""
+    a, b = old.split(), new.split()
+    left, right = [], []
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+        if tag == "equal":
+            left.append({"type": "eq", "text": " ".join(a[i1:i2])})
+            right.append({"type": "eq", "text": " ".join(b[j1:j2])})
+        elif tag == "delete":
+            left.append({"type": "del", "text": " ".join(a[i1:i2])})
+        elif tag == "insert":
+            right.append({"type": "add", "text": " ".join(b[j1:j2])})
+        elif tag == "replace":
+            left.append({"type": "del", "text": " ".join(a[i1:i2])})
+            right.append({"type": "add", "text": " ".join(b[j1:j2])})
+    return left, right
+
+
+def comparable() -> list[tuple[str, str]]:
+    """(condition, title) for the text-change conditions that have a two-version compare."""
+    return [(c, tc["title"]) for c, tc in temporal.TEXT_CHANGES.items()]
+
+
+def compare(condition: str) -> dict | None:
+    """Side-by-side comparison of a text-change condition's before vs after held text."""
+    tc = temporal.TEXT_CHANGES.get(condition)
+    if tc is None:
+        return None
+    first, last = tc["segments"][0], tc["segments"][-1]
+    left_segs, right_segs = _side_by_side(
+        _full_text(first["version"], condition), _full_text(last["version"], condition)
+    )
+    change = last["start"]
+    v_old, v_new = versions.BY_LABEL[first["version"]], versions.BY_LABEL[last["version"]]
+    return {
+        "condition": condition, "title": tc["title"], "change_date": temporal.fmt(change),
+        "note": last["note"],
+        "left": {
+            "in_force": f"{temporal.fmt(first['start'])} – {temporal.fmt(first['end'])}",
+            "consolidation": temporal.fmt(v_old["date"]), "segs": left_segs,
+        },
+        "right": {
+            "in_force": f"from {temporal.fmt(change)} (current)",
+            "consolidation": temporal.fmt(v_new["date"]), "segs": right_segs,
+        },
     }
 
 

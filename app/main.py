@@ -18,7 +18,7 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src import temporal  # noqa: E402
+from src import temporal, history  # noqa: E402
 from src.rag import STORE, TOP_K, answer_question, get_client, get_collection  # noqa: E402
 
 # --- Public-demo safeguards ---
@@ -130,6 +130,9 @@ st.markdown(
     .vh-del { color:#ff8a8a; text-decoration:line-through; opacity:0.8; }
     .vh-ctx { opacity:0.6; }
     .vh-gap { color:#FF6600; opacity:0.6; padding:0 4px; }
+    /* Compare-two-dates side-by-side column */
+    .cmp-col { max-height:460px; overflow-y:auto; padding:10px 12px; border:1px solid #333;
+               border-radius:8px; background:rgba(255,255,255,0.03); font-size:0.85em; line-height:1.75; }
 
     /* Hide Streamlit chrome for a clean embed */
     #MainMenu, footer, [data-testid="stToolbar"] { visibility: hidden; height: 0; }
@@ -188,6 +191,20 @@ def _diff_html(segs: list[dict]) -> str:
     return " ".join(out)
 
 
+def _side_html(segs: list[dict]) -> str:
+    """Render one column of a side-by-side compare: unchanged text plain, add green, del struck-red."""
+    out = []
+    for s in segs:
+        t = _san(s["text"])
+        if s["type"] == "del":
+            out.append(f'<span class="vh-del">{t}</span>')
+        elif s["type"] == "add":
+            out.append(f'<span class="vh-add">{t}</span>')
+        else:
+            out.append(t)
+    return f'<div class="cmp-col">{" ".join(out)}</div>'
+
+
 def render_history(h: dict) -> None:
     """Render the 'what changed' panel for one mapped condition."""
     title = (f'<div class="vh-title">📜 Version history — Condition {h["condition"]} · '
@@ -216,6 +233,25 @@ def render_history(h: dict) -> None:
                 f'<div class="vh-sub" style="margin-top:6px">As of <b>{h["as_of"]}</b>, this '
                 f'condition {state} - introduced <b>{h["introduced"]}</b>.</div>')
     st.markdown(f'<div class="vh-card">{body}</div>', unsafe_allow_html=True)
+
+
+def render_compare(condition: str) -> None:
+    """Full before/after side-by-side for a text-change condition — a drill-down under its
+    version-history card, so it always shows the condition the user asked about."""
+    cmp = history.compare(condition)
+    if not cmp:
+        return
+    with st.expander(f"🔀 Compare the full text side by side — before vs after {cmp['change_date']}"):
+        lcol, rcol = st.columns(2)
+        with lcol:
+            st.markdown(f"**◀ Before** · in force {cmp['left']['in_force']}  \n"
+                        f"_{cmp['left']['consolidation']} consolidation_")
+            st.markdown(_side_html(cmp["left"]["segs"]), unsafe_allow_html=True)
+        with rcol:
+            st.markdown(f"**After ▶** · in force {cmp['right']['in_force']}  \n"
+                        f"_{cmp['right']['consolidation']} consolidation_")
+            st.markdown(_side_html(cmp["right"]["segs"]), unsafe_allow_html=True)
+        st.caption("Green = added in the newer version · struck-through red = removed.")
 
 
 # --- Header ---
@@ -323,6 +359,8 @@ if ask and question.strip():
     # --- Version history "what changed" panel (mapped conditions in the answer) ---
     for h in result.get("history", []):
         render_history(h)
+        if h["kind"] == "text-change":
+            render_compare(h["condition"])  # full side-by-side, always for the asked condition
 
     # --- Retrieved sources (transparency; removable later) ---
     with st.expander(f"🔎 Retrieved sources (top {TOP_K}, hybrid rank)"):
