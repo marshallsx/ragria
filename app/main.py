@@ -22,7 +22,7 @@ from src import temporal  # noqa: E402
 from src.rag import STORE, TOP_K, answer_question, get_client, get_collection  # noqa: E402
 
 # --- Public-demo safeguards ---
-MAX_PER_SESSION = 10       # questions per browser session
+MAX_PER_SESSION = 30       # questions per browser session (raised for live demos)
 MAX_QUESTION_CHARS = 300   # input length cap
 MAX_PER_DAY = 300          # soft global daily cap (in-memory; resets on container restart).
                            # The hard cost ceiling is the Anthropic Console spend limit.
