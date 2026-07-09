@@ -204,5 +204,35 @@ The expanded set caught two real issues the original 19 missed, each with a dist
 Result: **31/31 decisions, 26/26 retrieval + citation, 26/26 faithful, 0 regressions** — the harness
 both *caught* the issues and *verified* the fix.
 
+## Embedder A/B — bge-small vs MiniLM (revisiting O4)
+
+Would a stronger embedder beat the current ChromaDB default (`all-MiniLM-L6-v2`)? Tested
+`BAAI/bge-small-en-v1.5` (ONNX via `fastembed`, no PyTorch) against the 26 answer-cases,
+isolating the embedder's effect (vector-only) from its practical impact (in the hybrid pipeline
+± synonym expansion). Rank of the first expected condition; recall@k = cases with it in top-k.
+
+| Method | recall@1 | recall@3 | recall@6 | mean rank | misses |
+|---|---|---|---|---|---|
+| MiniLM vector | 17/26 | 24/26 | 24/26 | 1.60 | O4, P3 |
+| bge vector | 13/26 | 21/26 | 25/26 | 2.65 | P3 |
+| **MiniLM hybrid+syn** *(current prod)* | 20/26 | 25/26 | **26/26** | 1.35 | **none** |
+| bge hybrid+syn | 22/26 | 25/26 | 25/26 | 1.38 | S1 |
+| bge hybrid NOsyn | 23/26 | 24/26 | 24/26 | 1.28 | S1, P3 |
+
+**Verdict — not a net win; keep MiniLM hybrid+syn.** Three findings:
+1. **bge natively fixes the O4 vocabulary gap** — O4 (21BA) goes rank **None → 2** vector-only,
+   just from the swap. The original hypothesis, confirmed: bge understands the vocabulary MiniLM missed.
+2. **But bge is worse as a raw embedder overall** — vector-only it loses on recall@1 (13 vs 17) and
+   mean rank (2.65 vs 1.60), and tanks P3 (rank 8 → 19). It trades one blind spot for others.
+3. **The incumbent hybrid is still the only config with zero misses** (recall@6 26/26). Every bge
+   variant drops ≥1 case (S1, or S1+P3). bge hybrid+syn buys +2 recall@1 but regresses S1 — lateral,
+   within noise on 26 cases. bge hybrid *NOsyn* has the best recall@1/mean-rank (bge reduces the need
+   for synonyms) but drops P3 entirely, confirming the lay→licence synonym layer still does real work.
+
+The incumbent already fixed O4 via BM25 + synonyms, so bge would fix a problem that's already fixed,
+at the cost of a full re-embed of the 3-version store and a heavier dependency. Documented as a viable
+alternative, not an upgrade. *Caveat: 26 cases, single run — 1–3 case differences are within noise.*
+Reproduce: `venv/bin/python evals/embedder_ab.py` (checkpointed + resumable; tuned for a 4 GB box).
+
 ## Artefacts
-`evals/cases.yaml` · `evals/run_evals.py` · `src/detect_changes.py` · `docs/change-map.md` · `evals/results_{baseline,postfix,haiku,hybrid,temporal,textchange,ndf,history,hardened}.json`
+`evals/cases.yaml` · `evals/run_evals.py` · `evals/embedder_ab.py` (+ `embedder_ab.log`) · `src/detect_changes.py` · `docs/change-map.md` · `evals/results_{baseline,postfix,haiku,hybrid,temporal,textchange,ndf,history,hardened}.json`
