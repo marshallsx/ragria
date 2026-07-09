@@ -116,6 +116,21 @@ st.markdown(
         color: #FFFFFF !important;
         box-shadow: none !important;
     }
+    /* Version-history "what changed" panel */
+    .vh-card { border:1px solid #333; border-left:3px solid #FF6600; border-radius:8px;
+               padding:12px 16px; margin:10px 0; background:rgba(255,102,0,0.05); }
+    .vh-title { font-weight:800; color:#FF6600; margin-bottom:8px; font-size:1.02em; }
+    .vh-timeline { font-size:0.9em; margin:4px 0; }
+    .vh-sub { opacity:0.7; }
+    .vh-line { color:#FF6600; opacity:0.75; }
+    .vh-here { color:#FF6600; font-weight:700; }
+    .vh-diff { font-size:0.9em; line-height:1.9; background:rgba(255,255,255,0.04);
+               border-radius:6px; padding:10px 12px; margin-top:6px; }
+    .vh-add { background:rgba(60,200,60,0.25); color:#9dff9d; border-radius:3px; padding:1px 4px; }
+    .vh-del { color:#ff8a8a; text-decoration:line-through; opacity:0.8; }
+    .vh-ctx { opacity:0.6; }
+    .vh-gap { color:#FF6600; opacity:0.6; padding:0 4px; }
+
     /* Hide Streamlit chrome for a clean embed */
     #MainMenu, footer, [data-testid="stToolbar"] { visibility: hidden; height: 0; }
     </style>
@@ -152,6 +167,55 @@ def _reserve_daily_slot() -> bool:
         return False
     u["count"] += 1
     return True
+
+
+def _san(t: str) -> str:
+    """Escape HTML and flatten em-dashes for safe inline rendering."""
+    return t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("—", "-")
+
+
+def _diff_html(segs: list[dict]) -> str:
+    out = []
+    for s in segs:
+        if s["type"] == "add":
+            out.append(f'<span class="vh-add">{_san(s["text"])}</span>')
+        elif s["type"] == "del":
+            out.append(f'<span class="vh-del">{_san(s["text"])}</span>')
+        elif s["type"] == "gap":
+            out.append('<span class="vh-gap"> … </span>')
+        else:
+            out.append(f'<span class="vh-ctx">{_san(s["text"])}</span>')
+    return " ".join(out)
+
+
+def render_history(h: dict) -> None:
+    """Render the 'what changed' panel for one mapped condition."""
+    title = (f'<div class="vh-title">📜 Version history — Condition {h["condition"]} · '
+             f'{_san(h["title"])}</div>')
+    if h["kind"] == "text-change":
+        marks = " <span class='vh-line'>──→</span> ".join(
+            f'● <b>{m["date"]}</b> <span class="vh-sub">({m["label"]})</span>' for m in h["markers"]
+        )
+        timeline = f'<div class="vh-timeline">{marks} <span class="vh-line">──→ today</span></div>'
+        showing = h["markers"][-1]["date"] if h["on_after"] else h["markers"][0]["date"]
+        side = "on/after" if h["on_after"] else "before"
+        here = (f'<div class="vh-sub" style="margin:4px 0 8px">You asked <b>as of {h["as_of"]}</b> - '
+                f'<span class="vh-here">{side}</span> the {h["change_date"]} change, so RIA shows the '
+                f'<b>{showing}</b> text.</div>')
+        more = ' <span class="vh-gap">…(+more)</span>' if h["diff_truncated"] else ''
+        diff = (f'<div class="vh-sub"><b>What changed on {h["change_date"]}:</b> '
+                f'<span class="vh-add">added</span> · <span class="vh-del">removed</span></div>'
+                f'<div class="vh-diff">{_diff_html(h["diff"])}{more}</div>')
+        body = title + timeline + here + diff
+    else:  # introduced
+        marks = (f'<span class="vh-sub">did not exist</span> <span class="vh-line">──→</span> '
+                 f'● <b>{h["introduced"]}</b> <span class="vh-sub">(introduced)</span> '
+                 f'<span class="vh-line">──→ today</span>')
+        state = "existed" if h["existed"] else "did <b>not</b> exist yet"
+        body = (title + f'<div class="vh-timeline">{marks}</div>'
+                f'<div class="vh-sub" style="margin-top:6px">As of <b>{h["as_of"]}</b>, this '
+                f'condition {state} - introduced <b>{h["introduced"]}</b>.</div>')
+    st.markdown(f'<div class="vh-card">{body}</div>', unsafe_allow_html=True)
 
 
 # --- Header ---
@@ -255,6 +319,10 @@ if ask and question.strip():
             st.subheader("Citations")
             for c in result["citations"]:
                 st.markdown(f"- **Condition {c['condition']}** - {c['condition_title']} (pp. {c['pages']})")
+
+    # --- Version history "what changed" panel (mapped conditions in the answer) ---
+    for h in result.get("history", []):
+        render_history(h)
 
     # --- Retrieved sources (transparency; removable later) ---
     with st.expander(f"🔎 Retrieved sources (top {TOP_K}, hybrid rank)"):

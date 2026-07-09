@@ -31,9 +31,9 @@ from dotenv import load_dotenv
 from rank_bm25 import BM25Okapi
 
 try:  # works both as `src.rag` (app/evals) and `python src/rag.py`
-    from src import temporal, versions
+    from src import temporal, versions, history
 except ImportError:
-    import temporal, versions
+    import temporal, versions, history
 
 ROOT = Path(__file__).resolve().parent.parent
 STORE = ROOT / "chroma"
@@ -389,6 +389,8 @@ def answer_question(
         ci["condition"] = re.sub(r"(?i)^\s*condition\s+", "", str(ci.get("condition", ""))).strip()
     result["as_of"] = as_of.isoformat()
     result["retrieved"] = retrieved_meta
+    # "What changed" views for any mapped condition among the citations (for the UI panel).
+    result["history"] = history.views_for(result.get("citations", []), as_of)
     return result
 
 
@@ -411,6 +413,27 @@ def _format_cli(q: str, r: dict) -> str:
         lines.append(
             f"  [{d}] Cond {m['condition']} — {m['condition_title']} (v{v}, pp.{m['pages']})"
         )
+    for h in r.get("history", []):
+        lines.append("")
+        if h["kind"] == "text-change":
+            side = "after" if h["on_after"] else "before"
+            lines.append(f"Version history — Cond {h['condition']} ({h['title']}): "
+                         f"text changed {h['change_date']} (as of {h['as_of']}: {side} the change)")
+            parts = []
+            for s in h["diff"]:
+                if s["type"] == "add":
+                    parts.append(f"[+ {s['text']}]")
+                elif s["type"] == "del":
+                    parts.append(f"[- {s['text']}]")
+                elif s["type"] == "gap":
+                    parts.append("…")
+                else:
+                    parts.append(s["text"])
+            lines.append(f"  what changed: {' '.join(parts)}{'  …(+more)' if h['diff_truncated'] else ''}")
+        else:
+            state = "existed" if h["existed"] else "did NOT exist yet"
+            lines.append(f"Version history — Cond {h['condition']} ({h['title']}): "
+                         f"introduced {h['introduced']} (as of {h['as_of']}: {state})")
     return "\n".join(lines)
 
 
