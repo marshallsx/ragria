@@ -357,10 +357,17 @@ if ask and question.strip():
                 st.markdown(f"- **Condition {c['condition']}** - {c['condition_title']} (pp. {c['pages']})")
 
     # --- Version history "what changed" panel (mapped conditions in the answer) ---
+    # Defensive: this panel is a supplementary enhancement — the answer + citations are already
+    # shown above. If a half-updated deploy leaves these render helpers out of sync (e.g. a stale
+    # `history` module missing `compare()`), degrade gracefully: skip the panel, log to the server
+    # logs, and never crash the whole answer. Guarded per-entry so one bad entry can't sink the rest.
     for h in result.get("history", []):
-        render_history(h)
-        if h["kind"] == "text-change":
-            render_compare(h["condition"])  # full side-by-side, always for the asked condition
+        try:
+            render_history(h)
+            if h["kind"] == "text-change":
+                render_compare(h["condition"])  # full side-by-side, always for the asked condition
+        except Exception as e:  # noqa: BLE001 — supplementary UI must never break the answer
+            print(f"[version-history panel skipped] {type(e).__name__}: {e}", flush=True)
 
     # --- Retrieved sources (transparency; removable later) ---
     with st.expander(f"🔎 Retrieved sources (top {TOP_K}, hybrid rank)"):
