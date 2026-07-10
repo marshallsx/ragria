@@ -127,6 +127,34 @@ def plan(question: str, coll=None, client=None, model: str | None = None) -> dic
     return {"is_broad": bool(data.get("is_broad")), "subqueries": subs}
 
 
+K_PER = 6       # chunks pulled per sub-query (reuses the existing hybrid retriever)
+BUDGET = 40     # max unique chunks in the union fed to synthesis (context/cost cap)
+
+
+def plan_and_retrieve(question: str, coll=None, client=None, model: str | None = None,
+                      k_per: int = K_PER, budget: int = BUDGET) -> tuple[dict, list[dict]]:
+    """Plan sub-queries, retrieve each via the existing hybrid retriever, then UNION + dedup by
+    chunk id with ROUND-ROBIN interleave across sub-queries: each obligation area contributes its
+    rank-1 chunk before any contributes its rank-2, so the budget cap can't starve a whole area.
+    Returns (plan, union_chunks). A specific question → one sub-query → behaves like today."""
+    coll = coll or rag.get_collection()
+    p = plan(question, coll=coll, client=client, model=model)
+    lists = [rag.hybrid_retrieve(sq, k_per, coll)[0] for sq in p["subqueries"]]
+    union: list[dict] = []
+    seen: set[str] = set()
+    maxlen = max((len(lst) for lst in lists), default=0)
+    for depth in range(maxlen):
+        for lst in lists:
+            if depth < len(lst):
+                c = lst[depth]
+                if c["id"] not in seen:
+                    seen.add(c["id"])
+                    union.append(c)
+                    if len(union) >= budget:
+                        return p, union
+    return p, union
+
+
 if __name__ == "__main__":
     q = sys.argv[1] if len(sys.argv) > 1 else "what obligations do we have to vulnerable customers?"
     p = plan(q)

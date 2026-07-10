@@ -398,6 +398,16 @@ Current retrieval's Core-condition recall on the anchor set:
   sub-query finds what the broad query structurally can't. Precision measured at retrieval level only
   (synthesis filters); real answer-precision measured later. This "before" number is the fix target.
 
+### Step 1 (planner) + Step 2 (union retrieval) — DONE (2026-07-10)
+- `src/planner.py`: corpus-aware `plan()` + `plan_and_retrieve()` (per-sub-query hybrid retrieve →
+  round-robin interleave union, budget 40). `evals/broad_compare.py` measures it vs baseline.
+- **Recall: 47% → 88%** (`evals/broad_compare.py`). BQ1 2/5→5/5, BQ3 2/4→4/4, BQ4 2/3→3/3,
+  BQ5 narrow control 1/1 (unchanged, 2 sub-queries). **BQ2 residual 2/4** — misses 21A + 21BA,
+  which are unreachable at ceiling for the broad phrasing and NOT in the planner's candidate list;
+  lever = nudge planner to include well-known specific obligations, not only candidates.
+- Retrieval-level precision noise rises (expected; synthesis filters) — real answer-precision at Step 3.
+- NEXT: (optional) planner-prompt tweak for BQ2 residual, then Step 3 synthesis (grouped obligations).
+
 ### Anchor eval set — VERIFIED (Scott confirmed vs Ofgem, 2026-07-10)
 Grading rule: **recall** = fraction of a query's CORE conditions surfaced; **precision** = surfacing
 anything OUTSIDE Core ∪ Borderline is a miss (Borderline hits are "free", so reasonable breadth
