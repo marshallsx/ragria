@@ -322,3 +322,80 @@ Goal Scott chose: **make the live product genuinely better** — measured, not b
   (electricity supply only); (b) temporal coverage gaps (only 5 conditions mapped); (c)
   retrieval misses on real phrasing; (d) refusal calibration.
 - Constraint: safe on the 4 GB box — retrieval + modest API calls, **no re-embedding**.
+
+## Phase 7 — Broad-query completeness (query planning / decomposition) — PROPOSED, pending sign-off
+
+**Principle (Scott):** broad-query COMPLETENESS is an **accuracy requirement, equal weight to
+precision**. A question like "what obligations do we have to vulnerable customers?" must surface
+ALL the relevant obligations, not just the best-matching one. Mechanism = **automatic query
+planning (decomposition)**. No user classification; a "comprehensive" override is optional only.
+
+**Flow:**
+1. **Plan** sub-queries from the question — a specific question yields 1 sub-query (itself); a
+   broad one yields several (each a facet/obligation area).
+2. **Retrieve** top-k per sub-query (existing hybrid: vector + BM25 + expansion), against the
+   condition/section-tagged chunks.
+3. **Union + de-duplicate** the retrieved chunks (by chunk id; keep best rank across sub-queries).
+4. **Synthesize ONE grounded answer, grouped by obligation**, each point cited to source + section.
+5. **Refuse** when no adequate match; otherwise add an **honesty line** that the answer reflects the
+   retrieved sections and may not be exhaustive.
+
+**Requirements this drives:**
+- Chunk metadata carries condition/section for grouping + citation — **ALREADY MET**
+  (`condition`, `condition_title`, `section` on every chunk). **No re-chunk / re-embed needed.**
+- Evals must include **broad-query cases that measure RECALL** (did it surface all expected
+  obligations?), not just precision on narrow queries — plus a precision/no-regression guard on
+  narrow queries (decomposition must not degrade them).
+
+**Design decisions — recommended resolutions (confirm/adjust before build):**
+- **Planner = one LLM call** returning 1..N sub-queries (structured output). For narrow questions
+  it returns just the original → no behaviour change. (Alt: heuristic gate — rejected as brittle.)
+  Open: planner model (Opus vs cheaper Haiku for the plan step) — recommend measure, start Opus.
+- **Cap sub-queries** (recommend ≤ 6) and **cap total unique chunks** fed to synthesis (recommend
+  ~30–40, prioritised by best cross-sub-query score) — bounds cost/latency + precision drift.
+- **Retrieval per sub-query** reuses the existing hybrid retriever untouched; union by chunk id;
+  whole-condition / neighbour expansion applied AFTER union on survivors.
+- **Synthesis** = grouped-by-obligation structured output (list of {obligation, detail,
+  citations[]}); keep refusal + add non-exhaustiveness honesty line. UI renders grouped.
+- **Temporal composes:** decomposition runs inside the resolved version scope (as-of date); the
+  history panel is computed over the union of cited conditions (dedup + cap panels).
+- **Refusal:** refuse only when the UNION is empty/inadequate; partial coverage → answer the
+  covered obligations + the honesty caveat (the recall ceiling is stated, not hidden).
+
+**Risks / guardrails:**
+- Over-decomposition → precision drift / marginally-related conditions. Guard: cap sub-queries +
+  chunk budget; synthesis stays grounded (assert only what's supported) so over-retrieval ≠
+  hallucination.
+- Cost/latency rise on broad queries (extra plan call + bigger synthesis context). Guard: caps +
+  measure cost per broad query; consider Haiku planner.
+- Narrow-query regression. Guard: eval precision/no-regression on the existing cases.
+
+**Measure-first integration (reconciles with the quality-pass discipline):**
+- Step 0 = **baseline**: add a handful of broad-query cases with hand-curated expected-condition
+  sets and measure CURRENT recall (expected to be low) BEFORE building — so the fix is measured,
+  not assumed. Then implement, then re-measure recall gain + precision/no-regression.
+
+**Deferred (unchanged):** gas corpus; broader industry codes; the optional user "comprehensive"
+override (automatic planner handles breadth; manual toggle is a later nice-to-have).
+
+**Decisions SIGNED OFF (2026-07-10):**
+- Planner = **corpus-aware** (wide-net retrieve → LLM selects relevant candidate conditions from
+  their titles → focused sub-query per selected area → deep retrieve each). NOT blind decomposition.
+- Grade on **condition recall + precision** (obligation grouping is a presentation layer; grading
+  is deterministic on conditions).
+- Caps accepted as tunable defaults: **≤ 6 sub-queries**, **~30–40 unique-chunk budget**.
+
+**Still open (decide before/at build):** planner model (Opus vs cheaper Haiku for the plan step —
+recommend start Opus, measure); exact grouped-obligation output schema + UI grouping.
+
+### Anchor eval set — DRAFT (Scott verifying broad lists vs Ofgem)
+Grading rule: **recall** = fraction of a query's CORE conditions surfaced; **precision** = surfacing
+anything OUTSIDE Core ∪ Borderline is a miss (Borderline hits are "free", so reasonable breadth
+isn't punished). Core/Borderline below are PROPOSED from titles + domain reasoning — pending
+Scott's Ofgem verification, after which this becomes the seed for `evals/` broad-query cases.
+- **BQ1 "obligations to vulnerable customers"** — Core: 0, 26, 27, 27A, 28 · Borderline: 31G, 0A
+- **BQ2 "billing obligations to domestic customers"** — Core: 21A, 21B, 21BA, 31H · Borderline: 22A, 31I, 27
+- **BQ3 "what must we do when installing a smart meter?"** (cap stress-test) — Core: 39, 40, 41, 45 · Borderline: 42, 46, 47, 51
+- **BQ4 "obligations before disconnecting a customer for debt"** — Core: 27, 27A, 28 · Borderline: 26, 0
+- **BQ5 (NARROW CONTROL) "maximum back-billing period for domestic customers?"** — Core: 21BA · Borderline: (none).
+  Proves decomposition yields **1 sub-query (itself)** and does NOT over-broaden or regress narrow queries.
