@@ -409,6 +409,17 @@ Current retrieval's Core-condition recall on the anchor set:
   answer-precision measured at Step 3. (100% is on 5 anchor cases — a strong signal, not proof.)
 - NEXT: Step 3 synthesis (grouped-by-obligation output; answer-level recall + precision).
 
+### Step 3 (grouped synthesis) — DONE (2026-07-10)
+- `src/planner.py`: `synthesize()` (reuses rag.SYSTEM grounding+temporal rules verbatim, grouped
+  output via GROUPED_SCHEMA; derives backward-compat `answer`+`citations`) + `answer_broad()` (full
+  pipeline). `evals/broad_synth.py` measures answer-level recall/precision.
+- **Answer-level Core recall (CITED): 14/17 = 82%** (BQ1 5/5, BQ2 3/4, BQ3 3/4, BQ4 2/3, BQ5 1/1).
+  Precision mostly clean (synthesis filters retrieval noise as predicted; BQ3 +49 smart-metering-adjacent).
+- Gap vs 100% retrieval recall = synthesis selectivity (~1 Core dropped per broad query). Non-determinism
+  observed (need variance handling in evals). BQ1 sample = 8 grouped, grounded, cited obligations.
+- NEXT: Step 4 — wire answer_broad into rag.answer_question behind the out-of-scope backstop + UI grouped
+  render + REGRESSION check on the existing 31-case hardened + temporal suite (must not regress).
+
 ### Anchor eval set — VERIFIED (Scott confirmed vs Ofgem, 2026-07-10)
 Grading rule: **recall** = fraction of a query's CORE conditions surfaced; **precision** = surfacing
 anything OUTSIDE Core ∪ Borderline is a miss (Borderline hits are "free", so reasonable breadth

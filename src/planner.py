@@ -19,7 +19,9 @@ CLI smoke test:  venv/bin/python src/planner.py "what obligations do we have to 
 from __future__ import annotations
 
 import json
+import re
 import sys
+from datetime import date
 
 try:  # works both as `src.planner` (app/evals) and `python src/planner.py`
     from src import rag
@@ -157,6 +159,134 @@ def plan_and_retrieve(question: str, coll=None, client=None, model: str | None =
                     if len(union) >= budget:
                         return p, union
     return p, union
+
+
+# --- Step 3: grouped-by-obligation synthesis ------------------------------------------------
+# Reuse rag.SYSTEM's grounding + temporal rules VERBATIM (so Phase 7 composes with version
+# awareness), swapping only the output-format instruction and the empty-answer wording.
+_GROUPED_TAIL = (
+    "Structure the answer as a list of DISTINCT OBLIGATIONS. Each obligation is one concrete duty: "
+    "a short label (obligation), a grounded detail (1-3 sentences drawn ONLY from the extracts), and "
+    "citation(s) to the condition(s) it comes from (condition number, title, page range). Group "
+    "related points under a single obligation; keep obligations distinct (do not split one duty across "
+    "several, or merge unrelated duties). Include an obligation ONLY if the extracts support it — do "
+    "NOT pad with tangential conditions that merely appeared among the extracts. Always set "
+    "exhaustiveness_note to one line stating the answer reflects the retrieved sections and may not be "
+    "exhaustive. If the extracts contain nothing adequate, set refused=true, obligations=[], and say "
+    "what was missing in reason. Return your response in the required structured format."
+)
+GROUPED_SYSTEM = (
+    rag.SYSTEM.rsplit("Return your response", 1)[0].rstrip().replace("leave answer empty", "leave obligations empty")
+    + "\n\n" + _GROUPED_TAIL
+)
+
+GROUPED_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "refused": {"type": "boolean"},
+        "obligations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "obligation": {"type": "string"},
+                    "detail": {"type": "string"},
+                    "citations": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "condition": {"type": "string"},
+                                "condition_title": {"type": "string"},
+                                "pages": {"type": "string"},
+                            },
+                            "required": ["condition", "condition_title", "pages"],
+                            "additionalProperties": False,
+                        },
+                    },
+                },
+                "required": ["obligation", "detail", "citations"],
+                "additionalProperties": False,
+            },
+        },
+        "reason": {"type": "string"},
+        "exhaustiveness_note": {"type": "string"},
+    },
+    "required": ["refused", "obligations", "reason", "exhaustiveness_note"],
+    "additionalProperties": False,
+}
+
+
+def synthesize(question: str, union_chunks: list[dict], coll=None, as_of: date | None = None,
+               client=None, model: str | None = None) -> dict:
+    """Grounded, grouped-by-obligation synthesis over the union chunks. Returns the grouped result
+    PLUS backward-compatible `answer` (markdown) + `citations` (deduped) so the existing UI / evals
+    / temporal-history consumers keep working unchanged."""
+    coll = coll or rag.get_collection()
+    as_of = as_of or date.today()
+    model = model or rag.MODEL
+    client = client or rag.get_client()
+
+    conds = {c["meta"]["condition"] for c in union_chunks}
+    context = rag.build_context(rag.expand_hits(union_chunks, coll, as_of))
+    notes = rag.temporal.temporal_notes(conds, as_of) + rag.temporal.text_change_notes(conds, as_of)
+    parts = [
+        f"Current licence version: consolidated to {rag.temporal.current_version_str()}.",
+        f"As-of date: {rag.temporal.fmt(as_of)}",
+    ]
+    scope = rag.temporal.scope_note(as_of)
+    if scope:
+        parts.append(scope)
+    if notes:
+        parts.append("Temporal facts (authoritative):\n" + "\n".join(f"- {n}" for n in notes))
+    parts.append(f"Question: {question}")
+    parts.append(f"Retrieved extracts:\n\n{context}")
+
+    fmt = {"type": "json_schema", "schema": GROUPED_SCHEMA}
+    kwargs = dict(model=model, max_tokens=4096, system=GROUPED_SYSTEM,
+                  messages=[{"role": "user", "content": "\n\n".join(parts)}])
+    if "haiku" in model:
+        kwargs["output_config"] = {"format": fmt}
+    else:
+        kwargs["thinking"] = {"type": "adaptive"}
+        kwargs["output_config"] = {"effort": "medium", "format": fmt}
+    resp = client.messages.create(**kwargs)
+
+    if resp.stop_reason == "refusal":
+        return {"refused": True, "obligations": [], "reason": "The request was declined by a safety filter.",
+                "exhaustiveness_note": "", "citations": [], "answer": "", "as_of": as_of.isoformat()}
+
+    result = json.loads(next(b.text for b in resp.content if b.type == "text"))
+    obligations = result.get("obligations", [])
+    # Sanitise citation condition refs (strip stray "Condition " prefix) + derive deduped citations.
+    citations, seen = [], set()
+    for ob in obligations:
+        for ci in ob.get("citations", []):
+            ci["condition"] = re.sub(r"(?i)^\s*condition\s+", "", str(ci.get("condition", ""))).strip()
+            if ci["condition"] and ci["condition"] not in seen:
+                seen.add(ci["condition"])
+                citations.append(ci)
+    # Backward-compat markdown answer (old UI / evals `answer` field).
+    lines = []
+    for ob in obligations:
+        cites = ", ".join(f"Condition {ci['condition']}" for ci in ob.get("citations", []))
+        lines.append(f"**{ob.get('obligation', '')}** — {ob.get('detail', '')}" + (f" ({cites})" if cites else ""))
+    note = result.get("exhaustiveness_note", "")
+    result["citations"] = citations
+    result["answer"] = "" if result.get("refused") else "\n\n".join(lines) + (f"\n\n_{note}_" if note else "")
+    result["as_of"] = as_of.isoformat()
+    return result
+
+
+def answer_broad(question: str, coll=None, as_of: date | None = None, client=None,
+                 model: str | None = None) -> dict:
+    """Full Phase-7 pipeline: plan → union retrieve → grouped synthesis. (Step 4 wires this into
+    rag.answer_question behind the out-of-scope backstop; kept thin here for isolated testing.)"""
+    coll = coll or rag.get_collection()
+    p, union = plan_and_retrieve(question, coll=coll, client=client, model=model)
+    result = synthesize(question, union, coll=coll, as_of=as_of, client=client, model=model)
+    result["plan"] = p
+    return result
 
 
 if __name__ == "__main__":
