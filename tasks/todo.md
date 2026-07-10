@@ -388,11 +388,10 @@ override (automatic planner handles breadth; manual toggle is a later nice-to-ha
 **Still open (decide before/at build):** planner model (Opus vs cheaper Haiku for the plan step —
 recommend start Opus, measure); exact grouped-obligation output schema + UI grouping.
 
-### Anchor eval set — DRAFT (Scott verifying broad lists vs Ofgem)
+### Anchor eval set — VERIFIED (Scott confirmed vs Ofgem, 2026-07-10)
 Grading rule: **recall** = fraction of a query's CORE conditions surfaced; **precision** = surfacing
 anything OUTSIDE Core ∪ Borderline is a miss (Borderline hits are "free", so reasonable breadth
-isn't punished). Core/Borderline below are PROPOSED from titles + domain reasoning — pending
-Scott's Ofgem verification, after which this becomes the seed for `evals/` broad-query cases.
+isn't punished). This is now the signed-off seed for the `evals/` broad-query cases.
 - **BQ1 "obligations to vulnerable customers"** — Core: 0, 26, 27, 27A, 28 · Borderline: 31G, 0A
 - **BQ2 "billing obligations to domestic customers"** — Core: 21A, 21B, 21BA, 31H · Borderline: 22A, 31I, 27
 - **BQ3 "what must we do when installing a smart meter?"** (cap stress-test) — Core: 39, 40, 41, 45 · Borderline: 42, 46, 47, 51
