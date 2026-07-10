@@ -37,6 +37,15 @@ EXAMPLES = [
     ("Out of scope ↩", "What safety certifications are required to install a domestic gas boiler?"),
 ]
 
+# Broad questions — RIA plans focused sub-searches, unions the results, and answers grouped by
+# obligation, so an open "what are all our duties around X?" question surfaces every relevant
+# condition rather than only the closest match.
+BROAD_EXAMPLES = [
+    ("Vulnerable customers", "What obligations do we have to vulnerable customers?"),
+    ("Billing obligations", "What are our billing obligations to domestic customers?"),
+    ("Installing a smart meter", "What must we do when installing a smart meter?"),
+]
+
 # Temporal examples set the question AND a past "as of" date to showcase the time travel.
 # Grouped into the three kinds of change RIA can answer across, each with its own heading.
 _CCB_Q = "Do suppliers have to protect domestic customer credit balances?"
@@ -288,6 +297,16 @@ PER_ROW = 3
 for start in range(0, len(EXAMPLES), PER_ROW):
     cols = st.columns(PER_ROW)  # fixed width so labels wrap only at spaces
     for col, (label, q) in zip(cols, EXAMPLES[start : start + PER_ROW]):
+        if col.button(label, help=q, use_container_width=True):
+            st.session_state.question = q
+            st.session_state.as_of = date.today()  # current-position examples
+
+st.write("**Broad questions** - open “what are all our duties around …?” questions. "
+         "RIA plans focused sub-searches and answers **grouped by obligation**, surfacing every "
+         "relevant condition rather than only the closest match:")
+for start in range(0, len(BROAD_EXAMPLES), PER_ROW):
+    cols = st.columns(PER_ROW)
+    for col, (label, q) in zip(cols, BROAD_EXAMPLES[start : start + PER_ROW]):
         if col.button(label, help=q, use_container_width=True):
             st.session_state.question = q
             st.session_state.as_of = date.today()  # current-position examples
