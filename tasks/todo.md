@@ -463,3 +463,24 @@ isn't punished). This is now the signed-off seed for the `evals/` broad-query ca
   So this is an ongoing, incremental backlog, not a one-shot task.
 - **Phase 7 SYNTHESIS PASS** (deferred): lift answer-level recall (82%); fix T4 date-string in the
   grouped answer; consider Haiku for the planner step to cut per-query cost on the live demo.
+
+## SESSION CLOSE — 2026-07-10 (pre-lunch)
+**Phase 7 (broad-query completeness) is DONE, regression-GREEN, and LIVE on the deployed app.**
+Planner → union retrieval → grouped-by-obligation synthesis, wired into `answer_question` behind
+the out-of-scope backstop; "Broad questions" UI section; version-history panel shows every mapped
+cited condition + a self-updating coverage line. Pushed to origin/main + rebooted.
+Also this session: repo confirmed public + secret-safe; added an **All Rights Reserved LICENSE**
+(NOT MIT — preserves future sale) + README copyright footer.
+
+### RESUME AFTER LUNCH — product-quality pass (measure → triage → fix → re-measure)
+Return to the deferred quality pass (see "## NEXT — product-quality pass" above). Concretely:
+- **Step 1 — Diagnose.** Build a batch of realistic + adversarial questions (lay phrasing,
+  out-of-scope probes, temporal edges, multi-part conditions) beyond the tidy existing cases.
+  Run them → ranked list of concrete failures, tagged: retrieval miss / false refusal /
+  hallucination / temporal caveat / genuinely out-of-scope. NOTE: this now tests the LIVE Phase-7
+  pipeline (planner + grouped synthesis), so it also stresses broad/decomposition behaviour.
+- **Step 2 — Triage.** Pick the single dominant, fixable class (the one fix that helps the most).
+- **Step 3 — Fix + verify.** Implement it; re-run for zero regressions (P1/P3 rigour); the 31-case
+  hardened suite + the 5 broad anchors are the regression baseline.
+- First action next session: draft the diagnostic question batch and show Scott BEFORE running any
+  API calls (per the agreed sign-off habit).

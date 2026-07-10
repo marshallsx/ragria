@@ -153,3 +153,52 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   was fully built), once corrected by me too hastily ("no embedder work existed" when the
   transcript proved it did). Git log, file listings, and the transcript are the ground truth;
   check them before asserting or agreeing.
+
+## Phase 7 — broad-query completeness (query planning) + licensing
+
+- **Broad-query completeness is a recall problem, and recall is an accuracy requirement.** The
+  system was tuned for precision on narrow questions, so "what are ALL our duties around X?"
+  surfaced ~2 of the relevant conditions (baseline 47% Core recall on the anchor set). A
+  corpus-aware planner (wide-net retrieve → let the model pick relevant conditions from their
+  titles → one focused sub-query per obligation area → union) lifted retrieval recall to 100%.
+
+- **Corpus-aware planning beats blind decomposition, and targeted sub-queries reach what a broad
+  query structurally can't.** Killer evidence: "billing obligations" cannot retrieve Cond 21BA
+  even at depth 40, but a narrow "back-billing" sub-query surfaces it at rank 1. Grounding the
+  plan in the corpus's own vocabulary avoids the O4-style vocabulary gap.
+
+- **Measure retrieval recall AND answer recall separately.** Retrieval union hit 100% Core, but
+  the synthesized ANSWER cited 82% — synthesis is selective. Retrieval recall is a ceiling, not
+  the delivered number; grade the citations, not just the fetch.
+
+- **Decomposition trades precision for recall — guard the refusal discipline explicitly.** The
+  broad pipeline over-answered an out-of-scope question (Guaranteed Standards) by latching onto a
+  tangential condition (14A) — a false answer the narrow system correctly refused. Fix was a
+  SCOPE DISCIPLINE instruction: answer only what the extracts actually address; refuse when the
+  question's CORE subject isn't in them, even if a related condition surfaced.
+
+- **Backward-compat derivation lets a big output-schema change land with zero regressions.** The
+  new grouped-by-obligation schema derives the old `answer` (markdown) + `citations` fields, so
+  the UI, the 31-case eval harness, and the temporal-history panel kept working untouched —
+  regression gate stayed green (31/31) without touching consumers.
+
+- **A pre-existing cap can silently fight a new feature.** `views_for(limit=2)` was a sensible
+  anti-clutter guard when answers cited ~1 mapped condition; broad multi-condition answers then
+  silently dropped the 3rd temporal panel. When a feature changes cardinality assumptions, hunt
+  for constants/limits set under the old assumption.
+
+- **Absence-of-signal can imply a false claim; make coverage explicit.** Showing a version-history
+  panel for one cited condition but not others could be read as "those never changed" when the
+  truth is "not mapped yet." A generated coverage line ("mapped so far for 0A, 4D, 21B, 25E, 28")
+  turns the ambiguity into an honest, self-updating statement.
+
+- **Licence to intent, not by default: MIT would give away the thing you want to sell.** For a
+  public portfolio repo that may be commercialised later, MIT grants everyone the right to use,
+  modify, and SELL the code — the opposite of the goal. "All Rights Reserved" (source-visible,
+  no reuse rights) keeps portfolio visibility while reserving commercial rights. GitHub won't
+  badge a custom licence (licenseInfo=null) but the LICENSE file is still effective.
+
+- **Security-through-obscurity isn't security.** Removing the README to "hide what it does"
+  protects nothing — the code IS the disclosure. Real levers: the LICENSE (legal deterrent) and
+  repo privacy (removes the code from view). Keep the README; its portfolio value dwarfs its
+  negligible effect on copying.
