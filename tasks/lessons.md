@@ -116,3 +116,40 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   (one-off; queries are fast). The 256-token limit drives chunk size (~175 words). It's
   only moderately discriminating on dense legal text — a retrieval-quality item to
   measure in the eval phase.
+
+## Post-Phase-6 — embedder A/B, crash-hardening, deploy hygiene
+
+- **The "obvious upgrade" isn't always one — measure it.** Swapping to a stronger embedder
+  (`bge-small`) *felt* like a clear win and does natively fix the O4 vocabulary gap (21BA
+  None→2 vector-only). But measured over the answer-cases it was **worse as a raw embedder**
+  (recall@1 13 vs 17; P3 8→19) and **no config beat MiniLM hybrid+syn**, the only one with
+  zero recall@6 misses. Kept MiniLM. Same lesson as the O4 title-embedding non-fix: the
+  pipeline (BM25 + synonyms) had already solved the problem the embedder swap targeted.
+
+- **On a 4 GB box, a naive heavy job gets OOM-killed — isolate memory phases + checkpoint.**
+  The embedder A/B crashed twice (the session "booted out") loading Chroma + BM25 + the ONNX
+  model + all vectors in one process on ~1.8 GB WSL. The fix that made it complete: (1) two
+  memory-isolated phases — embed holds ONLY the model + texts, then `del texts` before Chroma/
+  BM25 load; (2) small batches + capped ONNX threads; (3) **atomic, resumable checkpointing**
+  (tmp-file + `os.replace`) so a crash resumes from the last flush, not from zero. Template:
+  `evals/embedder_ab.py`. Also: raise WSL swap via `.wslconfig` (needs `wsl --shutdown` to
+  take effect — a Windows-side step, easy to forget).
+
+- **Lost uncommitted work is recoverable from the Claude session transcript.** After the crash
+  lost the A/B script (never committed, scratchpad cleaned), it was reconstructed from
+  `~/.claude/projects/<proj>/<session>.jsonl` — the Write/Edit tool-use inputs hold the exact
+  file contents. Lesson: commit experiment scripts early; if not, the transcript is the backup.
+
+- **Streamlit Community Cloud can half-update on push → reboot after every deploy.** A live
+  crash looked like a code bug but the repo was fully consistent and worked end-to-end locally.
+  Cause: the running instance served a new `main.py` against a **stale module** missing a
+  newly-added function → AttributeError *at the call site with no deeper frame* (the signature
+  of "module has no attribute"). Fix: reboot the app (Manage app → ⋮ → Reboot). Prevention:
+  reboot after any deploy, and **guard supplementary UI** so a half-update degrades (skip the
+  panel) instead of crashing the whole answer.
+
+- **Verify state against disk, not against a claim (either direction).** Twice this stretch a
+  stated project state was wrong — once too pessimistic ("fresh start at Phase 2" when the repo
+  was fully built), once corrected by me too hastily ("no embedder work existed" when the
+  transcript proved it did). Git log, file listings, and the transcript are the ground truth;
+  check them before asserting or agreeing.

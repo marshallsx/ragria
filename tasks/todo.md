@@ -284,3 +284,41 @@ correct refusals. On GitHub, secret-safe throughout.
   questions (D1/D2) are correctly out of scope; answering them = corpus expansion.
 - **Phase 6 (temporal/version awareness)** remains the intended differentiator, to build
   on these fundamentals.
+
+## Post-Phase-6 work log (2026-07-09 → 10)
+
+### Embedder A/B — bge-small vs MiniLM (DONE — verdict: keep MiniLM) ✅
+- Question: would a stronger embedder beat the ChromaDB default (`all-MiniLM-L6-v2`)?
+  Tested `BAAI/bge-small-en-v1.5` (ONNX/fastembed, no PyTorch) over the 26 answer-cases,
+  isolating the embedder (vector-only) from the pipeline (hybrid ± synonyms).
+- **Verdict: not a net win — production stays on MiniLM hybrid+syn.** bge natively fixes the
+  O4 vocabulary gap (21BA rank None→2 vector-only) but is worse as a raw embedder overall
+  (recall@1 13 vs 17; P3 8→19), and MiniLM hybrid+syn is the ONLY config with zero recall@6
+  misses. bge would fix an already-fixed problem at the cost of a full re-embed + heavier dep.
+- Artefacts: `evals/embedder_ab.py` (hardened, resumable, 4 GB-safe), `evals/report.md`
+  "Embedder A/B" section, `fastembed==0.8.0` pinned (eval-only). Branch `eval/embedder-ab-bge`
+  (pushed, NOT merged to main — it's an experiment record, not an app change).
+- Caveat: 26 cases / single run — 1–3 case differences are within noise.
+
+### Live-deploy incident + guard (DONE) ✅
+- Live crash on the deployed app (Streamlit Community Cloud): a **half-updated build** ran the
+  new `app/main.py` (calling `history.compare()`) against a **stale `history` module** without
+  it → AttributeError crashed the whole answer. Repo was consistent; it worked end-to-end
+  locally. **Reboot fixed it.**
+- Hardening: `app/main.py` now wraps the supplementary version-history panel in a per-entry
+  try/except (skip + log to server logs, never crash the answer). Merged to `main` (c70bd49),
+  redeployed. Rule: **reboot the app after any deploy** (auto-rebuild can half-update).
+
+## NEXT — product-quality pass (AGREED, awaiting sign-off to start)
+Goal Scott chose: **make the live product genuinely better** — measured, not by guessing.
+- **Step 1 — Diagnose.** Build a realistic + adversarial question batch (lay phrasing, out-of-
+  scope probes, temporal edges, multi-part conditions) beyond the ~30 tidy cases → ranked list
+  of concrete failures tagged: retrieval miss / false refusal / hallucination / temporal caveat
+  / genuinely out-of-scope.
+- **Step 2 — Triage.** Pick the single dominant, fixable class.
+- **Step 3 — Fix + verify.** Implement it; re-run for zero regressions (P1/P3 rigour).
+- Optional parallel: privacy-safe capture of real demo questions (compounding loop).
+- Candidate weaknesses to confirm with data (don't assume the winner): (a) scope refusals
+  (electricity supply only); (b) temporal coverage gaps (only 5 conditions mapped); (c)
+  retrieval misses on real phrasing; (d) refusal calibration.
+- Constraint: safe on the 4 GB box — retrieval + modest API calls, **no re-embedding**.
