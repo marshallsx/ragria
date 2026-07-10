@@ -501,3 +501,13 @@ Return to the deferred quality pass (see "## NEXT — product-quality pass" abov
 - Watch-item: mild over-caveating on a fully-in-scope broad answer (BQ1 got a minor 0A note) — tune
   if it recurs. Remaining diagnostic items (low priority): future in-question dates (TE5), very-long
   broad answers (B2).
+
+### Faithfulness gate + Haiku-planner cost cut — DONE + LIVE (2026-07-10)
+- **Faithfulness judge** re-run on the Phase 7 grouped-synthesis pipeline: **27/27 faithful, 0
+  hallucinations**, 31/31 decisions (`results_phase7_judge.json`). The larger unioned context did
+  NOT introduce hallucinations — safety gate confirmed.
+- **Planner → Haiku** (synthesis stays Opus). A/B (`evals/planner_ab.py`): Haiku planning matches
+  Opus on anchor Core recall (16/17 both, identical per-anchor). Decoupled in `planner.py`
+  (PLANNER_MODEL=Haiku; answer_broad passes synthesis model only to synthesize). Cuts one of the two
+  per-query LLM calls to a ~10x-cheaper model. Regression GREEN: 31/31, 27/27 retrieval+citation,
+  8/8 version, 0 false refusals/answers (`results_phase7_haiku_planner.json`).

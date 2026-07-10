@@ -32,6 +32,11 @@ WIDE_NET = 40          # depth of the wide-net retrieve that builds the candidat
 MAX_CANDIDATES = 25    # cap candidate conditions shown to the planner (keeps the prompt small)
 MAX_SUBQUERIES = 6     # total sub-queries incl. the original (bounds cost/latency + precision drift)
 
+# Planner runs on Haiku (synthesis stays on Opus). A/B (evals/planner_ab.py) showed Haiku planning
+# matches Opus on anchor Core recall (16/17 both), so this cuts per-query cost with no quality loss.
+HAIKU = "claude-haiku-4-5-20251001"
+PLANNER_MODEL = HAIKU
+
 PLAN_SCHEMA = {
     "type": "object",
     "properties": {
@@ -101,7 +106,7 @@ def plan(question: str, coll=None, client=None, model: str | None = None) -> dic
     """Return {'is_broad': bool, 'subqueries': [str, ...]} — sub-queries ALWAYS include the
     original question first. Specific question → [question]; broad → several focused phrases."""
     coll = coll or rag.get_collection()
-    model = model or rag.MODEL
+    model = model or PLANNER_MODEL
     client = client or rag.get_client()
 
     candidates = _candidate_conditions(question, coll)
@@ -310,7 +315,9 @@ def answer_broad(question: str, coll=None, as_of: date | None = None, client=Non
     """Full Phase-7 pipeline: plan → union retrieve → grouped synthesis. (Step 4 wires this into
     rag.answer_question behind the out-of-scope backstop; kept thin here for isolated testing.)"""
     coll = coll or rag.get_collection()
-    p, union = plan_and_retrieve(question, coll=coll, client=client, model=model)
+    # Planner uses PLANNER_MODEL (Haiku); only synthesis takes `model` (Opus). Decoupled so the
+    # cheap plan step doesn't inherit the expensive synthesis model.
+    p, union = plan_and_retrieve(question, coll=coll, client=client)
     result = synthesize(question, union, coll=coll, as_of=as_of, client=client, model=model)
     result["plan"] = p
     result["_union"] = union   # raw union chunks so callers can build retrieval/transparency meta
