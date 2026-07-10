@@ -511,3 +511,23 @@ Return to the deferred quality pass (see "## NEXT — product-quality pass" abov
   (PLANNER_MODEL=Haiku; answer_broad passes synthesis model only to synthesize). Cuts one of the two
   per-query LLM calls to a ~10x-cheaper model. Regression GREEN: 31/31, 27/27 retrieval+citation,
   8/8 version, 0 false refusals/answers (`results_phase7_haiku_planner.json`).
+
+## SESSION CLOSE — 2026-07-10 (end of day) · RESUME HERE NEXT TIME
+**Shipped & live today:** Phase 7 broad-query completeness (planner → union → grouped synthesis),
+end-to-end, regression 31/31, **faithfulness 27/27 (0 hallucinations)**, planner on Haiku for cost;
+compound/partial-scope handling (out_of_scope_note); version-history multi-panel + coverage line;
+repo public + All Rights Reserved LICENSE. All pushed to origin/main. (Reboot the Streamlit app once
+more to pick up the Haiku-planner commit.)
+
+**RESUME = Step 3, an open CHOICE (not yet decided):**
+- **DEPTH — synthesis-recall pass:** lift answer-level completeness (synthesis cites ~82% of Core
+  vs 100% retrieved — it drops ~1 Core condition per broad query); also fix the T4 date-string in
+  the grouped answer. Measurable against the 5 broad anchors + 31-case suite. (My recommendation.)
+- **BREADTH — temporal-mapping completeness:** map more conditions' version history (data-gated;
+  needs per-condition Ofgem verification WITH Scott). See the BACKLOG section above.
+
+**Also open (low priority):** over-caveat tune (BQ1's spurious 0A note), future in-question dates
+(TE5), very-long broad answers (B2). Diagnostic harness = `evals/diagnostic.py`; broad-recall
+harness = `evals/broad_compare.py` / `broad_synth.py`; anchors + grading rule in the Phase 7 section.
+First action next session: confirm depth-vs-breadth with Scott, then (if depth) draft the
+synthesis-recall improvement and show the measured before-number first.

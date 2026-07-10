@@ -218,3 +218,16 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   uncovered part (an `out_of_scope_note`). A single "refuse if core subject is out of scope" rule
   over-refuses compound questions; a single "answer what you can" rule over-answers them. Both are
   needed, and the diagnostic surfaced exactly this gap.
+
+- **Measure whether you actually need the expensive model — sometimes the cheap one ties.** The
+  planner (decompose the question into sub-queries) runs on Haiku; a quick A/B vs Opus showed
+  IDENTICAL anchor Core recall (16/17 both). So the plan step moved to a ~10x-cheaper model with
+  zero quality loss, cutting one of the two per-query LLM calls on the live paid demo. Mirror image
+  of the embedder A/B (where the "upgrade" lost): don't assume the pricier/bigger option is needed —
+  A/B it on the metric that matters. Put the expensive model only where it earns its keep (here,
+  grounded synthesis stays on Opus).
+
+- **Separate the two LLM roles so each can use the right model.** Planning and synthesis were
+  initially coupled to one model param; decoupling them (`PLANNER_MODEL` vs the synthesis model)
+  was what made the Haiku cost-cut a one-line change and keeps a clean seam for future tuning
+  (e.g. a cheaper synthesis model for narrow queries later).
