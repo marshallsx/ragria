@@ -398,7 +398,12 @@ def answer_question(
         for c in union
     ] or retrieved_meta
     result["as_of"] = as_of.isoformat()
-    result["history"] = history.views_for(result.get("citations", []), as_of)
+    # Show every mapped cited condition's history on a BROAD answer (completeness); keep the
+    # anti-clutter cap of 2 for narrow answers. (Only 5 conditions are mapped, so 8 = "all".)
+    is_broad = bool(result.get("plan", {}).get("is_broad"))
+    result["history"] = history.views_for(
+        result.get("citations", []), as_of, limit=8 if is_broad else 2
+    )
     return result
 
 
