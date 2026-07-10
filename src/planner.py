@@ -172,8 +172,17 @@ _GROUPED_TAIL = (
     "several, or merge unrelated duties). Include an obligation ONLY if the extracts support it — do "
     "NOT pad with tangential conditions that merely appeared among the extracts. Always set "
     "exhaustiveness_note to one line stating the answer reflects the retrieved sections and may not be "
-    "exhaustive. If the extracts contain nothing adequate, set refused=true, obligations=[], and say "
-    "what was missing in reason. Return your response in the required structured format."
+    "exhaustive. "
+    "SCOPE DISCIPLINE: the extracts come from a BROAD search and may include conditions only "
+    "tangentially related to the question. Answer only what these Electricity Supply licence conditions "
+    "actually address. If the question's CORE subject is a regime or instrument that is NOT part of "
+    "these conditions — e.g. the Guaranteed Standards of Performance and their compensation payments, "
+    "complaint-handling standards, or gas supply — do NOT answer it from a loosely-related condition: "
+    "set refused=true, obligations=[], and state in reason that these licence conditions do not cover "
+    "that subject. (Surfacing many genuinely-relevant obligations is good; answering an out-of-scope "
+    "question via a tangential condition is not.) "
+    "If the extracts contain nothing adequate, set refused=true, obligations=[], and say what was "
+    "missing in reason. Return your response in the required structured format."
 )
 GROUPED_SYSTEM = (
     rag.SYSTEM.rsplit("Return your response", 1)[0].rstrip().replace("leave answer empty", "leave obligations empty")
@@ -241,10 +250,11 @@ def synthesize(question: str, union_chunks: list[dict], coll=None, as_of: date |
         parts.append("Temporal facts (authoritative):\n" + "\n".join(f"- {n}" for n in notes))
     parts.append(f"Question: {question}")
     parts.append(f"Retrieved extracts:\n\n{context}")
+    user_content = "\n\n".join(parts)
 
     fmt = {"type": "json_schema", "schema": GROUPED_SCHEMA}
     kwargs = dict(model=model, max_tokens=4096, system=GROUPED_SYSTEM,
-                  messages=[{"role": "user", "content": "\n\n".join(parts)}])
+                  messages=[{"role": "user", "content": user_content}])
     if "haiku" in model:
         kwargs["output_config"] = {"format": fmt}
     else:
@@ -275,6 +285,10 @@ def synthesize(question: str, union_chunks: list[dict], coll=None, as_of: date |
     result["citations"] = citations
     result["answer"] = "" if result.get("refused") else "\n\n".join(lines) + (f"\n\n_{note}_" if note else "")
     result["as_of"] = as_of.isoformat()
+    # Fields the existing UI / eval faithfulness-judge expect on a result.
+    result["context"] = context
+    result["temporal_facts"] = notes
+    result["prompt"] = user_content
     return result
 
 
@@ -286,6 +300,7 @@ def answer_broad(question: str, coll=None, as_of: date | None = None, client=Non
     p, union = plan_and_retrieve(question, coll=coll, client=client, model=model)
     result = synthesize(question, union, coll=coll, as_of=as_of, client=client, model=model)
     result["plan"] = p
+    result["_union"] = union   # raw union chunks so callers can build retrieval/transparency meta
     return result
 
 

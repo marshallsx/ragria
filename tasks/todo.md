@@ -420,6 +420,20 @@ Current retrieval's Core-condition recall on the anchor set:
 - NEXT: Step 4 — wire answer_broad into rag.answer_question behind the out-of-scope backstop + UI grouped
   render + REGRESSION check on the existing 31-case hardened + temporal suite (must not regress).
 
+### Step 4 (wire into answer_question) — DONE + regression GREEN (2026-07-10)
+- `rag.answer_question` now: cheap out-of-scope backstop first (unchanged) → in-scope routes through
+  `planner.answer_broad` (plan → union → grouped synthesis). `retrieved` meta rebuilt from the UNION.
+  Backward-compat `answer`/`citations`/`context`/`prompt` preserved so UI + evals + temporal unchanged.
+- Regression gate (`results_phase7_scopefix.json`, --no-judge): **decision 31/31, retrieval 26/26,
+  citation 26/26, version-swap 8/8, history 2/2, 0 false refusals, 0 false answers.** Content 11/12 =
+  only T4's "14 April 2022" string (grouped answer doesn't echo it verbatim; version IS served
+  correctly) — deferred to the synthesis pass.
+- D2 regression FIXED: initial wiring over-answered a Guaranteed-Standards (out-of-scope) question via
+  a tangential Cond 14A; added a SCOPE DISCIPLINE instruction to the synthesis prompt → refuses when
+  the question's CORE subject isn't in the extracts. Targeted re-check: 5/5 refusals refuse, 3/3
+  answers answer; full suite confirms 0 false refusals.
+- DEFERRED to synthesis pass: T4 date-string in grouped answer; lift answer-level recall (82%).
+
 ### Anchor eval set — VERIFIED (Scott confirmed vs Ofgem, 2026-07-10)
 Grading rule: **recall** = fraction of a query's CORE conditions surfaced; **precision** = surfacing
 anything OUTSIDE Core ∪ Borderline is a miss (Borderline hits are "free", so reasonable breadth

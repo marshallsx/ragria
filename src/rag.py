@@ -375,64 +375,30 @@ def answer_question(
             "retrieved": retrieved_meta,
         }
 
-    conds = {c["meta"]["condition"] for c in chunks}
-    context = build_context(expand_hits(chunks, coll, as_of))
-    notes = temporal.temporal_notes(conds, as_of) + temporal.text_change_notes(conds, as_of)
-    parts = [
-        f"Current licence version: consolidated to {temporal.current_version_str()}.",
-        f"As-of date: {temporal.fmt(as_of)}",
-    ]
-    scope = temporal.scope_note(as_of)
-    if scope:
-        parts.append(scope)
-    if notes:
-        parts.append("Temporal facts (authoritative):\n" + "\n".join(f"- {n}" for n in notes))
-    parts.append(f"Question: {question}")
-    parts.append(f"Retrieved extracts:\n\n{context}")
-    user_content = "\n\n".join(parts)
-
-    client = client or get_client()
-    fmt = {"type": "json_schema", "schema": OUTPUT_SCHEMA}
-    kwargs = dict(
-        model=model,
-        max_tokens=4096,
-        system=SYSTEM,
-        messages=[{"role": "user", "content": user_content}],
-    )
-    # Adaptive thinking + effort are Opus/Sonnet-5 features; Haiku 4.5 rejects them
-    # (400) but supports structured output. Branch so the eval A/B can use either.
-    if "haiku" in model:
-        kwargs["output_config"] = {"format": fmt}
-    else:
-        kwargs["thinking"] = {"type": "adaptive"}
-        kwargs["output_config"] = {"effort": "medium", "format": fmt}
-    resp = client.messages.create(**kwargs)
-
-    if resp.stop_reason == "refusal":
-        return {
-            "refused": True,
-            "answer": "",
-            "citations": [],
-            "reason": "The request was declined by a safety filter.",
-            "as_of": as_of.isoformat(),
-            "retrieved": retrieved_meta,
+    # In scope → Phase 7 pipeline: plan sub-queries → union retrieve → grouped-by-obligation
+    # synthesis. A specific question yields 1 sub-query → behaves like the old single-query path;
+    # a broad one is decomposed so ALL relevant obligations are surfaced. (Lazy import avoids a
+    # planner<->rag circular import.)
+    try:
+        from src import planner
+    except ImportError:
+        import planner
+    result = planner.answer_broad(question, coll=coll, as_of=as_of, client=client, model=model)
+    union = result.pop("_union", [])
+    # Transparency + eval meta reflects the FULL union fed to synthesis (every sub-query), not just
+    # the backstop's single-query top-k, so retrieval-hit / version checks see everything served.
+    result["retrieved"] = [
+        {
+            "condition": c["meta"]["condition"],
+            "condition_title": c["meta"]["condition_title"],
+            "pages": f"{c['meta']['page_start']}-{c['meta']['page_end']}",
+            "distance": round(c["distance"], 3) if c["distance"] is not None else None,
+            "version": temporal.version_for(c["meta"]["condition"], as_of),
         }
-
-    # With thinking enabled, the first block is a thinking block — take the text block.
-    text = next(b.text for b in resp.content if b.type == "text")
-    result = json.loads(text)
-    # Sanitise citation condition refs: strip a stray "Condition " prefix the model
-    # sometimes emits (else the UI renders "Condition Condition 0A" and graders miss).
-    for ci in result.get("citations", []):
-        ci["condition"] = re.sub(r"(?i)^\s*condition\s+", "", str(ci.get("condition", ""))).strip()
+        for c in union
+    ] or retrieved_meta
     result["as_of"] = as_of.isoformat()
-    result["retrieved"] = retrieved_meta
-    # "What changed" views for any mapped condition among the citations (for the UI panel).
     result["history"] = history.views_for(result.get("citations", []), as_of)
-    result["context"] = context          # retrieved extracts only
-    result["temporal_facts"] = notes     # authoritative dated facts injected into the prompt
-    result["prompt"] = user_content      # the FULL grounding the model saw (framing + dates + extracts);
-                                         # the eval faithfulness judge checks the answer against all of it
     return result
 
 
