@@ -84,6 +84,22 @@ TEMPORAL_GROUPS = [
     },
 ]
 
+# Conditions whose version history is mapped (text-change + introduced) — generated from the
+# temporal module so the coverage line below stays accurate as more conditions are mapped.
+def _cond_sort_key(c: str):
+    num = ""
+    for ch in c:
+        if ch.isdigit():
+            num += ch
+        else:
+            break
+    return (int(num) if num else 999, c)
+
+
+MAPPED_CONDS_STR = ", ".join(
+    sorted(set(temporal.TEXT_CHANGES) | set(temporal.MAPPED), key=_cond_sort_key)
+)
+
 st.set_page_config(page_title="Regulatory Intelligence Assistant (RIA)", page_icon="⚡", layout="centered")
 
 # Make the Anthropic key available whether it's in a local .env (dev - handled by
@@ -387,6 +403,12 @@ if ask and question.strip():
                 render_compare(h["condition"])  # full side-by-side, always for the asked condition
         except Exception as e:  # noqa: BLE001 — supplementary UI must never break the answer
             print(f"[version-history panel skipped] {type(e).__name__}: {e}", flush=True)
+    if result.get("history"):
+        st.caption(
+            f"Version history is mapped so far for Conditions {MAPPED_CONDS_STR} - coverage is "
+            "expanding condition by condition. Other conditions in this answer don't yet have a "
+            "version comparison."
+        )
 
     # --- Retrieved sources (transparency; removable later) ---
     with st.expander(f"🔎 Retrieved sources (top {TOP_K}, hybrid rank)"):

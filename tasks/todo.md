@@ -444,3 +444,22 @@ isn't punished). This is now the signed-off seed for the `evals/` broad-query ca
 - **BQ4 "obligations before disconnecting a customer for debt"** — Core: 27, 27A, 28 · Borderline: 26, 0
 - **BQ5 (NARROW CONTROL) "maximum back-billing period for domestic customers?"** — Core: 21BA · Borderline: (none).
   Proves decomposition yields **1 sub-query (itself)** and does NOT over-broaden or regress narrow queries.
+
+### Version-history panel on broad answers (2026-07-10, DONE + LIVE)
+- (a) Lifted the 2-panel cap for broad answers (`rag.py` limit=8 when `is_broad`) → every mapped
+  cited condition's history shows, per the completeness rule; narrow answers keep the cap of 2.
+- (b) Added a coverage line in `app/main.py` (generated from `temporal`, so it self-updates):
+  "Version history is mapped so far for Conditions 0A, 4D, 21B, 25E, 28 …" — so a broad answer
+  showing 28's panel but not 27's is NOT misread as "27 never changed".
+
+## BACKLOG — tracked so we don't forget
+- **TEMPORAL MAPPING COMPLETENESS** (now user-visible via the coverage line — the UI names exactly
+  which conditions are mapped, so gaps are obvious). Expand the mapped set beyond the current 5
+  (0A, 21B, 28 text-change; 25E, 4D introduced). Candidates already noted: billing 31H, SoLR 8,
+  more introduced conditions; an "expired/ceased" category (e.g. 28A, spent 30 Jun 2021).
+  CONSTRAINT (non-negotiable, per Phase 6 rule): only map a condition whose history is gap-free
+  from the consolidations we HOLD (v2019/v2022/v2025). Multi-change/volatile conditions (SLC 47)
+  need more intermediate consolidations before they can be mapped — data-gated, not just effort.
+  So this is an ongoing, incremental backlog, not a one-shot task.
+- **Phase 7 SYNTHESIS PASS** (deferred): lift answer-level recall (82%); fix T4 date-string in the
+  grouped answer; consider Haiku for the planner step to cut per-query cost on the live demo.
