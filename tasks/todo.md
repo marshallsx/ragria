@@ -385,8 +385,18 @@ override (automatic planner handles breadth; manual toggle is a later nice-to-ha
   is deterministic on conditions).
 - Caps accepted as tunable defaults: **≤ 6 sub-queries**, **~30–40 unique-chunk budget**.
 
-**Still open (decide before/at build):** planner model (Opus vs cheaper Haiku for the plan step —
-recommend start Opus, measure); exact grouped-obligation output schema + UI grouping.
+**Still open (decide before/at build):** exact grouped-obligation output schema + UI grouping.
+**Planner model = Opus (decided 2026-07-10)** — simplest; measure cost after, optimise to Haiku later if needed.
+
+### Step 0 baseline — DONE (2026-07-10, `evals/broad_baseline.py`, LOCAL / no API)
+Current retrieval's Core-condition recall on the anchor set:
+- **Served (k=6, what the app feeds today): 8/17 = 47%.** Ceiling (deep k=40): 15/17 = 88%.
+- Per-query served: BQ1 2/5, BQ2 1/4, BQ3 2/4, BQ4 2/3, BQ5 (narrow control) 1/1 ✅.
+- **Read:** the gap is real and quantified (47%). 88% reachable at depth ⇒ corpus-aware planner is
+  the right fix. Killer evidence for TARGETED sub-queries: BQ2's "billing obligations" can't reach
+  21BA even at depth 40, yet BQ5's narrow "back-billing" query surfaces it at rank 1 — the planner's
+  sub-query finds what the broad query structurally can't. Precision measured at retrieval level only
+  (synthesis filters); real answer-precision measured later. This "before" number is the fix target.
 
 ### Anchor eval set — VERIFIED (Scott confirmed vs Ofgem, 2026-07-10)
 Grading rule: **recall** = fraction of a query's CORE conditions surfaced; **precision** = surfacing
