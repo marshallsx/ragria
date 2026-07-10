@@ -484,3 +484,20 @@ Return to the deferred quality pass (see "## NEXT — product-quality pass" abov
   hardened suite + the 5 broad anchors are the regression baseline.
 - First action next session: draft the diagnostic question batch and show Scott BEFORE running any
   API calls (per the agreed sign-off habit).
+
+### Quality pass ROUND 1 — DONE + LIVE (2026-07-10)
+- **Diagnose** (`evals/diagnostic.py`, 24 realistic+adversarial Qs): system strong overall (lay
+  phrasing ✅, pure out-of-scope refusals ✅, temporal caveats incl. unmapped-condition ✅, false
+  premises refuted ✅, no invented figures ✅). Dominant fixable weakness = **compound/partial
+  scope** (X3 Ombudsman, A4 switching+GS-compensation): answered a tangential in-scope obligation
+  without flagging the out-of-scope part.
+- **Fix** (`src/planner.py`): compound-scope handling + a new `out_of_scope_note` field — answer the
+  covered part, name the uncovered part; pure out-of-scope still refuses.
+- **Gold update (signed off):** D2 changed `refuse` → `answer` (expect 14A). D2 ≈ A4; the compound
+  answer (14A timescale + GS-compensation caveat) is more honest+useful than a flat refusal. Gold
+  was outdated by the new capability — NOT eval-gaming (verified by inspecting the actual output).
+- **Regression GREEN:** 31/31 decisions, 27/27 retrieval + citation, 8/8 version, 0 false refusals,
+  0 false answers (`results_phase7_scopefix_final.json`). Content 11/12 = T4 date-string (deferred).
+- Watch-item: mild over-caveating on a fully-in-scope broad answer (BQ1 got a minor 0A note) — tune
+  if it recurs. Remaining diagnostic items (low priority): future in-question dates (TE5), very-long
+  broad answers (B2).

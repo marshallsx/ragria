@@ -202,3 +202,19 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   protects nothing — the code IS the disclosure. Real levers: the LICENSE (legal deterrent) and
   repo privacy (removes the code from view). Keep the README; its portfolio value dwarfs its
   negligible effect on copying.
+
+- **A new capability can outdate a gold standard — inspect the output before calling it a
+  regression.** The compound-scope fix flipped case D2 from refuse→answer, showing as a 30/31
+  "regression". But D2 is near-identical to A4 (which we WANTED answered-with-caveat), and the
+  actual output was a good, honest compound answer (14A switching timescale + a note that
+  Guaranteed Standards compensation is out of scope). The eval gold ("refuse") predated the
+  answer+caveat capability. Fix was to update D2's gold (with sign-off) — NOT eval-gaming, because
+  the new behaviour is genuinely better and the judgement was made by reading the answer, not by
+  chasing a green number. Distinguish "gold outdated by a real improvement" from "system got worse"
+  every time a fix moves a previously-passing case.
+
+- **Partial/compound scope needs its own path, distinct from pure out-of-scope.** Pure out-of-scope
+  → refuse. Compound (some parts covered, some not) → answer the covered parts AND name the
+  uncovered part (an `out_of_scope_note`). A single "refuse if core subject is out of scope" rule
+  over-refuses compound questions; a single "answer what you can" rule over-answers them. Both are
+  needed, and the diagnostic surfaced exactly this gap.

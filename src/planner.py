@@ -173,14 +173,20 @@ _GROUPED_TAIL = (
     "NOT pad with tangential conditions that merely appeared among the extracts. Always set "
     "exhaustiveness_note to one line stating the answer reflects the retrieved sections and may not be "
     "exhaustive. "
-    "SCOPE DISCIPLINE: the extracts come from a BROAD search and may include conditions only "
-    "tangentially related to the question. Answer only what these Electricity Supply licence conditions "
-    "actually address. If the question's CORE subject is a regime or instrument that is NOT part of "
-    "these conditions — e.g. the Guaranteed Standards of Performance and their compensation payments, "
-    "complaint-handling standards, or gas supply — do NOT answer it from a loosely-related condition: "
-    "set refused=true, obligations=[], and state in reason that these licence conditions do not cover "
-    "that subject. (Surfacing many genuinely-relevant obligations is good; answering an out-of-scope "
-    "question via a tangential condition is not.) "
+    "SCOPE DISCIPLINE. The extracts come from a BROAD search and may include conditions only "
+    "tangentially related to the question; answer only what these Electricity Supply licence "
+    "conditions actually address. "
+    "(1) If the question's CORE subject is a regime/instrument NOT in these conditions (e.g. the "
+    "Guaranteed Standards of Performance and their compensation, the Ombudsman complaint-handling "
+    "process, gas supply, or a specific numeric price-cap level) and the extracts touch it only "
+    "tangentially, do NOT answer it from a loosely-related condition: set refused=true, "
+    "obligations=[], and say so in reason. "
+    "(2) If the question is COMPOUND — it asks about several things and only SOME are covered here — "
+    "answer the covered parts as obligations AND set out_of_scope_note to name the part(s) these "
+    "licence conditions do NOT cover (e.g. 'Guaranteed Standards compensation for a missed switch is "
+    "not set by these licence conditions'). Never let a tangential in-scope obligation silently stand "
+    "in for the out-of-scope part. "
+    "(3) Set out_of_scope_note to an empty string when the whole question is fully in scope. "
     "If the extracts contain nothing adequate, set refused=true, obligations=[], and say what was "
     "missing in reason. Return your response in the required structured format."
 )
@@ -220,8 +226,9 @@ GROUPED_SCHEMA = {
         },
         "reason": {"type": "string"},
         "exhaustiveness_note": {"type": "string"},
+        "out_of_scope_note": {"type": "string"},
     },
-    "required": ["refused", "obligations", "reason", "exhaustiveness_note"],
+    "required": ["refused", "obligations", "reason", "exhaustiveness_note", "out_of_scope_note"],
     "additionalProperties": False,
 }
 
@@ -282,8 +289,14 @@ def synthesize(question: str, union_chunks: list[dict], coll=None, as_of: date |
         cites = ", ".join(f"Condition {ci['condition']}" for ci in ob.get("citations", []))
         lines.append(f"**{ob.get('obligation', '')}** — {ob.get('detail', '')}" + (f" ({cites})" if cites else ""))
     note = result.get("exhaustiveness_note", "")
+    oos = (result.get("out_of_scope_note") or "").strip()
     result["citations"] = citations
-    result["answer"] = "" if result.get("refused") else "\n\n".join(lines) + (f"\n\n_{note}_" if note else "")
+    tail = ""
+    if oos:
+        tail += f"\n\n**Not covered by these licence conditions:** {oos}"
+    if note:
+        tail += f"\n\n_{note}_"
+    result["answer"] = "" if result.get("refused") else "\n\n".join(lines) + tail
     result["as_of"] = as_of.isoformat()
     # Fields the existing UI / eval faithfulness-judge expect on a result.
     result["context"] = context

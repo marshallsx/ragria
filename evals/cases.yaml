@@ -38,9 +38,12 @@
 
 - id: D2
   category: Deadlines
+  # Compound question: the SLC switching timescale (14A) IS in scope; Guaranteed Standards
+  # compensation is NOT. Since the Phase 7 compound-scope handling, the correct behaviour is to
+  # answer the covered part (14A) and caveat the out-of-scope GS compensation — not refuse whole.
   question: What are the Guaranteed Standards switching timescales, and what compensation applies if missed?
-  expected: refuse
-  expect_conditions: []
+  expected: answer
+  expect_conditions: ['14A']
 
 - id: S1
   category: Smoke
