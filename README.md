@@ -164,3 +164,7 @@ temporal/version awareness as the differentiator over a generic document chatbot
 ---
 
 **Built by [Scott Marshall](https://www.scottdmarshall.com)** · [Live demo](https://ria-ofgem.streamlit.app) · Public Ofgem data · Not legal advice
+
+---
+
+© 2026 Scott Marshall. All rights reserved. The source is published publicly for portfolio and demonstration purposes only — see [LICENSE](LICENSE). No reuse, modification, distribution, or resale without prior written permission.
