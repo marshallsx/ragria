@@ -582,18 +582,35 @@ is appended; probe confirmed).
   judge on): 31/31, retrieval+citation 27/27, version 8/8, history 2/2, faithfulness 27/27 (0
   hallucinations), 0 false refusals/answers, recall@3 27/27, mean_rank 1.33.
 
+### 21A residual RESOLVED — it was a WRONG ANCHOR, not a bug (commit c4c8fa1, LIVE)
+Chasing "21A reaches context but isn't cited (BQ2 3/4)" revealed 21A's full text is the CRC (Carbon
+Reduction Commitment) Energy Efficiency Scheme annual statement of supply to NON-domestic
+Participants (CRC Order 2010) — NOTHING to do with domestic billing. Synthesis was CORRECT to exclude
+it; the domestic billing-info/statements duty is 31H (already Core, already cited). Fix (D2-style,
+evidence-led, NOT eval-gaming):
+- `broad_baseline.py`: BQ2 Core -> {21B, 21BA, 31H} (dropped CRC 21A).
+- `planner.py`: dropped the "annual statement" hint (only fetched out-of-scope 21A); kept "Backbilling".
+- Re-verify GREEN: BQ2 answer-level 3/3 = 100% every pass, clean precision; answer-level aggregate
+  ~92% on the corrected 16-condition set; regression 31/31, retrieval+citation 27/27, faithfulness
+  27/27 (0 hallucinations), 0 false refusals/answers. (`results_phase7_depth_v4_21Afix.json`.)
+LESSON: a condition's TITLE can mislead — 21A "annual statement" sounded like domestic billing but the
+BODY is CRC/non-domestic. Verify anchors against the actual licence TEXT, not the title. The system
+excluding an out-of-scope condition is correct behaviour, not a recall miss.
+
 ### RESIDUAL / still-open (logged, not chased)
-- **21A answer-level:** now reaches CONTEXT 100% but synthesis still doesn't CITE it (BQ2 answer 3/4,
-  not 4/4). A synthesis-selection gap on 21A specifically (Problem A territory), NOT retrieval. Small.
-- **T3/T4 date-string:** grouped answer doesn't always echo the exact consolidation date verbatim
-  (content 11/12, flickers between temporal cases). Deferred synthesis-pass item.
-- DEPTH net result across changes 1+2: answer-level Core recall ~76% -> ~88%, regression + faithfulness
-  green throughout, 0 hallucinations.
+- **T3/T5 date-string:** grouped answer doesn't always echo the exact consolidation date verbatim
+  (content 10-11/12, flickers between temporal cases run-to-run). Deferred synthesis-pass item; does
+  NOT affect decision/version/faithfulness (those stay correct).
+- **BQ3 answer-level 3/4:** drops one of 39/40/41/45 (smart-meter family) + mild precision noise
+  (46A/28). Synthesis-selection, low priority.
+- DEPTH net result (changes 1+2 + anchor fix): answer-level Core recall ~76% -> ~92% (on corrected
+  anchors); regression + faithfulness green throughout; 0 hallucinations. BQ2 fully resolved.
 
 ### DEPTH essentially complete — next options (pick next session)
 - Chase the 21A answer-level residual (small synthesis-selection tweak) to get BQ2 -> 4/4.
 - Or switch to BREADTH (temporal-mapping completeness — data-gated, needs Ofgem verification WITH Scott).
 - Or the date-string fix + low-priority polish (over-caveat, TE5, B2).
-REMINDER: reboot the Streamlit app to pick up 476931d (+ 97fa8c2 citation-completeness + the earlier
-Haiku-planner commit) — the live site won't reflect DEPTH until rebooted.
+REMINDER: reboot the Streamlit app to pick up c4c8fa1 (anchor fix + hint) + 476931d (Problem B) +
+97fa8c2 (citation-completeness) + the earlier Haiku-planner commit — the live site won't reflect
+DEPTH until rebooted.
 Uncommitted still: docs/how-ria-works-explained.md (decide public vs local).
