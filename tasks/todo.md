@@ -619,9 +619,24 @@ body anchor error after 21A — same lesson: check the BODY.
   on corrected anchors; regression + faithfulness green throughout; 0 hallucinations. BQ2 + BQ3 fully
   resolved. NOTE: the honest read is the system is near-complete on GENUINE core obligations — the
   earlier "92%" understated because two anchors had soft/incorrect core members (21A, 45).
-- CONFIDENCE CAVEAT: 5 anchors is a weak signal; any % has wide error bars. For real confidence in
-  the number, expand + Ofgem-verify the broad anchor set (~15-20 queries) rather than optimise the
-  last point on five. Logged as an option, not started.
+- CONFIDENCE CAVEAT (now ADDRESSED): 5 anchors was a weak signal. Expanded to 20 (below).
+
+### Broad-anchor set EXPANDED 5 -> 20 (body-verified) — DONE + committed (59146f9, 2026-07-13)
+Added BQ6-20 across all three sections (prepayment, switching, tariffs, supplier-failure/continuity,
+non-domestic, fair-treatment, smart-data, credit balances, advice service, financial-resilience,
+metering/theft, fuel-mix, FIT, SEG) + 2nd narrow control (BQ16). Gold BODY-verified via 3 parallel
+subagents + a full-body trap-scan (`scratchpad/anchor_verify.py`) — rejected ceased/spent (28A,28AA,
+24A,22B,32A,45), wrong-scheme (35 Green Deal not FIT; 59 alt-fuel not SEG), wrong-customer-type
+(7A/7D/20). Scott's rulings baked: keep BQ11 (core {0}); BQ14 domestic (core {31G}); BQ9 -> {8,9,19C}.
+FIRST MEASUREMENT (honest baseline — more diverse => harder than the old 5): context 46/49 (94%);
+answer-level 44/49 (90%, 1 full pass; a 2nd pass aborted on an API 503 — flakiness continues).
+- NEW residuals surfaced (real signal the 5-anchor set hid — candidate next DEPTH targets):
+  * **BQ8 tariffs 1/3** — 22A + 25 not reached (context missed 22A too) = a planner/retrieval gap,
+    SAME SHAPE as the old 21A/21BA billing gap. Clearest next target if continuing DEPTH.
+  * BQ9/BQ10/BQ15 each drop 1 core (SoLR / non-domestic / 19C continuity-plan).
+  * Precision noise on near-narrow BQ11/BQ14 (core=1 condition, synthesis lists 5-6 extras).
+- Harnesses now cover 20 anchors automatically (`broad_synth.py`, `scratchpad/all20_context.py`).
+  Note: for a stable answer-level number, run 2-3 passes (non-deterministic); today = 1 full pass.
 
 ### DEPTH essentially complete — next options (pick next session)
 - Chase the 21A answer-level residual (small synthesis-selection tweak) to get BQ2 -> 4/4.
