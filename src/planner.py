@@ -32,6 +32,27 @@ WIDE_NET = 40          # depth of the wide-net retrieve that builds the candidat
 MAX_CANDIDATES = 25    # cap candidate conditions shown to the planner (keeps the prompt small)
 MAX_SUBQUERIES = 6     # total sub-queries incl. the original (bounds cost/latency + precision drift)
 
+# Deterministic safety net for well-known SPECIFIC obligations that the LLM planner reaches
+# unreliably. Some conditions only rank into the top-k under an exact short term and the planner
+# tends to dilute it (e.g. 21A "annual statement of supply" ranks #3 for 'annual statement' but
+# DROPS OUT entirely once 'domestic'/'consumption' qualifiers are appended). For a BROAD question
+# whose area matches, we inject these PROVEN phrasings verbatim as extra sub-queries — additive, so
+# they never displace the planner's own coverage. Each phrasing is verified by a retrieval rank
+# probe (scratchpad), not guessed. Curated + extensible by design: reliability over LLM generalisation.
+SPECIFIC_OBLIGATION_HINTS = [
+    {
+        "area": "billing",
+        # SPECIFIC terms only, matched against the QUESTION alone (not candidate titles). Generic
+        # words ('bill', 'statement', 'charge') and candidate-title matching over-fired: they
+        # injected billing sub-queries into non-billing questions (a disconnection Q with "unpaid
+        # bill"; a Guaranteed-Standards Q whose candidates happened to include billing conditions),
+        # displacing the real extracts and causing false refusals. Under-firing is safe (degrades
+        # to the normal planner); over-firing breaks unrelated questions.
+        "triggers": ("billing", "back-billing", "backbilling"),
+        "queries": ["annual statement", "Backbilling"],   # -> 21A rank 3, 21BA rank ~1
+    },
+]
+
 # Planner runs on Haiku (synthesis stays on Opus). A/B (evals/planner_ab.py) showed Haiku planning
 # matches Opus on anchor Core recall (16/17 both), so this cuts per-query cost with no quality loss.
 HAIKU = "claude-haiku-4-5-20251001"
@@ -102,6 +123,23 @@ def _candidate_conditions(question: str, coll) -> list[tuple[str, str]]:
     return pairs[:MAX_CANDIDATES]
 
 
+def _hint_subqueries(question: str, candidates: list[tuple[str, str]]) -> list[str]:
+    """Proven-phrasing sub-queries to inject for a BROAD question whose area matches a curated
+    hint (see SPECIFIC_OBLIGATION_HINTS). Matches trigger keywords against the QUESTION ONLY —
+    matching candidate titles over-fired (a question with no billing intent whose wide-net
+    candidates merely included billing conditions would wrongly trigger). `candidates` is kept in
+    the signature for future hints that may need it."""
+    hay = question.lower()
+    out, seen = [], set()
+    for h in SPECIFIC_OBLIGATION_HINTS:
+        if any(k in hay for k in h["triggers"]):
+            for q in h["queries"]:
+                if q.lower() not in seen:
+                    seen.add(q.lower())
+                    out.append(q)
+    return out
+
+
 def plan(question: str, coll=None, client=None, model: str | None = None) -> dict:
     """Return {'is_broad': bool, 'subqueries': [str, ...]} — sub-queries ALWAYS include the
     original question first. Specific question → [question]; broad → several focused phrases."""
@@ -125,17 +163,24 @@ def plan(question: str, coll=None, client=None, model: str | None = None) -> dic
     text = next(b.text for b in resp.content if b.type == "text")
     data = json.loads(text)
 
-    # Original question ALWAYS first (safety net — planning can only add coverage), then the
-    # planner's focused sub-queries; dedup case-insensitively, cap total at MAX_SUBQUERIES.
+    # Original question ALWAYS first (safety net — planning can only add coverage). For a broad
+    # question, inject the deterministic hint sub-queries next (proven phrasings for hard-to-reach
+    # specific obligations), THEN the planner's focused sub-queries. Hints are ADDITIVE: the cap is
+    # raised by the number injected so they never displace the planner's own coverage. Dedup
+    # case-insensitively (a hint the planner already emitted is not duplicated).
+    is_broad = bool(data.get("is_broad"))
+    hints = _hint_subqueries(question, candidates) if is_broad else []
+    ordered = [question] + hints + [(sq.get("query") or "").strip() for sq in data.get("subqueries", [])]
+    cap = MAX_SUBQUERIES + len(hints)
     subs, seen = [], set()
-    for q in [question] + [(sq.get("query") or "").strip() for sq in data.get("subqueries", [])]:
+    for q in ordered:
         key = q.lower()
         if q and key not in seen:
             seen.add(key)
             subs.append(q)
-        if len(subs) >= MAX_SUBQUERIES:
+        if len(subs) >= cap:
             break
-    return {"is_broad": bool(data.get("is_broad")), "subqueries": subs}
+    return {"is_broad": is_broad, "subqueries": subs}
 
 
 K_PER = 6       # chunks pulled per sub-query (reuses the existing hybrid retriever)
