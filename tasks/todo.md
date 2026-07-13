@@ -614,3 +614,40 @@ REMINDER: reboot the Streamlit app to pick up c4c8fa1 (anchor fix + hint) + 4769
 97fa8c2 (citation-completeness) + the earlier Haiku-planner commit — the live site won't reflect
 DEPTH until rebooted.
 Uncommitted still: docs/how-ria-works-explained.md (decide public vs local).
+
+## SESSION CLOSE — 2026-07-13 · RESUME HERE NEXT TIME
+**DEPTH pass (broad-answer recall) is DONE, shipped, regression-GREEN, faithfulness-clean.**
+Answer-level Core recall **~76% -> ~92%** (on corrected anchors), 0 hallucinations throughout,
+0 false refusals in the shipped state. Three commits landed on origin/main today:
+- 97fa8c2 — citation-completeness rule (synthesis stops over-merging conditions). 76% -> 84%.
+- 476931d — deterministic hint sub-queries (Problem B; BQ2 context 58% -> 100%). 84% -> 88%.
+- c4c8fa1 — corrected BQ2 anchor (21A is CRC/non-domestic, not billing) + dropped phantom hint.
+  BQ2 answer 3/3 = 100%; aggregate ~92%.
+Plus docs commits (d41acae, d02b0b0, b3cee5b) and today's `architecture.md` reached origin.
+
+### ⚠️ FIRST ACTIONS NEXT SESSION
+1. **REBOOT the Streamlit app** — none of today's DEPTH work is live until you do (picks up c4c8fa1,
+   476931d, 97fa8c2, and the Haiku-planner commit). Then sanity-check a broad billing question in
+   the live app.
+2. Decide **docs/how-ria-works-explained.md** — commit (public) or keep local (still uncommitted).
+
+### STATE OF PLAY
+- Regression baseline to protect: 31-case hardened suite + 5 broad anchors. Latest green =
+  `results_phase7_depth_v4_21Afix.json` (decision 31/31, retrieval+citation 27/27, faithfulness
+  27/27, version 8/8, history 2/2, 0 false refusals/answers).
+- Harnesses: `evals/run_evals.py` (31-case + judge), `evals/broad_synth.py` (answer-level recall,
+  run 3x for variance), `scratchpad/problemB_before.py` (cheap context-level recall, no Opus).
+  NOTE: scratchpad/ is untracked throwaway diagnostics — safe to delete or keep.
+- API was flaky today: serialise structured-output eval jobs (don't run two at once) — see lessons.
+
+### RESUME = pick the next fork (DEPTH essentially complete)
+- **BREADTH — temporal-mapping completeness** (the differentiator; data-gated, needs per-condition
+  Ofgem verification WITH Scott). See BACKLOG. Candidates: billing 31H, SoLR 8, more introduced
+  conditions, an expired/ceased category. Constraint: only map gap-free histories from held
+  consolidations (v2019/v2022/v2025).
+- **DEPTH low-priority polish** (optional): T3/T5 date-string-in-grouped-answer (content 10-11/12,
+  flickers; decision/version/faithfulness stay correct); BQ3 answer-level 3/4 (smart-meter family
+  selection + mild 46A/28 noise); over-caveat tune; future in-question dates (TE5); very-long broad
+  answers (B2).
+Recommendation: BREADTH next (bigger product value), but it needs a working session WITH Scott to
+verify Ofgem histories — so confirm which condition(s) to map first before drafting.

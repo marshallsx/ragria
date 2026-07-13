@@ -231,3 +231,52 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   initially coupled to one model param; decoupling them (`PLANNER_MODEL` vs the synthesis model)
   was what made the Haiku cost-cut a one-line change and keeps a clean seam for future tuning
   (e.g. a cheaper synthesis model for narrow queries later).
+
+## Session 2026-07-13 — DEPTH pass (broad-answer recall) lessons
+
+- **Diagnose before you fix; the obvious hypothesis was half-wrong.** I assumed broad-answer recall
+  loss was one thing (synthesis over-merging conditions). Classifying every dropped Core condition as
+  *in-context-but-dropped* (synthesis) vs *missing-from-context* (retrieval) showed TWO separate
+  problems of roughly equal size. Fixing only the assumed one would have left half the gap. The cheap
+  classifier harness (planner + local retrieval, no Opus) paid for itself immediately.
+
+- **The recorded baseline was the lucky high end.** The prior note said "82% answer-level recall";
+  a 3-run variance check showed 71/76/82 → true mean ~76%. Single-run eval numbers on a
+  non-deterministic pipeline are unreliable — always take a small variance sample before setting a
+  target, or you measure your "fix" against an inflated bar.
+
+- **Prompt-tuning a retrieval/coverage problem is fighting the wrong battle.** To reach a stubborn
+  condition (21BA back-billing, 21A annual statement) I first strengthened the planner PROMPT. It
+  netted zero on aggregate AND destabilised previously-solid anchors (forcing "add EACH specific
+  obligation" crowded the sub-query budget → round-robin squeezed out a good condition). A local
+  rank probe showed the real cause: the target only ranks top-k under an EXACT short term, and the
+  LLM dilutes it ("annual statement" ranks #3, "annual statement of consumption domestic" ranks
+  None — one extra word kills it). LLMs can't reliably thread that needle. A small DETERMINISTIC
+  safety net (inject proven-phrasing sub-queries verbatim, additive so planner coverage isn't
+  displaced) was reliable AND non-disruptive. Reach for determinism when the fix is "use exactly
+  this string", not "reason better".
+
+- **An additive retrieval booster can still cause REFUSALS.** The safety net only ADDS sub-queries,
+  yet a loose trigger caused 2 false refusals: billing hints fired on a disconnection question
+  ("unpaid bill") and a Guaranteed-Standards question (billing conditions among its wide-net
+  candidates), and the injected off-topic chunks DISPLACED the real extract from the budget-capped
+  union → synthesis had nothing to answer from → refused. Lesson: a budget-capped union means adding
+  the wrong thing removes the right thing. Gate any injected retrieval NARROWLY (match the QUESTION
+  only, SPECIFIC terms not generic), and ALWAYS run the full refusal suite — the regression caught
+  it before ship. Under-firing is safe (degrades to normal planner); over-firing breaks unrelated
+  questions.
+
+- **A condition's TITLE can lie; verify anchors against the BODY.** The last recall "residual"
+  (21A reached context but was never cited) was not a bug — 21A's title "annual statement" sounds
+  like domestic billing, but its TEXT is the CRC (Carbon Reduction Commitment) Energy Efficiency
+  Scheme statement to NON-domestic Participants. Synthesis was CORRECT to exclude it from a domestic
+  billing question. The GOLD was wrong (21A shouldn't have been in BQ2's Core), even though the
+  anchor set was "verified vs Ofgem". Fix the gold when the evidence says it's off — never train the
+  system to cite an out-of-scope condition to satisfy a wrong target (same discipline as the D2
+  gold-update). A system correctly refusing/excluding is right behaviour, not a miss.
+
+- **Concurrency amplifies API flakiness on structured output.** Running two structured-output eval
+  jobs at once hit transient 503 "grammar compilation unavailable" + a truncated-JSON decode error.
+  Re-running SOLO succeeded every time — not code bugs, just load. When the API is unstable, serialise
+  the structured-output jobs. (Latent robustness note: synthesis has no retry/repair on a malformed
+  JSON response — worth hardening if it recurs.)
