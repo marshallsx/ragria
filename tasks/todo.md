@@ -682,3 +682,44 @@ Plus docs commits (d41acae, d02b0b0, b3cee5b) and today's `architecture.md` reac
   (TE5); very-long broad answers (B2). (BQ3 3/4 RESOLVED — was a soft anchor, 45 demoted; see above.)
 Recommendation: BREADTH next (bigger product value), but it needs a working session WITH Scott to
 verify Ofgem histories — so confirm which condition(s) to map first before drafting.
+
+## SESSION CLOSE — 2026-07-13 (END OF DAY, authoritative) · RESUME HERE TOMORROW
+Big day. DEPTH pass fully done + a 20-query body-verified anchor set built. All on origin/main.
+
+**Shipped/committed today (in order):** 97fa8c2 citation-completeness (recall 76→84%) · 476931d
+deterministic hint sub-queries / Problem B (BQ2 context 58→100%) · c4c8fa1 corrected BQ2 anchor
+(21A = CRC/non-domestic) · 71a01d5 demoted BQ3 45 (ceased consumer-engagement body) · 59146f9
+expanded anchor set 5→20 (body-verified). Plus doc/todo commits (latest 2011fd4) + architecture.md.
+
+**State:** DEPTH answer-level recall ~76%→~92% on the (corrected) 5 anchors; on the NEW 20-anchor
+set the honest baseline is answer-level 90% (44/49, 1 pass) / context 94% (46/49). Regression suite
+(31-case) last GREEN at c4c8fa1-era: decision 31/31, faithfulness 27/27, 0 false refusals.
+
+### ⚠️ FIRST ACTIONS TOMORROW
+1. **REBOOT the Streamlit app** — today's DEPTH commits (97fa8c2, 476931d, c4c8fa1) are NOT live
+   until reboot. (The anchor-set + doc commits are eval/docs only, no app impact.)
+2. Decide **docs/how-ria-works-explained.md** — still uncommitted (public vs local).
+
+### TOMORROW'S MAIN TASK — dig into the BQ8 tariffs gap (agreed)
+BQ8 "What must we tell customers about tariffs and prices?" scored **1/3** — core {22A, 25, 31I};
+22A + 25 not reached (context missed 22A too → a planner/retrieval gap, SAME SHAPE as the old
+21A/21BA billing gap that the deterministic hint fixed). Approach (mirror the Problem B playbook):
+- STEP 1 measure-first: is it retrieval (22A/25 never reach context) or synthesis (present, uncited)?
+  Use `scratchpad/all20_context.py` (context-level, no Opus) + a per-condition rank probe like
+  `scratchpad/bq2_retrieval_probe.py` — find the phrasing that ranks 22A ("Unit Rate, Standing Charge
+  and Tariff Name") and 25 ("Informed choices – Tariff comparability and marketing") into top-k.
+- STEP 2 fix: likely a deterministic hint entry for the "tariffs/prices" area in
+  `planner.SPECIFIC_OBLIGATION_HINTS` (proven phrasing), with a TIGHT trigger (the loose-trigger
+  false-refusal bug from Problem B — match question only, specific terms; ALWAYS run the 31-case
+  refusal suite after).
+- STEP 3 verify: re-measure BQ8 + full 20-anchor answer-level (2-3 passes for variance) + 31-case
+  regression + faithfulness. Zero regressions, watch precision on near-narrow BQ11/BQ14.
+- Show Scott the measured before-number FIRST (sign-off habit).
+
+### Also queued / open (lower priority)
+- Other 20-set residuals: BQ9/BQ10/BQ15 each drop 1 core; precision noise on near-narrow BQ11/BQ14.
+- 2nd full answer-level variance pass on the 20-set (today only got 1 — API 503 aborted pass 2).
+- T3/T5 date-string flicker (content 10-11/12). BREADTH (temporal mapping, needs Ofgem session).
+- Open question from lessons: can the live pipeline ever present a CEASED condition (28A/45/etc.)
+  as current? Not yet checked.
+- API was flaky today: serialise structured-output eval jobs; a 2-pass job aborted mid-run.

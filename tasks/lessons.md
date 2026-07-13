@@ -291,3 +291,28 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   (2) re-scoring recorded outputs against a corrected gold needs NO re-run (the model's citations
   are unchanged — only their classification is); (3) don't chase 100% on a 5-case set — the honest
   move for confidence is a bigger, body-verified anchor set, not prompt-squeezing the last point.
+
+## Session 2026-07-13 (cont.) — expanding the verified anchor set
+
+- **Body-verify gold with tooling + parallel subagents — not by hand, not by title.** Building the
+  20-query anchor set, the reliable method was: (1) a full-BODY trap-scan script
+  (`scratchpad/anchor_verify.py`) that flags "cease to apply"/"Not used"/past-date (spent),
+  Non-Domestic/Micro-Business/CRC (wrong customer type), and reporting-to-Authority-only, over the
+  WHOLE condition body (the 45 "ceased 2021" clause was buried mid-condition, not in the title or
+  opening); (2) three parallel subagents classifying Core/Borderline/Reject from that evidence with
+  a shared rubric. It overturned two of my own hand-picks on body evidence (cond 35 is Green Deal
+  not FIT; cond 59 is alternative-fuel not SEG) and rejected a whole cluster of spent conditions
+  (28A, 28AA, 24A, 22B, 32A, 45). Title-level or by-memory gold would have baked those errors into
+  the regression baseline.
+
+- **A bigger, honest eval set LOWERS the headline number — and that's the win.** ~98% on 5 curated
+  anchors became ~90% on 20 diverse ones. That drop is NOT a regression; it's removing measurement
+  bias — the tidy set was over-sampling easy queries. The 20-set immediately surfaced a real gap
+  (BQ8 tariffs 1/3: 22A/25 unreached, same shape as the old 21A/21BA billing gap) that the 5-set
+  structurally couldn't show. Optimise for a TRUER number, not a prettier one; when a metric looks
+  great, suspect the sample before trusting the score.
+
+- **The consolidation carries DEAD conditions.** Six ceased/spent conditions surfaced during anchor
+  work (28A, 28AA, 24A, 22B, 32A, 45). Eval gold must exclude them — but note the APP still retrieves
+  them (they're embedded chunks). Open question for a future session: can the live pipeline ever
+  present a CEASED condition as a current obligation? Worth a targeted check (not yet done).
