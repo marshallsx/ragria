@@ -30,7 +30,12 @@ ANCHORS = [
      # domestic billing-information / statements duty is 31H (already Core). Corrected 2026-07-13.
      "core": {"21B", "21BA", "31H"}, "borderline": {"22A", "31I", "27"}},
     {"id": "BQ3", "q": "What must we do when installing a smart meter?",
-     "core": {"39", "40", "41", "45"}, "borderline": {"42", "46", "47", "51"}},
+     # 45 demoted Core -> Borderline: its body is "Smart Metering Consumer Engagement" — establishing
+     # /funding a CENTRAL consumer-engagement body (Smart Energy GB), not an operational install duty,
+     # AND it CEASED to apply on 30 Jun 2021 (spent in the 2025 consolidation). Synthesis correctly
+     # excludes it for this operational install question; 39/40/41 are the real install duties.
+     # Kept Borderline (not dropped) since it is smart-metering-related. Corrected 2026-07-13.
+     "core": {"39", "40", "41"}, "borderline": {"42", "45", "46", "47", "51"}},
     {"id": "BQ4", "q": "What are our obligations before disconnecting a customer for debt?",
      "core": {"27", "27A", "28"}, "borderline": {"26", "0"}},
     {"id": "BQ5", "q": "What is the maximum back-billing period for domestic customers?",

@@ -280,3 +280,14 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   Re-running SOLO succeeded every time — not code bugs, just load. When the API is unstable, serialise
   the structured-output jobs. (Latent robustness note: synthesis has no retry/repair on a malformed
   JSON response — worth hardening if it recurs.)
+
+- **Second title-vs-body anchor error (BQ3 Cond 45) — the pattern generalises.** After 21A, a
+  body-check of BQ3's remaining "3/4" found the dropped condition (45 "Smart Metering Consumer
+  Engagement") was ALSO a soft anchor: it's about funding a central engagement body (Smart Energy
+  GB), not an install duty, AND it ceased 30 Jun 2021. Synthesis was right to drop it for an
+  operational install question. Re-scoring on corrected anchors lifted the measured recall ~92% ->
+  ~98% WITHOUT touching the system — the "misses" were mostly eval error. Takeaways: (1) when a
+  small hand-built gold set has a systematic-looking gap, suspect the gold before the system;
+  (2) re-scoring recorded outputs against a corrected gold needs NO re-run (the model's citations
+  are unchanged — only their classification is); (3) don't chase 100% on a 5-case set — the honest
+  move for confidence is a bigger, body-verified anchor set, not prompt-squeezing the last point.

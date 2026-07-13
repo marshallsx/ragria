@@ -597,14 +597,31 @@ LESSON: a condition's TITLE can mislead — 21A "annual statement" sounded like 
 BODY is CRC/non-domestic. Verify anchors against the actual licence TEXT, not the title. The system
 excluding an out-of-scope condition is correct behaviour, not a recall miss.
 
+### BQ3 body-check — 45 was ALSO a soft anchor (demoted; NOT a system miss)
+BQ3 deterministically dropped Cond 45 ("Smart Metering Consumer Engagement"). Body-check: 45 is
+about establishing/funding a CENTRAL consumer-engagement body (Smart Energy GB), NOT an operational
+install duty, AND it CEASED to apply 30 Jun 2021 (spent in the 2025 consolidation). Synthesis was
+CORRECT to exclude it for "what must we do when installing a smart meter". Demoted Core -> Borderline
+(`broad_baseline.py`); 39/40/41 are the real install duties (all cited every run). Second title-vs-
+body anchor error after 21A — same lesson: check the BODY.
+- RE-SCORED (no re-run needed — anchor change only reclassifies which conds count as core; model
+  outputs unchanged): answer-level Core recall on the corrected 15-condition anchor set = 100/93/100
+  across the three v4 passes → **mean ~98%**. The ONLY residual is BQ4's single non-deterministic
+  flicker on 27/27A/28.
+
 ### RESIDUAL / still-open (logged, not chased)
 - **T3/T5 date-string:** grouped answer doesn't always echo the exact consolidation date verbatim
   (content 10-11/12, flickers between temporal cases run-to-run). Deferred synthesis-pass item; does
   NOT affect decision/version/faithfulness (those stay correct).
-- **BQ3 answer-level 3/4:** drops one of 39/40/41/45 (smart-meter family) + mild precision noise
-  (46A/28). Synthesis-selection, low priority.
-- DEPTH net result (changes 1+2 + anchor fix): answer-level Core recall ~76% -> ~92% (on corrected
-  anchors); regression + faithfulness green throughout; 0 hallucinations. BQ2 fully resolved.
+- **BQ4 flicker:** occasionally 2/3 (drops one of 27/27A/28) — pure synthesis non-determinism, within
+  noise on a 5-anchor set. Not worth chasing.
+- DEPTH net result (changes 1+2 + both anchor corrections): answer-level Core recall ~76% -> **~98%**
+  on corrected anchors; regression + faithfulness green throughout; 0 hallucinations. BQ2 + BQ3 fully
+  resolved. NOTE: the honest read is the system is near-complete on GENUINE core obligations — the
+  earlier "92%" understated because two anchors had soft/incorrect core members (21A, 45).
+- CONFIDENCE CAVEAT: 5 anchors is a weak signal; any % has wide error bars. For real confidence in
+  the number, expand + Ofgem-verify the broad anchor set (~15-20 queries) rather than optimise the
+  last point on five. Logged as an option, not started.
 
 ### DEPTH essentially complete — next options (pick next session)
 - Chase the 21A answer-level residual (small synthesis-selection tweak) to get BQ2 -> 4/4.
@@ -646,8 +663,7 @@ Plus docs commits (d41acae, d02b0b0, b3cee5b) and today's `architecture.md` reac
   conditions, an expired/ceased category. Constraint: only map gap-free histories from held
   consolidations (v2019/v2022/v2025).
 - **DEPTH low-priority polish** (optional): T3/T5 date-string-in-grouped-answer (content 10-11/12,
-  flickers; decision/version/faithfulness stay correct); BQ3 answer-level 3/4 (smart-meter family
-  selection + mild 46A/28 noise); over-caveat tune; future in-question dates (TE5); very-long broad
-  answers (B2).
+  flickers; decision/version/faithfulness stay correct); over-caveat tune; future in-question dates
+  (TE5); very-long broad answers (B2). (BQ3 3/4 RESOLVED — was a soft anchor, 45 demoted; see above.)
 Recommendation: BREADTH next (bigger product value), but it needs a working session WITH Scott to
 verify Ofgem histories — so confirm which condition(s) to map first before drafting.
