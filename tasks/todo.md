@@ -561,10 +561,39 @@ language design doc for a 15-yr-old; UNCOMMITTED — decide public vs local) alo
   did NOT introduce unsupported claims)**, 0 false refusals/answers. Content 11/12 = date-string
   flicker (moved T4->T3 this run; same known deferred issue, not a regression).
 
-### RESUME AFTER LUNCH — DEPTH change 2 (Problem B: planner -> 21A)
-Recover the remaining BQ2 recall (21A annual statement never retrieved). Levers, measure each:
-(a) strengthen the planner prompt to reliably emit specific-obligation sub-queries with TITLE-LIKE
-phrasing (e.g. "annual statement", "Backbilling"); (b) bump `K_PER` 6->8 as a near-miss safety net.
-Guardrails: don't regress BQ1/BQ5 or the 31-case suite; watch precision + faithfulness.
-Also still deferred: the date-string-in-grouped-answer content miss.
-REMINDER: reboot the Streamlit app to pick up 97fa8c2 (+ the earlier Haiku-planner commit).
+### DEPTH change 2 — Problem B (planner -> 21A/21BA): SHIPPED + LIVE (commit 476931d)
+Broad billing answers missed 21A (annual statement) + flickered on 21BA (back-billing) because the
+LLM planner reaches them unreliably — both only rank top-k under an EXACT short term, and the
+planner dilutes it (21A ranks #3 for "annual statement" but DROPS OUT once "domestic"/"consumption"
+is appended; probe confirmed).
+- Prompt-tuning approach FAILED: net-zero aggregate, destabilised BQ1/BQ4 guardrails. Reverted.
+- FIX = deterministic `SPECIFIC_OBLIGATION_HINTS` table in `planner.py`: for a BROAD question whose
+  area matches, inject proven-phrasing sub-queries verbatim ("annual statement", "Backbilling"),
+  ADDITIVE (cap raised by count injected → planner coverage never displaced). Phrasings verified by
+  a retrieval rank probe (scratchpad).
+- TRIGGER IS TIGHT ON PURPOSE: matched against the QUESTION ONLY (not candidate titles) + SPECIFIC
+  terms ("billing"/"back-billing"), not generic ("bill"/"statement"/"charge"). A loose first cut
+  over-fired → billing hints injected into a disconnection Q ("unpaid bill") + a Guaranteed-Standards
+  Q (billing conds among candidates) → 2 FALSE REFUSALS (D2, P1). The 31-case suite caught it before
+  ship. Lesson: an additive retrieval booster can still cause REFUSALS by displacing the real extract
+  from the budget-capped union — gate it narrowly and always run the full refusal suite.
+- MEASURED: BQ2 context recall 58% -> 100% (12/12); overall context 90% -> 96%; answer-level Core
+  recall ~84% -> ~88% (stable ×3). Regression GREEN (results_phase7_depth_v3_tighttrigger.json,
+  judge on): 31/31, retrieval+citation 27/27, version 8/8, history 2/2, faithfulness 27/27 (0
+  hallucinations), 0 false refusals/answers, recall@3 27/27, mean_rank 1.33.
+
+### RESIDUAL / still-open (logged, not chased)
+- **21A answer-level:** now reaches CONTEXT 100% but synthesis still doesn't CITE it (BQ2 answer 3/4,
+  not 4/4). A synthesis-selection gap on 21A specifically (Problem A territory), NOT retrieval. Small.
+- **T3/T4 date-string:** grouped answer doesn't always echo the exact consolidation date verbatim
+  (content 11/12, flickers between temporal cases). Deferred synthesis-pass item.
+- DEPTH net result across changes 1+2: answer-level Core recall ~76% -> ~88%, regression + faithfulness
+  green throughout, 0 hallucinations.
+
+### DEPTH essentially complete — next options (pick next session)
+- Chase the 21A answer-level residual (small synthesis-selection tweak) to get BQ2 -> 4/4.
+- Or switch to BREADTH (temporal-mapping completeness — data-gated, needs Ofgem verification WITH Scott).
+- Or the date-string fix + low-priority polish (over-caveat, TE5, B2).
+REMINDER: reboot the Streamlit app to pick up 476931d (+ 97fa8c2 citation-completeness + the earlier
+Haiku-planner commit) — the live site won't reflect DEPTH until rebooted.
+Uncommitted still: docs/how-ria-works-explained.md (decide public vs local).
