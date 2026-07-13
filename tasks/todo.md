@@ -531,3 +531,40 @@ more to pick up the Haiku-planner commit.)
 harness = `evals/broad_compare.py` / `broad_synth.py`; anchors + grading rule in the Phase 7 section.
 First action next session: confirm depth-vs-breadth with Scott, then (if depth) draft the
 synthesis-recall improvement and show the measured before-number first.
+
+## DEPTH chosen — Step 3 IN PROGRESS (2026-07-13)
+Scott chose DEPTH (synthesis-recall pass). Also wrote `docs/how-ria-works-explained.md` (plain-
+language design doc for a 15-yr-old; UNCOMMITTED — decide public vs local) alongside the technical
+`docs/architecture.md` (committed + now pushed).
+
+### Measured-first diagnosis (before touching code)
+- Honest before-number = **~76% mean answer-level Core recall** (3-pass variance 71/76/82) — the
+  previously-recorded "82%" was the lucky high end. Retrieval "100%" was also optimistic.
+- Classified every dropped Core across BQ1-BQ4 as *in-context-but-dropped* (synthesis) vs
+  *missing-from-context* (planner/retrieval). Result: **TWO problems, not one.**
+  - **Problem A — synthesis over-merge** (BQ3 39/45, BQ4 27A present-but-uncited): GROUPED_SYSTEM
+    said "group related points" → model collapsed distinct conditions to one representative citation.
+  - **Problem B — planner/retrieval miss** (BQ2 21A never retrieved; 21BA flickers): planner didn't
+    emit an "annual statement" sub-query; a local no-API rank probe showed 21BA is rank 1 under
+    "back-billing maximum period" but rank 9 (below k_per=6) under the planner's actual phrasing.
+
+### DEPTH change 1 — Problem A FIX: SHIPPED + LIVE (commit 97fa8c2)
+- Added a CITATION COMPLETENESS rule to `planner.GROUPED_SYSTEM` (cite every condition that
+  MATERIALLY addresses the question; never collapse distinct conditions to one representative).
+- A tightened "core subject" variant OVER-CORRECTED (recall fell below baseline, BQ4 27A dropped
+  again) → reverted to the "materially" wording. Lesson: completeness/precision wording is a live
+  knob; measure both, don't eyeball.
+- Measured: **answer-level Core recall ~76% -> ~84%** (floor 71% -> 82%). BQ4 27A fixed; BQ1 5/5 +
+  BQ5 narrow control protected. Modest precision cost (BQ4 gains 31G — partly defensible).
+- Regression GREEN (`results_phase7_depth_v1.json`, judge on): decision 31/31, retrieval 27/27,
+  citation 27/27, version 8/8, history 2/2, **faithfulness 27/27 (0 hallucinations — more citations
+  did NOT introduce unsupported claims)**, 0 false refusals/answers. Content 11/12 = date-string
+  flicker (moved T4->T3 this run; same known deferred issue, not a regression).
+
+### RESUME AFTER LUNCH — DEPTH change 2 (Problem B: planner -> 21A)
+Recover the remaining BQ2 recall (21A annual statement never retrieved). Levers, measure each:
+(a) strengthen the planner prompt to reliably emit specific-obligation sub-queries with TITLE-LIKE
+phrasing (e.g. "annual statement", "Backbilling"); (b) bump `K_PER` 6->8 as a near-miss safety net.
+Guardrails: don't regress BQ1/BQ5 or the 31-case suite; watch precision + faithfulness.
+Also still deferred: the date-string-in-grouped-answer content miss.
+REMINDER: reboot the Streamlit app to pick up 97fa8c2 (+ the earlier Haiku-planner commit).
