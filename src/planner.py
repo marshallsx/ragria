@@ -49,7 +49,11 @@ SPECIFIC_OBLIGATION_HINTS = [
         # displacing the real extracts and causing false refusals. Under-firing is safe (degrades
         # to the normal planner); over-firing breaks unrelated questions.
         "triggers": ("billing", "back-billing", "backbilling"),
-        "queries": ["annual statement", "Backbilling"],   # -> 21A rank 3, 21BA rank ~1
+        # "Backbilling" -> Cond 21BA (a genuine domestic back-billing time-limit obligation the LLM
+        # planner reaches unreliably). NOTE: an earlier "annual statement" hint was dropped — it only
+        # fetched Cond 21A, whose text is the CRC Energy Efficiency Scheme statement to NON-domestic
+        # Participants (out of scope for domestic billing); synthesis correctly ignored it anyway.
+        "queries": ["Backbilling"],   # -> 21BA rank ~1
     },
 ]
 

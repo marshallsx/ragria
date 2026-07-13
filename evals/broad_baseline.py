@@ -25,7 +25,10 @@ ANCHORS = [
     {"id": "BQ1", "q": "What obligations do we have to vulnerable customers?",
      "core": {"0", "26", "27", "27A", "28"}, "borderline": {"31G", "0A"}},
     {"id": "BQ2", "q": "What are our billing obligations to domestic customers?",
-     "core": {"21A", "21B", "21BA", "31H"}, "borderline": {"22A", "31I", "27"}},
+     # 21A removed: its full text is the CRC (Carbon Reduction Commitment) Energy Efficiency Scheme
+     # annual statement to non-domestic Participants — NOT a domestic billing obligation. The
+     # domestic billing-information / statements duty is 31H (already Core). Corrected 2026-07-13.
+     "core": {"21B", "21BA", "31H"}, "borderline": {"22A", "31I", "27"}},
     {"id": "BQ3", "q": "What must we do when installing a smart meter?",
      "core": {"39", "40", "41", "45"}, "borderline": {"42", "46", "47", "51"}},
     {"id": "BQ4", "q": "What are our obligations before disconnecting a customer for debt?",
