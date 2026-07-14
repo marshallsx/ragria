@@ -760,7 +760,13 @@ content 12/12, version 8/8, history 2/2, faithfulness 27/27, 0 false refusals. N
    (31-case + faithfulness). Confirm 31/31, faithfulness clean, 0 false refusals (bigger token budget
    + guard must not change narrow/refusal/temporal). If GREEN -> commit + push `src/planner.py` (LIVE
    crash-fix; needs app reboot). 
-2. **Then tackle BQ11/BQ14 over-broadening** (the agreed next task). Characterised by the 3-pass run:
+2. BQ11/BQ14 over-broadening — DONE 2026-07-14 (dee40da). Diagnosis: NOT a system bug — the broad
+   answers are largely CORRECT (fair-treatment genuinely spans the consumer-protection suite;
+   info-service spans billing/consumption/PSR info). GOLD-CALIBRATION fix: widened Borderline (BQ11
+   +27/27A/28/21B/31H; BQ14 +21B/51), re-scored from EXISTING 3-pass data ($0 API) — noise BQ11 ~4->1.3,
+   BQ14 ~2.3->1.3/pass, recall unchanged. Residual noise (22D/23/31I; 27/28) kept out deliberately.
+   A synthesis tightening was AVOIDED (it over-corrected during DEPTH). [superseded task below]
+   ~~Then tackle BQ11/BQ14 over-broadening~~ (the agreed task). Characterised by the 3-pass run:
    near-narrow anchors over-cite — BQ11 (core {0}) cited up to 7 extras (21B,22D,23,27,27A,28,31H =
    billing/prepayment/disconnection dressed as "fair-treatment"); BQ14 (core {31G}) cited 21B,27,28,51.
    Root: planner marks these broad-sounding-but-really-narrow Qs is_broad -> over-decomposes -> synthesis
