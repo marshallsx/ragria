@@ -21,12 +21,40 @@ from __future__ import annotations
 import json
 import re
 import sys
+import time
 from datetime import date
 
 try:  # works both as `src.planner` (app/evals) and `python src/planner.py`
     from src import rag
 except ImportError:
     import rag
+
+try:
+    import anthropic
+except ImportError:
+    anthropic = None
+
+# Transient API errors (503 'overloaded' / grammar-compilation-unavailable, rate limits, connection
+# drops) were aborting whole eval runs AND would crash a live answer. Retry in place with backoff on
+# TOP of the SDK's own retries, so a brief blip is ridden out instead of raising.
+_RETRYABLE = tuple(e for e in (
+    getattr(anthropic, "InternalServerError", None),
+    getattr(anthropic, "APIConnectionError", None),
+    getattr(anthropic, "APITimeoutError", None),
+    getattr(anthropic, "RateLimitError", None),
+) if e) if anthropic else ()
+
+
+def _create_retry(client, kwargs, attempts: int = 4):
+    delay = 2.0
+    for i in range(attempts):
+        try:
+            return client.messages.create(**kwargs)
+        except _RETRYABLE:
+            if i == attempts - 1:
+                raise
+            time.sleep(delay)
+            delay *= 2
 
 WIDE_NET = 40          # depth of the wide-net retrieve that builds the candidate landscape
 MAX_CANDIDATES = 25    # cap candidate conditions shown to the planner (keeps the prompt small)
@@ -176,7 +204,7 @@ def plan(question: str, coll=None, client=None, model: str | None = None) -> dic
     else:
         kwargs["thinking"] = {"type": "adaptive"}
         kwargs["output_config"] = {"effort": "low", "format": fmt}
-    resp = client.messages.create(**kwargs)
+    resp = _create_retry(client, kwargs)
     text = next(b.text for b in resp.content if b.type == "text")
     data = json.loads(text)
 
@@ -351,7 +379,7 @@ def synthesize(question: str, union_chunks: list[dict], coll=None, as_of: date |
     # malformed parse, then DEGRADE GRACEFULLY — never raise.
     result = None
     for max_tokens in (8192, 16384):
-        resp = client.messages.create(**_make_kwargs(max_tokens))
+        resp = _create_retry(client, _make_kwargs(max_tokens))
         if resp.stop_reason == "refusal":
             return {"refused": True, "obligations": [], "reason": "The request was declined by a safety filter.",
                     "exhaustiveness_note": "", "out_of_scope_note": "", "citations": [], "answer": "",

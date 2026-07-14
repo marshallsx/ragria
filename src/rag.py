@@ -52,6 +52,15 @@ LARGE_TOP_N = 2      # ALSO fully expand the top-N matched conditions even if la
                      # peripheral match on a big condition (e.g. 27, 17 chunks) still serves
                      # its relevant part — the P1 false-refusal fix...
 LARGE_MAX_CHUNKS = 30  # ...but never a monster (34=131, 1=68, 28AD=58 chunks) — those stay ±1
+
+# SPENT conditions: still carried (and embedded) in the 2025 consolidation but whose OWN text says
+# they have ceased (verified by scratchpad/ceased_scan.py — each has a "cease to have effect/apply"
+# clause with a PAST date). They are keyword-rich and were OUT-RANKING the current equivalents (e.g.
+# 28A/28AA, ceased 2021/2019, crowded out the live charge cap 28AD). We DEMOTE (not remove) them in
+# fusion: they stay retrievable so grounding still flags their historic status and a genuinely
+# historic query can find them, but they never sit above a current condition. NOTE: 28 is EXCLUDED —
+# it is current (only some sub-paragraphs cease in 2025) and temporally mapped.
+SPENT_CONDITIONS = {"22B", "24A", "28A", "28AA", "32A", "37", "45"}
 CHUNKS_FILE = ROOT / "data" / "interim" / "slc_chunks.jsonl"
 # Coarse backstop only. The LLM makes the real refusal call; this just avoids an
 # API round-trip when even the closest chunk is clearly unrelated.
@@ -239,8 +248,16 @@ def hybrid_retrieve(question: str, k: int = TOP_K, coll=None) -> tuple[list[dict
     vector_hits is returned separately so the caller can use the best vector
     distance for the coarse out-of-scope backstop."""
     vhits = vector_retrieve(question, CAND_N, coll)
-    fused_ids = rrf([[h["id"] for h in vhits], bm25_retrieve(question, CAND_N)])[:k]
+    fused_all = rrf([[h["id"] for h in vhits], bm25_retrieve(question, CAND_N)])
     _, _, chunk_by_id = get_bm25()
+
+    # Demote SPENT conditions below current ones BEFORE the top-k cut (stable → keeps RRF order
+    # within each group). They stay retrievable (fill remaining slots if few current matches) so
+    # grounding can flag them, but a current condition on the same topic now out-ranks them.
+    def _is_spent(id_: str) -> bool:
+        c = chunk_by_id.get(id_)
+        return c is not None and c["metadata"]["condition"] in SPENT_CONDITIONS
+    fused_ids = sorted(fused_all, key=_is_spent)[:k]
     vdist = {h["id"]: h["distance"] for h in vhits}
     fused = []
     for id_ in fused_ids:
