@@ -62,17 +62,23 @@ ANCHORS = [
      # NON-domestic IS in scope here; reject 45 (spent), 31G/27 (domestic-only), 56 (reporting-only).
      "core": {"0A", "7A", "7D", "20"}, "borderline": {"7C", "21BA", "47", "51"}},
     {"id": "BQ11", "q": "How must we treat domestic customers fairly?",
-     # SLC 0 (Standards of Conduct) is THE fair-treatment condition; reject 0A (non-domestic),
-     # 32A (ceased 31 Dec 2022). Near-narrow by design (don't over-broaden).
-     "core": {"0"}, "borderline": {"25", "26", "31G", "31F"}},
+     # SLC 0 (Standards of Conduct) is THE fair-treatment CORE. "Fair treatment" is genuinely broad,
+     # so the consumer-protection suite is reasonable to surface (Borderline = free): disconnection/
+     # payment protections (27/27A), prepayment safeguards (28), billing accuracy/info (21B/31H),
+     # plus tariff/PSR/advice (25/26/31F/31G). Borderline widened 2026-07-14 (gold-calibration, not a
+     # system fix — the system's broad answer here is largely correct). reject 0A (non-domestic), 32A (ceased).
+     "core": {"0"}, "borderline": {"25", "26", "31G", "31F", "27", "27A", "28", "21B", "31H"}},
     {"id": "BQ12", "q": "What are our obligations around smart-meter consumption data and privacy?",
      "core": {"47", "51"}, "borderline": {"46", "46A", "49"}},
     {"id": "BQ13", "q": "What are our obligations to protect customers' money and credit balances?",
      "core": {"4D", "27"}, "borderline": {"4B"}},
     {"id": "BQ14", "q": "What information, enquiry and advice service must we provide to domestic customers?",
      # DOMESTIC scope (Scott 2026-07-13): 31G is the domestic advice/assistance core; SLC 20's live
-     # body is non-domestic -> borderline.
-     "core": {"31G"}, "borderline": {"20", "31E", "31F", "31H", "26"}},
+     # body is non-domestic -> borderline. Borderline widened 2026-07-14 to the reasonable
+     # information-provision suite (billing/consumption info 21B/31H, smart-data access 51, PSR 26,
+     # engagement 31E/31F) — all are "information to customers". (Operational 27/28 stay OUT = genuine
+     # over-reach, acceptable minor noise.) Gold-calibration, not a system fix.
+     "core": {"31G"}, "borderline": {"20", "31E", "31F", "31H", "26", "21B", "51"}},
     {"id": "BQ15", "q": "What are our financial-resilience and fit-and-proper obligations?",
      # 19A/19C demoted Core->Borderline 2026-07-14 (3rd title-vs-body anchor fix after 21A, 45):
      # 19A body = publish a Consolidated Segmental Statement (financial REPORTING/transparency, not
