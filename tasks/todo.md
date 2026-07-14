@@ -728,7 +728,12 @@ BQ8 "What must we tell customers about tariffs and prices?" scored **1/3** — c
 - Show Scott the measured before-number FIRST (sign-off habit).
 
 ### Also queued / open (lower priority)
-- Other 20-set residuals: BQ9/BQ10/BQ15 each drop 1 core; precision noise on near-narrow BQ11/BQ14.
+- 20-set residuals RESOLVED 2026-07-14: BQ9 (3/3 over 3 runs) + BQ10 (4/4) were single-pass FLICKER,
+  no fix. BQ15 anchor-corrected: 19A/19C demoted Core->Borderline (reporting/continuity, not
+  resilience) -> core {4A,4B,4C} cited ~3/3 (13bf959). NET: after BQ8 fix + these, the 20-anchor set
+  is effectively healthy on GENUINE cores; remaining misses are variance flicker (e.g. BQ4 27x, BQ15
+  4A). Still open: precision noise on near-narrow BQ11/BQ14 + mild BQ8 (21B/7D); a proper 3-pass
+  20-anchor number for the record (today's per-anchor diagnoses were 3-run, but not one combined pass).
 - 2nd full answer-level variance pass on the 20-set (today only got 1 — API 503 aborted pass 2).
 - T3/T5 date-string flicker (content 10-11/12). BREADTH (temporal mapping, needs Ofgem session).
 - Open question from lessons: can the live pipeline ever present a CEASED condition (28A/45/etc.)
