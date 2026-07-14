@@ -55,6 +55,19 @@ SPECIFIC_OBLIGATION_HINTS = [
         # Participants (out of scope for domestic billing); synthesis correctly ignored it anyway.
         "queries": ["Backbilling"],   # -> 21BA rank ~1
     },
+    {
+        "area": "tariffs",
+        # Same pattern as billing: for a broad tariffs/prices question the planner reaches Cond 25
+        # (comparability) fine but MISSES 22A (Unit Rate/Standing Charge/Tariff Name) and 31I
+        # (price-change notifications) — both rank into top-k only under an exact short term the
+        # planner won't produce. Trigger matched against the QUESTION only. "tariff" alone OVER-FIRED
+        # (an over-fire test vs all 20 anchors + the 31-case suite showed it also hit BQ18
+        # environmental-claims, BQ19 Feed-in-Tariffs, O3/P6 fixed-term-ending — wrong sub-areas that
+        # could be displaced). Narrowed to specific licence terms + "prices": fires BQ8 alone, 0
+        # collateral ("prices" does not match "price cap"). Under-fire is safe; over-fire breaks.
+        "triggers": ("unit rate", "standing charge", "prices"),
+        "queries": ["Unit Rate Standing Charge", "contract changes information price change"],  # -> 22A #1, 31I #1
+    },
 ]
 
 # Planner runs on Haiku (synthesis stays on Opus). A/B (evals/planner_ab.py) showed Haiku planning
