@@ -350,3 +350,24 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   over 3 passes on the corrected 47-condition set), running the FULL set surfaced the truncation
   crash that the per-anchor spot-checks never hit (they didn't run BQ6 back-to-back under the same
   process). Exhaustive runs find integration bugs that targeted ones miss.
+
+## Session 2026-07-14 (cont.) — ceased-condition correctness + API resilience
+
+- **Grounding protected correctness; ranking did not.** The corpus carries 7 SPENT conditions (their
+  own 2025 text says "cease to have effect on <past date>": 28A/28AA/37/45/32A/22B/24A), all UNMAPPED
+  by temporal. The scary risk — presenting spent law as current — did NOT happen: grounded synthesis
+  reads the cease clause and states the historic dates. But spent conditions are keyword-rich and were
+  OUT-RANKING the current equivalent (28A/28AA crowded out the live charge cap 28AD, which got missed).
+  Fix = DEMOTE (stable, not remove) the 7 spent conditions below current ones before the top-k cut:
+  still retrievable (grounding flags them; historic queries find them), never leading. Lesson: for a
+  time-versioned corpus, "is it retrievable?" and "should it rank first?" are different questions —
+  dead-but-embedded content needs down-ranking even when grounding stops it being mis-stated.
+- **Cost-driven robustness: retry transient 503s in the pipeline.** The recurring "grammar compilation
+  temporarily unavailable" 503s were aborting whole 31-case runs (wasting real money) and would crash a
+  live answer. Added _create_retry() with backoff around plan()+synthesize() — the re-run rode out the
+  same 503s that killed the first attempt. Resilience isn't just uptime; here it's directly a COST fix
+  (no more wasted partial runs) and a live crash-fix.
+- **Exonerate a change with the $0 diff, not a re-run.** When P1 false-refused in the gate, the earlier
+  local ($0) retrieval-diff had already shown P1 was NOT among the 7 cases the demotion changed — so the
+  change provably couldn't cause it. A 2-run P1 recheck (cheap) confirmed flicker. Reason from the
+  cheap evidence before spending on a full re-run.

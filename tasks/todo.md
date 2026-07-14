@@ -774,3 +774,12 @@ content 12/12, version 8/8, history 2/2, faithfulness 27/27, 0 false refusals. N
    synthesis scope discipline to not cite conditions outside the question's core subject. Show before-number.
 ### Reminder: app reboot still pending for all today's pipeline commits (BQ8 tariff fd2431f + the
 ### truncation fix once committed) + yesterday's DEPTH commits.
+
+## Ceased-condition correctness check — DONE + FIXED (2026-07-14, commit 37e37e7)
+CHECK RESULT: correctness PASS — spent conditions are NOT presented as current (grounding flags the
+cease dates); no hallucination. WEAKNESS found: spent conditions out-ranked current equivalents
+(28A/28AA crowded out live charge cap 28AD). FIX (approach B): demote 7 known-spent conditions
+{22B,24A,28A,28AA,32A,37,45} below current ones in fusion (stable, still retrievable). Plus a
+transient-503 retry wrapper in planner (cost + live-crash hardening). Ship-gate: retrieval 27/27,
+faithfulness 26/26, version 8/8, history 2/2, 0 false answers; the lone P1 refusal = confirmed
+flicker (P1 retrieval unchanged by demotion; 2 clean re-runs). LIVE pipeline change -> needs reboot.
