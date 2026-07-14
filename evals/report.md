@@ -1,3 +1,90 @@
+# RIA — Eval Report
+
+> **This is a living report.** The **Final State** section below (2026-07-14) is the current,
+> authoritative summary of the electricity RIA. Everything after it (from *"Eval Report (Phase 5)"*)
+> is the historical journey — the measured path from v0 → hybrid retrieval → temporal → broad-query
+> completeness — kept for provenance.
+
+---
+
+## FINAL STATE — electricity RIA (2026-07-14)
+
+**What it is.** A learning-first RAG assistant grounded **only** in the public Ofgem **electricity
+supply** Standard Licence Conditions (consolidations 2019 / 2022 / 2025). Ask a regulatory question →
+it retrieves the relevant Conditions, answers **only** from them, cites condition + section + pages,
+refuses when unsupported, and can answer **"as of a past date"** for mapped conditions. Live on
+Streamlit Community Cloud.
+
+### Pipeline (as evaluated)
+`ingest → structure-aware chunk by Condition → embed (MiniLM) → per-sub-query hybrid retrieve
+(vector + BM25 + RRF, ×8 title boost, lay→licence synonyms) → corpus-aware query planning (Haiku) →
+round-robin union → grouped-by-obligation grounded synthesis (Opus) → cite / refuse / scope-discipline`,
+with temporal version resolution per condition and small-to-big expansion. See `docs/architecture.md`.
+
+### Headline metrics
+
+**A. Hardened suite — 31 cases** (`evals/run_evals.py`, Opus, faithfulness-judge on; latest green
+`results_trunc_fix.json`):
+| Decision | Retrieval hit | Citation hit | Faithfulness | Version | History | False refusals/answers |
+|---|---|---|---|---|---|---|
+| **31/31** | **27/27** | **27/27** | **27/27 (0 hallucinations)** | **8/8** | **2/2** | **0 / 0** |
+recall@1 20/27 · recall@3 27/27 · mean_rank 1.33 · correct refusals 4/4 (out-of-scope held).
+
+**B. Broad-query set — 20 body-verified anchors** (`evals/broad_synth.py`, 3-pass, corrected
+47-condition gold): **answer-level Core recall 98% / 100% / 96% → ~98% mean.** Residual = pure
+per-pass flicker (no systematic gap). Includes 2 narrow controls (must not over-broaden). Gold was
+BODY-verified against the 2025 consolidation (spent / wrong-customer-type / wrong-scheme conditions
+rejected from Core — see `evals/broad_baseline.py`).
+
+**C. Faithfulness / hallucination:** independent LLM-judge, **0 hallucinations** across all runs —
+including the larger unioned broad-answer context.
+
+**D. Ceased-condition correctness:** PASS — spent conditions still embedded (28A/28AA/37/45/32A/22B/24A)
+are **never presented as current**; grounding states their historic cease dates. They are now
+retrieval-demoted so they don't out-rank current equivalents.
+
+### Capabilities delivered (all measured)
+- **v0:** grounded answer + condition-level citations + refusal; Streamlit UI. (Baseline 9/10 →
+  hybrid retrieval **10/10**, O4 vocabulary-gap false-refusal fixed.)
+- **Temporal (Phase 6):** 3 held consolidations; per-condition "as of date" resolution; **5 mapped
+  conditions** (0A, 21B, 28 text-change; 25E, 4D introduced); unmapped/historic → honest caveat.
+- **Broad-query completeness (Phase 7):** corpus-aware planner → union → grouped-by-obligation
+  synthesis; recall ~76% → ~98% via citation-completeness + deterministic proven-phrasing hints
+  (back-billing 21BA, tariffs 22A/31I), each with over-fire-tested triggers.
+- **Robustness:** truncation-safe synthesis (max_tokens raised + retry + graceful degrade — a real
+  live crash-fix); transient-503 retry; spent-condition demotion; UI history-panel deploy guard.
+
+### Known limitations (honest)
+- **Temporal coverage:** only 5 conditions mapped — a dated query on any other condition caveats
+  rather than resolving. Expanding this (BREADTH) is data-gated (needs gap-free history from held
+  consolidations) + Ofgem verification. The UI names exactly which conditions are mapped.
+- **Precision:** mild over-citation on genuinely-broad answers (a few tangential-but-related
+  conditions); measured and bounded, not hallucination.
+- **Content flicker:** grouped answers don't always echo a consolidation date verbatim
+  (content 11–12/12); decision/version/faithfulness stay correct.
+- **Corpus:** electricity **supply** only — complaints-handling / Guaranteed Standards / gas are
+  correctly out of scope (answering them would be corpus expansion).
+- **Small-N caveat:** 20 broad anchors + 31 hardened cases is a strong but modest signal; single-run
+  percentages carry wide error bars (hence 3-pass variance for the broad number).
+
+### Eval methodology notes
+- Deterministic grading (decision / retrieval / citation / version / history) + an **independent
+  faithfulness judge**; broad-query gold graded on **condition recall + precision** (Core must be
+  surfaced; Borderline is free; anything else is a precision miss).
+- **Non-determinism** is handled with 3-pass variance on the broad set; a single-pass "miss" is
+  treated as suspect until reproduced (repeatedly proved to be flicker or gold error, not a bug).
+- **Anchors are body-verified, not title-verified** — a condition's title can mislead (21A "annual
+  statement" is a non-domestic CRC duty; 45 "consumer engagement" ceased 2021). Three gold
+  corrections came from this discipline.
+
+### Artefacts
+`evals/run_evals.py` (hardened suite + judge) · `evals/broad_synth.py` / `broad_baseline.py`
+(20-anchor broad set) · `evals/diagnostic.py` (adversarial batch) · `evals/cases.yaml` ·
+`results_*.json` (per-run records) · `docs/architecture.md` (design) ·
+`docs/how-ria-works-explained.md` (plain-language).
+
+---
+
 # RIA — Eval Report (Phase 5)
 
 Lightweight, deterministic evaluation of the Regulatory Intelligence Assistant.
