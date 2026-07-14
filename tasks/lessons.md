@@ -328,3 +328,25 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   persistent gap, the FIRST move is variance-check (3 runs) + body-check the dropped condition — most
   "gaps" are flicker or gold error, not system defects. Only genuine, stable, in-scope misses
   (21BA, 22A/31I) warrant a code fix.
+
+## Session 2026-07-14 (cont.) — a real crash bug hiding behind "API flakiness"
+
+- **Synthesis JSON truncation crashed long broad answers — and I'd mis-attributed it to the API.**
+  The final 3-pass 20-anchor measurement kept dying at BQ6 (prepayment, ~11 obligations). Root cause
+  was NOT a 503: `synthesize()` used max_tokens=4096, and with adaptive thinking the THINKING tokens
+  share that budget — so a long grouped-JSON answer stopped mid-string (stop_reason 'max_tokens'),
+  `json.loads` raised JSONDecodeError, and the WHOLE answer crashed. This is a live bug (a broad
+  prepayment question would crash the deployed app, like the earlier Streamlit incident). Several of
+  yesterday's "API flakiness" JSONDecodeErrors were almost certainly THIS, not load — I wrongly waved
+  them off. Fix: max_tokens 4096->8192, retry once at 16384 on truncation/malformed parse, then
+  DEGRADE GRACEFULLY (return a safe "ask something more specific" answer) — never raise on a model
+  response. LESSONS: (1) size a structured-output token budget for the WORST-CASE answer, and
+  remember thinking shares it; (2) NEVER let json.loads on an LLM response crash the user path —
+  always guard + degrade; (3) a filtering pipe (`| grep`) HID the tracebacks for two whole runs and
+  made a crash look like a clean 5-anchor result — when a loop "completes" with suspiciously short
+  output, re-run UNFILTERED before trusting it.
+
+- **The measurement paid for itself twice.** Beyond the for-the-record number (~98% mean, 98/100/96
+  over 3 passes on the corrected 47-condition set), running the FULL set surfaced the truncation
+  crash that the per-anchor spot-checks never hit (they didn't run BQ6 back-to-back under the same
+  process). Exhaustive runs find integration bugs that targeted ones miss.

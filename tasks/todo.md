@@ -739,3 +739,32 @@ BQ8 "What must we tell customers about tariffs and prices?" scored **1/3** — c
 - Open question from lessons: can the live pipeline ever present a CEASED condition (28A/45/etc.)
   as current? Not yet checked.
 - API was flaky today: serialise structured-output eval jobs; a 2-pass job aborted mid-run.
+
+## COFFEE BREAK — 2026-07-14 (mid-session) · RESUME HERE
+### ⚠️ UNCOMMITTED WORK IN src/planner.py — do NOT lose
+`synthesize()` has an UNCOMMITTED truncation fix (max_tokens 4096->8192; retry once at 16384 on
+truncation/malformed JSON; then graceful degrade — never crash). It is VERIFIED on 60 broad answers
+(3-pass run, no crashes) but NOT yet regression-gated or committed. `git diff src/planner.py` to see it.
+
+### What happened this half-session
+- The 3-pass 20-anchor measurement kept CRASHING at BQ6 — root cause was a REAL LIVE BUG, not the API:
+  synthesis JSON truncated at max_tokens=4096 (thinking shares the budget) on long grouped answers
+  (BQ6 prepayment ~11 obligations) -> json.loads crash. Fixed (above). Some of yesterday's "API
+  flakiness" JSONDecodeErrors were probably THIS. See lessons.md.
+- FINAL for-the-record measurement (corrected 47-condition set, truncation fix in place):
+  **answer-level Core recall 98% / 100% / 96% -> mean ~98% (138/141)**, 0 crashes. Residual = pure
+  flicker (different anchor each pass: BQ19, BQ7, BQ10 dropped 1 once each). The set is HEALTHY.
+
+### RESUME AFTER COFFEE — in order
+1. **Ship-gate the truncation fix:** run `venv/bin/python evals/run_evals.py --label trunc_fix`
+   (31-case + faithfulness). Confirm 31/31, faithfulness clean, 0 false refusals (bigger token budget
+   + guard must not change narrow/refusal/temporal). If GREEN -> commit + push `src/planner.py` (LIVE
+   crash-fix; needs app reboot). 
+2. **Then tackle BQ11/BQ14 over-broadening** (the agreed next task). Characterised by the 3-pass run:
+   near-narrow anchors over-cite — BQ11 (core {0}) cited up to 7 extras (21B,22D,23,27,27A,28,31H =
+   billing/prepayment/disconnection dressed as "fair-treatment"); BQ14 (core {31G}) cited 21B,27,28,51.
+   Root: planner marks these broad-sounding-but-really-narrow Qs is_broad -> over-decomposes -> synthesis
+   lists tangential obligations. Fix direction TBD (measure first): tighten planner is_broad, or tighten
+   synthesis scope discipline to not cite conditions outside the question's core subject. Show before-number.
+### Reminder: app reboot still pending for all today's pipeline commits (BQ8 tariff fd2431f + the
+### truncation fix once committed) + yesterday's DEPTH commits.
