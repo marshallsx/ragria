@@ -333,20 +333,44 @@ def synthesize(question: str, union_chunks: list[dict], coll=None, as_of: date |
     user_content = "\n\n".join(parts)
 
     fmt = {"type": "json_schema", "schema": GROUPED_SCHEMA}
-    kwargs = dict(model=model, max_tokens=4096, system=GROUPED_SYSTEM,
+
+    def _make_kwargs(max_tokens):
+        kw = dict(model=model, max_tokens=max_tokens, system=GROUPED_SYSTEM,
                   messages=[{"role": "user", "content": user_content}])
-    if "haiku" in model:
-        kwargs["output_config"] = {"format": fmt}
-    else:
-        kwargs["thinking"] = {"type": "adaptive"}
-        kwargs["output_config"] = {"effort": "medium", "format": fmt}
-    resp = client.messages.create(**kwargs)
+        if "haiku" in model:
+            kw["output_config"] = {"format": fmt}
+        else:
+            kw["thinking"] = {"type": "adaptive"}
+            kw["output_config"] = {"effort": "medium", "format": fmt}
+        return kw
 
-    if resp.stop_reason == "refusal":
-        return {"refused": True, "obligations": [], "reason": "The request was declined by a safety filter.",
-                "exhaustiveness_note": "", "citations": [], "answer": "", "as_of": as_of.isoformat()}
-
-    result = json.loads(next(b.text for b in resp.content if b.type == "text"))
+    # A broad answer can be long, and with adaptive thinking the thinking tokens share the
+    # max_tokens budget — so a too-small budget makes the response stop mid-JSON (stop_reason
+    # 'max_tokens'), which then fails json.loads and USED TO CRASH the whole answer (seen live on a
+    # prepayment question). Give it real room (8192), retry once bigger (16384) on truncation or a
+    # malformed parse, then DEGRADE GRACEFULLY — never raise.
+    result = None
+    for max_tokens in (8192, 16384):
+        resp = client.messages.create(**_make_kwargs(max_tokens))
+        if resp.stop_reason == "refusal":
+            return {"refused": True, "obligations": [], "reason": "The request was declined by a safety filter.",
+                    "exhaustiveness_note": "", "out_of_scope_note": "", "citations": [], "answer": "",
+                    "as_of": as_of.isoformat(), "context": context, "temporal_facts": notes, "prompt": user_content}
+        text = next((b.text for b in resp.content if b.type == "text"), "")
+        if resp.stop_reason != "max_tokens":          # not truncated → try to parse
+            try:
+                result = json.loads(text)
+                break
+            except json.JSONDecodeError:
+                pass                                   # malformed → fall through to retry / degrade
+        # else truncated → loop retries with a bigger budget
+    if result is None:
+        # Truncated/malformed even after retry: return a safe degraded answer, never crash.
+        return {"refused": False, "obligations": [], "reason": "",
+                "exhaustiveness_note": "The full answer could not be generated (the response was too long to complete). Please ask about a more specific obligation.",
+                "out_of_scope_note": "", "citations": [], "as_of": as_of.isoformat(),
+                "answer": "_The full answer could not be generated for this broad question — please ask about a more specific obligation._",
+                "context": context, "temporal_facts": notes, "prompt": user_content}
     obligations = result.get("obligations", [])
     # Sanitise citation condition refs (strip stray "Condition " prefix) + derive deduped citations.
     citations, seen = [], set()
