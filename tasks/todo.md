@@ -700,7 +700,18 @@ set the honest baseline is answer-level 90% (44/49, 1 pass) / context 94% (46/49
    until reboot. (The anchor-set + doc commits are eval/docs only, no app impact.)
 2. Decide **docs/how-ria-works-explained.md** — still uncommitted (public vs local).
 
-### TOMORROW'S MAIN TASK — dig into the BQ8 tariffs gap (agreed)
+### BQ8 tariffs gap — FIXED + LIVE (commit fd2431f, 2026-07-14)
+Diagnosis: 22A + 31I were MISSING-FROM-CONTEXT (retrieval gap, not synthesis; 25 was fine) — same
+shape as 21A/21BA. Rank probe: 22A ranks #1 for "Unit Rate Standing Charge", 31I #1 for "contract
+changes information price change" — planner never produced those. FIX = "tariffs" entry in
+`planner.SPECIFIC_OBLIGATION_HINTS` with those proven phrasings. Trigger over-fire-tested: "tariff"
+alone hit BQ18/BQ19/O3/P6 too → narrowed to ("unit rate","standing charge","prices") = fires BQ8
+alone, 0 collateral. Verified: BQ8 1/3 -> 3/3 (context+answer, 3 runs); 20-anchor answer ~90% -> ~94%;
+regression GREEN (results_phase7_bq8_tariffs.json): 31/31, 27/27 retr+cite, content 12/12,
+faithfulness 27/27, 0 false refusals. Watch: mild BQ8 precision noise (21B, 7D).
+REMINDER: this is a pipeline change → app reboot needed to go live.
+
+### (DONE — kept for the record) The BQ8 approach that was used
 BQ8 "What must we tell customers about tariffs and prices?" scored **1/3** — core {22A, 25, 31I};
 22A + 25 not reached (context missed 22A too → a planner/retrieval gap, SAME SHAPE as the old
 21A/21BA billing gap that the deterministic hint fixed). Approach (mirror the Problem B playbook):
