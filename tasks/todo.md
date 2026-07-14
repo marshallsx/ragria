@@ -817,3 +817,26 @@ State of record: hardened 31/31 + faithfulness 27/27; broad-anchor ~98% mean; ce
    cheaper synthesis model for live cost (measure-gated).
 COST DISCIPLINE IN EFFECT (memory cost-conscious-evals): re-score not re-run; diagnose locally;
 reserve full regressions for ship-gates; ask before expensive runs.
+
+## BREADTH candidate analysis — DONE (2026-07-14, $0 local diff of held versions)
+Source: `docs/change-map.md` (change-detector) + `scratchpad/ceased_scan.py` (ceased scan). Held
+versions: v2019 (89 conds) / v2022 (105) / v2025 (111). Landscape: STABLE 44 · SINGLE-CHANGE 28
+(3 mapped: 0A,21B,28) · INTRODUCED 22 (2 mapped: 25E,4D) · CEASED 7 · MULTI-CHANGE 9 (avoid).
+CAVEAT (non-negotiable): a snapshot diff sees only interval ENDPOINTS — every "single-change"
+candidate MUST be confirmed against Ofgem's modification history before mapping (a condition may
+change multiple times within a gap). That confirmation = the with-Scott part; not derivable from corpus.
+
+### Prioritised shortlist for the NEXT mapping session (value × cleanliness)
+Text-change (single, verify vs Ofgem): 31H (billing info) · 8/9 (Last Resort Supply) · 24 (domestic
+contract termination) · 31G (assistance/advice).
+Introduced (existence-boundary — cleanest): 27A (self-disconnection) · 4A/4B/4C (financial
+resilience/fit-proper) · 19C (supply continuity plans).
+Ceased/expired (NEW category to build): 28A (PPM charge restriction, in force 2017-2020, ceased 2021)
+· 45 (smart-meter consumer engagement, ceased 2021).
+AVOID (volatile, need intermediate consolidations): 47, 14A, 27, 28AD, 55, 1, 12, 14, 15.
+
+### Process to actually map one (per condition, with Scott)
+1. Confirm the real effective date(s) from Ofgem modification notices / EPR (epr.ofgem.gov.uk).
+2. Confirm it's gap-free across held versions (single change / clean intro / clean cease).
+3. Add to `src/temporal.py` (TEXT_CHANGES timeline / INTRODUCED / a new CEASED map).
+4. Add eval cases + verify (dated query resolves; undated unchanged; regression green).
