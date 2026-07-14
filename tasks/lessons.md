@@ -316,3 +316,15 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   work (28A, 28AA, 24A, 22B, 32A, 45). Eval gold must exclude them — but note the APP still retrieves
   them (they're embedded chunks). Open question for a future session: can the live pipeline ever
   present a CEASED condition as a current obligation? Worth a targeted check (not yet done).
+
+- **Third title-vs-body anchor fix (BQ15 19A/19C) + two flickers exposed.** Diagnosing the last
+  three 20-set "residuals": BQ9 (3/3 over 3 runs) and BQ10 (4/4 over 3 runs) were pure SINGLE-PASS
+  FLICKER — yesterday's 2/3 and 3/4 came from the one full pass we managed before an API 503 aborted
+  pass 2. Building a fix for either would have solved a non-problem. Only BQ15 had real signal, and
+  even that was mostly gold: 19A (body = publish a Consolidated Segmental Statement — financial
+  REPORTING, not resilience) and 19C (customer supply CONTINUITY plan on exit — BQ9's area) are soft
+  members; the canonical resilience/fit-and-proper package 4A/4B/4C is cited reliably. Demoted 19A/19C
+  to Borderline (synthesis was right to drop 19A). PATTERN NOW CLEAR: when a hand-built gold shows a
+  persistent gap, the FIRST move is variance-check (3 runs) + body-check the dropped condition — most
+  "gaps" are flicker or gold error, not system defects. Only genuine, stable, in-scope misses
+  (21BA, 22A/31I) warrant a code fix.

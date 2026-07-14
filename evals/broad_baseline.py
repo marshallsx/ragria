@@ -74,8 +74,12 @@ ANCHORS = [
      # body is non-domestic -> borderline.
      "core": {"31G"}, "borderline": {"20", "31E", "31F", "31H", "26"}},
     {"id": "BQ15", "q": "What are our financial-resilience and fit-and-proper obligations?",
-     # supplier-robustness: reporting/governance duties ARE in scope here.
-     "core": {"4A", "4B", "4C", "19A", "19C"}, "borderline": {"5B", "4D"}},
+     # 19A/19C demoted Core->Borderline 2026-07-14 (3rd title-vs-body anchor fix after 21A, 45):
+     # 19A body = publish a Consolidated Segmental Statement (financial REPORTING/transparency, not
+     # resilience) — synthesis correctly drops it; 19C body = customer supply CONTINUITY plan on
+     # market exit (BQ9's area, continuity not fit-and-proper). Canonical resilience/fit-and-proper
+     # package is 4A (operational capability) / 4B (capital & liquidity) / 4C (fit & proper). Body-verified.
+     "core": {"4A", "4B", "4C"}, "borderline": {"5B", "4D", "19A", "19C"}},
     {"id": "BQ16", "q": "When must we offer a customer an in-home display?",
      "core": {"40"}, "borderline": {"49"}},   # NARROW control
     {"id": "BQ17", "q": "What are our obligations on metering accuracy and theft of electricity?",
