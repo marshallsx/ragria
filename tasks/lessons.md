@@ -371,3 +371,25 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   local ($0) retrieval-diff had already shown P1 was NOT among the 7 cases the demotion changed — so the
   change provably couldn't cause it. A 2-run P1 recheck (cheap) confirmed flicker. Reason from the
   cheap evidence before spending on a full re-run.
+
+## Session 2026-07-14 (close) — calibration, cost, and privacy on a public repo
+
+- **"Over-broadening" was gold-calibration, not a system bug.** BQ11/BQ14 (near-narrow anchors) looked
+  like they over-cited — but the extra citations were largely DEFENSIBLE (fair treatment genuinely
+  spans the consumer-protection suite; an info-service question spans billing/PSR/consumption info).
+  The tight gold overstated the problem. Fix = widen Borderline (re-scored from EXISTING runs, $0),
+  NOT tighten synthesis (which over-corrected during DEPTH). When a metric looks bad, check whether
+  the GOLD is wrong before "fixing" the system — the 4th time this session that a gap was gold, not code.
+
+- **Cost is a first-class constraint (Scott pays per run).** Adopted: re-score existing outputs when
+  only the gold changes ($0); diagnose with LOCAL harnesses (rank probes / context-level / retrieval
+  diffs) before any Opus; reserve the full 31-case + judge for real ship-gates; default 1 pass; ask
+  before expensive runs. Also EXONERATE a change with the cheap diff before re-running — P1's gate
+  refusal was cleared by the $0 retrieval-diff (P1 wasn't in the changed set) + a 2-call recheck, not
+  a full re-run. See memory [[cost-conscious-evals]].
+
+- **"Commit but keep private" on a PUBLIC repo = a local-only branch, never a local commit on main.**
+  A local commit on main leaks the moment the next `git push origin main` runs. The plain-language
+  explainer (copy-risk) went on a local-only branch `private-docs` (no upstream, absent from main's
+  working tree by design). Publishing is irreversible (git history + GitHub cache), so default to the
+  safe side and flag the tension rather than guessing. See memory [[private-docs-branch]].

@@ -801,3 +801,19 @@ ceased-condition PASS. Electricity RIA is a correct, documented, live, eval-back
 - Low-value polish: date-string flicker, mild broad-answer precision noise, cheaper synthesis model for cost.
 - Cost discipline now in effect (see memory cost-conscious-evals): re-score not re-run, diagnose locally,
   reserve full regressions for ship-gates.
+
+## SESSION CLOSE — 2026-07-14 (end)
+Electricity RIA WRAPPED (see section above). This session shipped, all LIVE (app rebooted by Scott):
+- BQ8 tariffs hint (fd2431f) · synthesis truncation crash-fix + 503-retry (7f13b84, 37e37e7) ·
+  spent-condition demotion (37e37e7) · BQ15/BQ11/BQ14 gold recalibrations (13bf959, dee40da).
+- 20-query body-verified broad-anchor set (59146f9); final eval report (e0b0d6d).
+- Plain-language explainer on LOCAL-ONLY branch `private-docs` (8be851f) — private, not on GitHub.
+State of record: hardened 31/31 + faithfulness 27/27; broad-anchor ~98% mean; ceased-condition PASS.
+
+### RESUME (whenever): optional future work only — RIA is done as a wrap.
+1. BREADTH — temporal-mapping completeness (differentiator; DATA-GATED + needs an Ofgem-verification
+   session WITH Scott; only map gap-free histories from held v2019/22/25). The high-value next track.
+2. Low-value polish: date-string flicker (content 11-12/12); mild broad-answer precision noise;
+   cheaper synthesis model for live cost (measure-gated).
+COST DISCIPLINE IN EFFECT (memory cost-conscious-evals): re-score not re-run; diagnose locally;
+reserve full regressions for ship-gates; ask before expensive runs.
