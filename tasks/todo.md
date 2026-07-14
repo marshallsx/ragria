@@ -783,3 +783,21 @@ cease dates); no hallucination. WEAKNESS found: spent conditions out-ranked curr
 transient-503 retry wrapper in planner (cost + live-crash hardening). Ship-gate: retrieval 27/27,
 faithfulness 26/26, version 8/8, history 2/2, 0 false answers; the lone P1 refusal = confirmed
 flicker (P1 retrieval unchanged by demotion; 2 clean re-runs). LIVE pipeline change -> needs reboot.
+
+## ELECTRICITY RIA — WRAPPED (2026-07-14)
+Finish-line items all done:
+- ✅ Ceased-condition correctness check (PASS) + spent-condition demotion fix (37e37e7).
+- ✅ Final eval report — `evals/report.md` "FINAL STATE" section (e0b0d6d).
+- ✅ Plain-language explainer committed to LOCAL-ONLY branch `private-docs` (8be851f) — NOT on main/
+  public (repo is public; doc is copy-risk). It is ABSENT from main's working tree by design. To view:
+  `git checkout private-docs`. Only merge to main if the repo is made private or the doc is published.
+- ✅ App REBOOTED by Scott — all pipeline fixes now LIVE (BQ8 tariff hint, truncation crash-fix,
+  spent-demotion, 503-retry, citation-completeness, Haiku planner, hint sub-queries).
+State of record: 31-case 31/31 + faithfulness 27/27 (0 hallucinations); 20-anchor broad ~98% mean;
+ceased-condition PASS. Electricity RIA is a correct, documented, live, eval-backed artefact.
+
+### Optional future work (NOT part of wrap-up)
+- BREADTH — temporal-mapping completeness (the differentiator; data-gated + needs Ofgem sessions WITH Scott).
+- Low-value polish: date-string flicker, mild broad-answer precision noise, cheaper synthesis model for cost.
+- Cost discipline now in effect (see memory cost-conscious-evals): re-score not re-run, diagnose locally,
+  reserve full regressions for ship-gates.
