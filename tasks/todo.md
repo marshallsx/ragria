@@ -915,3 +915,31 @@ rendered by the app (not LLM markdown); before/after + ship-gate acceptance; bou
   0 false refusals/answers. ⚠️ Live pipeline change → app reboot needed.
 - Watch/tune (low priority): narrow answers with 2+ facets now stay light (no boundary); if a broad
   answer's boundary ever feels heavy, is_broad is the single knob.
+
+## SESSION CLOSE — 2026-07-16 · RESUME HERE NEXT TIME
+Three things shipped today, all regression-GREEN + faithfulness-clean, all on origin/main:
+1. **Synthesis-model A/B (9ba7bf7)** — tested Sonnet 5 / Haiku for the synthesis step to cut cost.
+   Sonnet tied Opus on broad recall but FAILED temporal faithfulness (asserted unmapped 4A/27A as
+   historic); Haiku not viable. DECISION: synthesis STAYS on Opus. Added `run_evals.py --judge-model`
+   (independent judge). See memory synthesis-model-ab-rejected — don't re-run.
+2. **BREADTH batch 1 (f761684)** — temporal mapping 5 → 9 conditions: 27A (introduced 15 Dec 2020 +
+   text-changed 8 Nov 2023), 4C + 19C (introduced 18 Mar 2021), 31H (text-changed 31 Dec 2020, CEP).
+   All Ofgem-dates verified by Scott. Ship-gate 40/40, faithfulness 36/36.
+3. **Answer-format change (4181c4d)** — scannable template (headline + plain-language blocks +
+   deterministic Source/version lines + proportionate footer), grounded glosses only, existence-
+   boundary = answer-not-refusal. Fixed the T3/T4/T5 date-string flicker (content 19/19). Ship-gate
+   40/40, faithfulness 36/36, 0 false refusals.
+
+### ⚠️ FIRST ACTION NEXT SESSION
+**REBOOT the Streamlit app** — batch 1 + the answer-format change are LIVE pipeline changes and are
+NOT visible until reboot. Demo check: broad "vulnerable customers" (new format) + a dated prepayment
+question (27A/28 version swap).
+
+### RESUME OPTIONS (pick next time)
+- **BREADTH batch 2** — candidates 24, 8, 9, 31G (single text-change) + 4A (introduced+text-change);
+  ceased category 28A/45 still unbuilt. AVOID 4B (total rewrite) + volatile set. Same process: Scott
+  Ofgem-verifies dates → $0 local shape-check → map → one batched ship-gate.
+- **Answer-format polish** (low priority): tune broad-boundary verbosity if it feels heavy; nothing
+  outstanding.
+COST DISCIPLINE holds (memory cost-conscious-evals): $0 local checks first, batch the ship-gates,
+re-score not re-run, ask before expensive runs.
