@@ -261,6 +261,40 @@ def scope_note(as_of: date) -> str | None:
     )
 
 
+def citation_note(condition: str, as_of: date) -> str:
+    """Short, deterministic version/effective-date note for a citation line, or '' when the
+    condition is not version-mapped (its current text simply applies). The app appends this to the
+    'Source: Condition X' line so version-awareness is surfaced without relying on the model to echo
+    a date. Every date here comes from the verified temporal map, so it is grounded by construction.
+    """
+    tc = TEXT_CHANGES.get(condition)
+    if tc is not None:
+        seg = _segment(condition, as_of)
+        if seg == "TOO_EARLY":
+            # Before our earliest held text. For an introduced condition that means it did not exist.
+            if tc.get("introduced"):
+                return f"introduced {fmt(tc['introduced'])}; did not exist as of {fmt(as_of)}"
+            return ""
+        if not seg:
+            return ""
+        v = versions.BY_LABEL[seg["version"]]
+        note = f"consolidated to {fmt(v['date'])}"
+        # A segment's start is a REAL effective date only for an introduced condition (first segment
+        # = its introduction) or for any LATER segment (a genuine change date). The first segment of a
+        # non-introduced condition merely starts at our earliest held consolidation, which is not an
+        # effective date — so don't present it as one.
+        idx = tc["segments"].index(seg)
+        if tc.get("introduced") or idx > 0:
+            note += f"; this wording effective from {fmt(seg['start'])}"
+        return note
+    m = MAPPED.get(condition)
+    if m is not None:
+        if as_of >= m["introduced"]:
+            return f"introduced {fmt(m['introduced'])}"
+        return f"introduced {fmt(m['introduced'])}; did not exist as of {fmt(as_of)}"
+    return ""
+
+
 def temporal_notes(conditions: set[str], as_of: date) -> list[str]:
     """Plain facts for each EXISTENCE-BOUNDARY mapped condition among the retrieved ones."""
     notes = []

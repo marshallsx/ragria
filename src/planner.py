@@ -260,11 +260,20 @@ def plan_and_retrieve(question: str, coll=None, client=None, model: str | None =
 # Reuse rag.SYSTEM's grounding + temporal rules VERBATIM (so Phase 7 composes with version
 # awareness), swapping only the output-format instruction and the empty-answer wording.
 _GROUPED_TAIL = (
-    "Structure the answer as a list of DISTINCT OBLIGATIONS. Each obligation is one concrete duty: "
-    "a short label (obligation), a grounded detail (1-3 sentences drawn ONLY from the extracts), and "
-    "citation(s) to the condition(s) it comes from (condition number, title, page range). Group "
-    "related points under a single obligation; keep obligations distinct (do not split one duty across "
-    "several, or merge unrelated duties). "
+    "Produce a SCANNABLE, plain-English answer. "
+    "HEADLINE: set `headline` to ONE plain-English sentence that answers the question directly at a "
+    "glance, in everyday words, supported by the obligations below. It must contain no figure, age, "
+    "date, monetary amount, or threshold that is not in the extracts. On a refusal set headline to an "
+    "empty string. "
+    "Then structure the answer as a list of DISTINCT OBLIGATIONS. Each obligation is one concrete duty: "
+    "`obligation` — a short heading in PLAIN LANGUAGE saying WHAT THE SUPPLIER MUST DO in everyday "
+    "words (NOT the condition number, NOT bare licence jargon); `detail` — a 2-4 sentence plain-English "
+    "explanation drawn ONLY from the extracts; and citation(s) to the condition(s) it comes from "
+    "(condition number, title, page range). Explain in plain English FIRST; when you use a licence "
+    "DEFINED TERM, gloss it briefly on first use using ONLY the definition given in the extracts — do "
+    "not invent a definition, and if the extracts do not define it, use the term without inventing a "
+    "gloss. Group related points under a single obligation; keep obligations distinct (do not split one "
+    "duty across several, or merge unrelated duties). "
     "CITATION COMPLETENESS: when a grouped obligation draws on several DIFFERENT licence conditions "
     "that each impose a distinct duty, cite EVERY such condition — never collapse several distinct "
     "conditions into one representative citation. Every condition among the extracts that MATERIALLY "
@@ -288,8 +297,18 @@ _GROUPED_TAIL = (
     "not set by these licence conditions'). Never let a tangential in-scope obligation silently stand "
     "in for the out-of-scope part. "
     "(3) Set out_of_scope_note to an empty string when the whole question is fully in scope. "
-    "If the extracts contain nothing adequate, set refused=true, obligations=[], and say what was "
-    "missing in reason. Return your response in the required structured format."
+    "EXISTENCE BOUNDARY (do NOT refuse): if the temporal facts state a retrieved condition did NOT yet "
+    "exist as of the as-of date, that is KNOWN territory, not a gap — ANSWER it. Give a headline and a "
+    "single obligation block that states plainly the obligation did not exist as of that date and the "
+    "date it was introduced (from the temporal facts), and cite that condition. Do NOT set refused=true "
+    "merely because the condition post-dates the as-of date, and do NOT present its current text as "
+    "having applied then. "
+    "NO UNEARNED SPECIFICS: never introduce a specific number, age, monetary amount, or threshold that "
+    "is not in the extracts; if the licence gives a category or a qualitative test rather than a figure, "
+    "state it that way. If any part of the answer cannot be confirmed from the extracts, say so plainly "
+    "rather than filling the gap. "
+    "If the extracts contain nothing adequate, set refused=true, headline='', obligations=[], and say "
+    "what was missing in reason. Return your response in the required structured format."
 )
 GROUPED_SYSTEM = (
     rag.SYSTEM.rsplit("Return your response", 1)[0].rstrip().replace("leave answer empty", "leave obligations empty")
@@ -300,6 +319,7 @@ GROUPED_SCHEMA = {
     "type": "object",
     "properties": {
         "refused": {"type": "boolean"},
+        "headline": {"type": "string"},
         "obligations": {
             "type": "array",
             "items": {
@@ -329,13 +349,13 @@ GROUPED_SCHEMA = {
         "exhaustiveness_note": {"type": "string"},
         "out_of_scope_note": {"type": "string"},
     },
-    "required": ["refused", "obligations", "reason", "exhaustiveness_note", "out_of_scope_note"],
+    "required": ["refused", "headline", "obligations", "reason", "exhaustiveness_note", "out_of_scope_note"],
     "additionalProperties": False,
 }
 
 
 def synthesize(question: str, union_chunks: list[dict], coll=None, as_of: date | None = None,
-               client=None, model: str | None = None) -> dict:
+               client=None, model: str | None = None, is_broad: bool = False) -> dict:
     """Grounded, grouped-by-obligation synthesis over the union chunks. Returns the grouped result
     PLUS backward-compatible `answer` (markdown) + `citations` (deduped) so the existing UI / evals
     / temporal-history consumers keep working unchanged."""
@@ -408,20 +428,61 @@ def synthesize(question: str, union_chunks: list[dict], coll=None, as_of: date |
             if ci["condition"] and ci["condition"] not in seen:
                 seen.add(ci["condition"])
                 citations.append(ci)
-    # Backward-compat markdown answer (old UI / evals `answer` field).
-    lines = []
-    for ob in obligations:
-        cites = ", ".join(f"Condition {ci['condition']}" for ci in ob.get("citations", []))
-        lines.append(f"**{ob.get('obligation', '')}** — {ob.get('detail', '')}" + (f" ({cites})" if cites else ""))
-    note = result.get("exhaustiveness_note", "")
-    oos = (result.get("out_of_scope_note") or "").strip()
     result["citations"] = citations
-    tail = ""
+
+    # --- Render the scannable answer template (Answer Format Spec). The model supplies grounded
+    # CONTENT (headline, plain-language headings, glossed detail); the app supplies the LAYOUT and the
+    # version/effective dates (from the temporal map, grounded by construction — not model-echoed). ---
+    def _source_line(ob):
+        parts = []
+        for ci in ob.get("citations", []):
+            cond = ci["condition"]
+            seg = f"Condition {cond}"
+            pages = (ci.get("pages") or "").strip()
+            if pages:
+                seg += f" (pp. {pages})"
+            vnote = rag.temporal.citation_note(cond, as_of)
+            if vnote:
+                seg += f" — {vnote}"
+            parts.append(seg)
+        return ("Source: " + "; ".join(parts)) if parts else ""
+
+    blocks = []
+    for ob in obligations:
+        block = f"**{ob.get('obligation', '')}**  \n{ob.get('detail', '')}"
+        src = _source_line(ob)
+        if src:
+            block += f"  \n{src}"
+        blocks.append(block)
+
+    headline = (result.get("headline") or "").strip()
+    body_parts = ([headline] if headline else []) + blocks
+
+    # Footer. The version line always shows (version-awareness is a selling point). The "Not covered
+    # here" boundary is PROPORTIONATE: shown for broad (multi-obligation) answers or when part of the
+    # question is out of scope; a simple single-obligation answer stays light.
+    oos = (result.get("out_of_scope_note") or "").strip()
+    footer = [
+        f"_Based on: Ofgem electricity supply Standard Licence Conditions consolidated to "
+        f"{rag.temporal.current_version_str()}; answer as of {rag.temporal.fmt(as_of)}._"
+    ]
+    # The question-specific out-of-scope / temporal caveat gets its OWN line (shown whenever present) —
+    # never glued onto the generic boundary, which reads as a run-on.
     if oos:
-        tail += f"\n\n**Not covered by these licence conditions:** {oos}"
-    if note:
-        tail += f"\n\n_{note}_"
-    result["answer"] = "" if result.get("refused") else "\n\n".join(lines) + tail
+        footer.append(f"_**Please note:** {oos.rstrip('. ')}._")
+    # The generic scope boundary is proportionate: shown only on BROAD answers (planner is_broad),
+    # so a narrow answer that happens to have a few facets stays light.
+    if is_broad:
+        footer.append(
+            "_**Not covered here:** voluntary industry commitments, Ofgem guidance sitting outside the "
+            "licence, and whether any given supplier is actually complying — RIA interprets the "
+            "electricity supply licence, it does not verify compliance._"
+        )
+    ex = (result.get("exhaustiveness_note") or "").strip()
+    if ex and is_broad:
+        footer.append(f"_{ex}_")
+
+    result["answer"] = "" if result.get("refused") else "\n\n".join(body_parts + footer)
     result["as_of"] = as_of.isoformat()
     # Fields the existing UI / eval faithfulness-judge expect on a result.
     result["context"] = context
@@ -438,7 +499,8 @@ def answer_broad(question: str, coll=None, as_of: date | None = None, client=Non
     # Planner uses PLANNER_MODEL (Haiku); only synthesis takes `model` (Opus). Decoupled so the
     # cheap plan step doesn't inherit the expensive synthesis model.
     p, union = plan_and_retrieve(question, coll=coll, client=client)
-    result = synthesize(question, union, coll=coll, as_of=as_of, client=client, model=model)
+    result = synthesize(question, union, coll=coll, as_of=as_of, client=client, model=model,
+                        is_broad=bool(p.get("is_broad")))
     result["plan"] = p
     result["_union"] = union   # raw union chunks so callers can build retrieval/transparency meta
     return result

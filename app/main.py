@@ -385,11 +385,10 @@ if ask and question.strip():
         st.warning("**Not in the source material.**")
         st.write(result["reason"].replace("—", "-"))
     else:
+        # The answer now carries a one-line headline, plain-language obligation blocks, and per-block
+        # "Source: Condition X" lines (with deterministic version/effective dates) — so the separate
+        # Citations list is redundant. Full titles + pages remain in the retrieved-sources expander.
         st.markdown(result["answer"].replace("—", "-"))
-        if result["citations"]:
-            st.subheader("Citations")
-            for c in result["citations"]:
-                st.markdown(f"- **Condition {c['condition']}** - {c['condition_title']} (pp. {c['pages']})")
 
     # --- Version history "what changed" panel (mapped conditions in the answer) ---
     # Defensive: this panel is a supplementary enhancement — the answer + citations are already
