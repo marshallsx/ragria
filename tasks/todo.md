@@ -893,3 +893,25 @@ Remaining single-text-change (verify single + gap-free): 24 (domestic contract t
 (assistance/advice, chg 2022→2025). Introduced+text-change: 4A (operational capability). AVOID: 4B
 (1→23 chunks 2022→2025 = total rewrite, almost certainly multi-change / not gap-free); the volatile
 set (47, 14A, 27, 28AD, 55). Ceased category (28A, 45) still unbuilt.
+
+## Answer-format change — DONE, ship-gate GREEN + LIVE (2026-07-16, commit 4181c4d)
+Problem (Scott, vs Gemini side-by-side): Ria's content is MORE correct but presented as a wall of
+text — loses on readability/persuasiveness. Fix = encode an Answer Format Spec into synthesis without
+sacrificing grounding/citations/version-awareness/refusals. Decisions (Scott): proportionate for
+narrow answers; grounded glosses only (from licence definition text); structure in schema fields
+rendered by the app (not LLM markdown); before/after + ship-gate acceptance; boundary only on broad.
+- One-line plain-English HEADLINE (new `headline` field); plain-language obligation headings; 2-4
+  sentence detail with defined terms glossed from the licence's own text; per-block `Source: Condition
+  N (pp.) — <version note>`; footer = always a version line, generic "Not covered here" boundary only
+  on BROAD answers (planner is_broad), question-specific out-of-scope caveat on its OWN line.
+- Version/effective dates rendered DETERMINISTICALLY (`temporal.citation_note`) not model-echoed →
+  also KILLED the long-standing T3/T4/T5 date-string flicker (content_checks 19/19).
+- EXISTENCE BOUNDARY prompt rule: "did not exist as of <date>" is a grounded ANSWER not a refusal —
+  hardened the fragile before-introduction path (T10/T13/T15 now deterministic; verified 2 passes).
+- Electricity-supply-only enforced in the footer (never implies gas). UI drops the redundant separate
+  Citations list (titles/pages remain in the retrieved-sources expander).
+- SHIP-GATE (results_format_change_v2.json, 40 cases, Opus synth + Opus judge): decision 40/40,
+  citation 36/36, content 19/19, version 12/12, history 6/6, faithfulness 36/36 (0 hallucinations),
+  0 false refusals/answers. ⚠️ Live pipeline change → app reboot needed.
+- Watch/tune (low priority): narrow answers with 2+ facets now stay light (no boundary); if a broad
+  answer's boundary ever feels heavy, is_broad is the single knob.

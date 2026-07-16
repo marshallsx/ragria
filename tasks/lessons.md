@@ -419,3 +419,21 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   new conditions together (decision 40/40, faithfulness 36/36, version 12/12, 0 false refusals) —
   instead of four separate ~$5 runs. Do the $0 local logic/retrieval/diff checks per condition, then
   ONE gate for the batch.
+
+## Answer-format change — lessons 2026-07-16
+- **Readability and correctness are not a trade-off — separate CONTENT from LAYOUT.** The model
+  supplies grounded content (headline, plain-language headings, glossed detail); the APP supplies the
+  template layout AND the version/effective dates (from the temporal map, grounded by construction).
+  Rendering dates deterministically instead of asking the model to echo them fixed a flicker that had
+  been "deferred" for weeks (content_checks 17-18/19 → 19/19).
+- **A pure presentation change can still regress BEHAVIOUR via the prompt.** Adding headline/plain-
+  language/obligation-block instructions tipped the fragile before-introduction case (27A as-of-2019)
+  from a correct existence-boundary answer into a FALSE REFUSAL. The faithfulness gate was clean, but
+  the decision gate caught it. Always run the full refusal+temporal suite after a synthesis-prompt edit.
+- **Fix the fragility, don't just fix the eval.** The before-intro path had flickered before (T13).
+  Rather than reword cases again, added an explicit EXISTENCE BOUNDARY rule ("did not exist as of X" is
+  a grounded ANSWER, not a refusal) → T10/T13/T15 deterministic over 2 passes. Gated tightly to the
+  temporal existence-boundary case so genuine out-of-scope refusals (R1/R2/D1/S4) are untouched.
+- **Hold the push when the gate surfaces something, even under "push it live".** A synthesis-prompt
+  change is exactly the kind that can drift; the discipline is measure → diagnose → fix → re-gate →
+  ship, not ship-on-request. The extra gate ($ ~6) beat shipping a visible false-refusal flicker.
