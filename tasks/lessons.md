@@ -437,3 +437,18 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
 - **Hold the push when the gate surfaces something, even under "push it live".** A synthesis-prompt
   change is exactly the kind that can drift; the discipline is measure → diagnose → fix → re-gate →
   ship, not ship-on-request. The extra gate ($ ~6) beat shipping a visible false-refusal flicker.
+- **An always-on caveat is not honesty — it is noise.** The broad-answer footer said "may not be
+  exhaustive" on EVERY broad answer (prompt: "Always set exhaustiveness_note..."). Because it never
+  varied it carried zero signal — identical at 5/5 recall and at 2/5 — so it taught users to ignore it
+  while underselling measured ~98% broad-anchor Core recall. A caveat only informs if it can be absent.
+  Replaced with an EARNED hedge: confident default, hedge only on real evidence of incompleteness.
+- **The model must not assert facts about OUR OWN pipeline.** How much of the licence RIA read is a
+  property of retrieval, not of the extracts — the model cannot know it, so it was guessing in prose.
+  Same category error as the version dates. Fix is the same split: content from the model, facts from
+  code (`union_truncated` + a corpus-derived condition count). Removed the field from GROUPED_SCHEMA
+  entirely rather than asking the model nicely not to author it.
+- **Check whether a proposed signal can ever fire BEFORE building on it.** "Union saturated" looked
+  like an obvious hedge trigger, but arithmetic said MAX_SUBQUERIES(6) * K_PER(6) = 36 unique < BUDGET
+  (40) — impossible without hint sub-queries. A cheap probe over the 20 anchors confirmed it fires
+  1/20 (BQ8 tariffs: 2 hints → 8 subs → 44 unique). Rare-but-real was the right answer; a signal that
+  fired 0/20 would have been decorative honesty. Measure the trigger, not just the fix.

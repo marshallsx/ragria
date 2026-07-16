@@ -943,3 +943,44 @@ question (27A/28 version swap).
   outstanding.
 COST DISCIPLINE holds (memory cost-conscious-evals): $0 local checks first, batch the ship-gates,
 re-score not re-run, ask before expensive runs.
+
+## Earned-completeness footer — BUILT, UNCOMMITTED, GATE PENDING (2026-07-16 eve) · RESUME HERE
+Scott's challenge: does "This answer reflects the retrieved sections only and may not be exhaustive"
+match RIA's completeness aim? **Verdict: no.** It was unconditional (prompt said "Always set
+exhaustiveness_note"), fired on EVERY broad answer (`is_broad`), carried zero signal (identical at
+5/5 recall and 2/5), undersold measured ~98% broad-anchor Core recall, and had the MODEL asserting a
+fact about OUR retrieval that it cannot know. Agreed fix = **earned hedge + confident default**.
+
+### Built (all in `src/planner.py`, UNCOMMITTED — do not push before the gate)
+- Removed `exhaustiveness_note` from `GROUPED_SCHEMA` + `required` + the "Always set..." prompt line.
+  The model no longer authors it (same content-from-model / facts-from-code split as version dates).
+- `plan_and_retrieve` now sets `p["union_truncated"]` = (unique chunks found > BUDGET) — the ONLY
+  runtime evidence an answer may be incomplete. Threaded → `answer_broad` → `synthesize(union_truncated=)`.
+- `condition_count(coll)` — distinct conditions in the CURRENT version, read from the store + cached
+  (never hardcode 111; self-updates with the corpus).
+- Footer (broad + not refused only): truncated → "**Possibly more:** …reached more of the licence than
+  RIA could read in one pass…"; else → "**Completeness:** RIA searched all 111 conditions … and lists
+  every obligation it found that materially addresses this question."
+
+### Measured ($0-ish probes, `scratchpad/saturation_probe.py` + `completeness_smoke.py`)
+- Saturation fires **1/20 anchors** (BQ8 tariffs: 2 hints → 8 subs → 44 unique > BUDGET 40). Rare by
+  construction: without hints the ceiling is MAX_SUBQUERIES(6) * K_PER(6) = 36 < BUDGET(40).
+- Smoke: BQ1 → confident line (union 22) · BQ8 → hedge (union 40, truncated) · BQ5 narrow → no line. ✅
+
+### ⚠️ FIRST ACTIONS TOMORROW
+1. **Run the ship-gate** — `venv/bin/python evals/run_evals.py --label completeness_footer`
+   (40 cases + faithfulness judge). Synthesis prompt + schema change → full refusal/temporal suite is
+   mandatory (a "presentation-only" change already caused a false refusal once — see lessons).
+   Expect: decision 40/40, faithfulness 36/36, 0 false refusals. If GREEN → commit + push + **reboot**.
+2. **Still pending from earlier: REBOOT the Streamlit app** — BREADTH batch 1 (f761684) + the
+   answer-format change (4181c4d) are LIVE pipeline changes still not visible until reboot.
+
+### Open judgement calls raised (Scott to decide, not yet actioned)
+- **Footer now 4 lines deep on BQ1** (version / Please note / Not covered here / Completeness). Each is
+  individually earned but stacked they are heavy — and readability is what started this. `**Not covered
+  here:**` and `**Completeness:**` sit adjacent saying related things: consider merging, or leading with
+  the positive. Not touched unilaterally.
+- **BQ8 truncates yet still scores 3/3 Core** — hedge is honest but pessimistic there. Deeper point:
+  `BUDGET=40` sits ABOVE the no-hint ceiling of 36, so the budget only ever binds on hint-boosted
+  questions. Raising `K_PER`/`BUDGET` is a real lever if we'd rather widen than hedge (cost/latency
+  trade — measure first).
