@@ -235,3 +235,75 @@
   expect_conditions: ["25E"]
   expect_contains: "24 September 2022"
   expect_history: "introduced"
+- id: T10  # 27A introduced+text-change condition BEFORE its introduction (existence boundary)
+  category: Temporal
+  question: What support must suppliers give prepayment customers who self-disconnect or run out of credit?
+  as_of: 2019-06-01
+  expected: answer
+  expect_conditions: ["27A"]
+  expect_contains: "15 December 2020"
+- id: T11  # 27A in its pre-IPPM window: introduced but before the 8 Nov 2023 text change
+  category: Temporal
+  question: What support must suppliers give prepayment customers who self-disconnect or run out of credit?
+  as_of: 2022-05-01
+  expected: answer
+  expect_conditions: ["27A"]
+  expect_version: "2022-04-14"
+  expect_contains: "14 April 2022"
+- id: T12  # 27A AFTER its 8 Nov 2023 text change (involuntary-PPM credit added)
+  category: Temporal
+  question: What support must suppliers give prepayment customers who self-disconnect or run out of credit?
+  as_of: 2024-06-01
+  expected: answer
+  expect_conditions: ["27A"]
+  expect_version: "2025-08-01"
+  expect_contains: "8 November 2023"
+  expect_history: "text-change"
+- id: T13  # 4C introduced condition BEFORE introduction (existence boundary)
+  category: Temporal
+  # Phrased to isolate Cond 4C. The broader "what ongoing fit and proper requirements..." pulls a
+  # crowd of related fit-and-proper conditions (34/45A/4) that arbitrate 4C's introduction fact away
+  # (and flickered refuse/answer) — that tests scope-arbitration, not the 4C existence-boundary map.
+  question: Does a licensee have to remain fit and proper on an ongoing basis?
+  as_of: 2020-06-01
+  expected: answer
+  expect_conditions: ["4C"]
+  expect_contains: "18 March 2021"
+  expect_history: "introduced"
+- id: T14  # 4C AFTER introduction
+  category: Temporal
+  question: Does a licensee have to remain fit and proper on an ongoing basis?
+  as_of: 2021-09-01
+  expected: answer
+  expect_conditions: ["4C"]
+- id: T15  # 19C introduced condition BEFORE introduction (existence boundary)
+  category: Temporal
+  question: What customer supply continuity plans must a supplier maintain?
+  as_of: 2020-06-01
+  expected: answer
+  expect_conditions: ["19C"]
+  expect_contains: "18 March 2021"
+  expect_history: "introduced"
+- id: T16  # 19C AFTER introduction
+  category: Temporal
+  question: What customer supply continuity plans must a supplier maintain?
+  as_of: 2021-09-01
+  expected: answer
+  expect_conditions: ["19C"]
+- id: T17  # 31H text-change condition BEFORE its 31 Dec 2020 CEP change
+  category: Temporal
+  question: What billing information and price breakdown must a supplier give domestic customers?
+  as_of: 2020-06-01
+  expected: answer
+  expect_conditions: ["31H"]
+  expect_version: "2019-08-03"
+  expect_contains: "3 August 2019"
+- id: T18  # 31H AFTER its 31 Dec 2020 CEP change
+  category: Temporal
+  question: What billing information and price breakdown must a supplier give domestic customers?
+  as_of: 2022-06-01
+  expected: answer
+  expect_conditions: ["31H"]
+  expect_version: "2025-08-01"
+  expect_contains: "31 December 2020"
+  expect_history: "text-change"

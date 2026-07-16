@@ -859,3 +859,37 @@ broad anchors (shared union per anchor; only synthesis model varied), then ship-
   cheaper, temporal/narrow → Opus), NOT a global swap; needs a broad-faithfulness check first.
 - Kept: `evals/synth_model_ab.py`, `evals/synth_sonnet_variance.py`, `run_evals.py --judge-model`
   (independent faithfulness judge — a genuine harness improvement). See memory synthesis-model-ab-rejected.
+
+## BREADTH batch 1 — DONE, ship-gate GREEN (2026-07-16). Mapped set 5 → 9 conditions.
+First temporal-mapping expansion since Phase 6. Scott verified all effective dates against Ofgem.
+Added (all gap-free from held v2019/v2022/v2025):
+- **27A Self-disconnection** — INTRODUCED 15 Dec 2020 AND text-changed 8 Nov 2023 (involuntary-PPM
+  credit paras 27A.7A-7C, the same reform as Cond 28). Modelled in TEXT_CHANGES with an `introduced`
+  marker; pre-introduction serves current text + "did not exist, introduced [date]" (existence-
+  boundary semantics via a new `version_for` branch). Cases T10 (before) / T11 (pre-IPPM v2022) /
+  T12 (post-IPPM v2025).
+- **4C Ongoing fit and proper requirement** — INTRODUCED 18 Mar 2021 (pure existence boundary, text
+  stable). MAPPED entry. Cases T13/T14 (phrased to isolate 4C — see below).
+- **19C Customer supply continuity plans** — INTRODUCED 18 Mar 2021 (pure existence boundary).
+  MAPPED entry. Cases T15/T16.
+- **31H Relevant Billing Information** — text-changed 31 Dec 2020 (Clean Energy Package / recast
+  Electricity Directive transposition — SAME date/SI as 21B). v2019 before → v2025 after. Cases
+  T17/T18. NOTE: the supplied 11 Feb 2019 date predated our earliest held consolidation (already in
+  v2019, not demonstrable) — the mappable change was the CEP one; caught by a $0 v2019-vs-v2022 diff.
+- SHIP-GATE (`results_breadth_batch1.json`, 40 cases, Opus synth + Opus judge): decision 40/40,
+  retrieval+citation 36/36, version 12/12, history 5/6, **faithfulness 36/36 (0 hallucinations)**,
+  0 false refusals, 0 false answers. Residual: T3 date-string flicker (known/deferred), and T13's
+  original crowded phrasing (fixed).
+- T13 crowded-retrieval edge (LOGGED, low priority): a before-introduction query whose topic pulls a
+  pack of competing conditions can arbitrate the introduction fact away (flickered refuse/answer).
+  Isolating phrasing gives the clean existence-boundary answer; mapping is sound. See lessons.
+- CODE: `src/temporal.py` (27A/31H TEXT_CHANGES + 4C/19C MAPPED + introduced-aware pre-existence note
+  + `version_for` branch), `src/history.py` (introduced marker on introduced text-change conditions),
+  `evals/cases.yaml` (T10-T18). ⚠️ Live pipeline change → **app reboot needed** to go live.
+
+### BREADTH — next candidates (same process: Ofgem-verify dates WITH Scott, then $0 map + batch gate)
+Remaining single-text-change (verify single + gap-free): 24 (domestic contract termination, chg
+2019→2022) · 8 (LRS direction, chg 2019→2022) · 9 (LRS payment claims, chg 2022→2025) · 31G
+(assistance/advice, chg 2022→2025). Introduced+text-change: 4A (operational capability). AVOID: 4B
+(1→23 chunks 2022→2025 = total rewrite, almost certainly multi-change / not gap-free); the volatile
+set (47, 14A, 27, 28AD, 55). Ceased category (28A, 45) still unbuilt.

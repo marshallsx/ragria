@@ -393,3 +393,29 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   explainer (copy-risk) went on a local-only branch `private-docs` (no upstream, absent from main's
   working tree by design). Publishing is irreversible (git history + GitHub cache), so default to the
   safe side and flag the tension rather than guessing. See memory [[private-docs-branch]].
+
+## BREADTH batch 1 (temporal mapping 5 → 9 conditions) — lessons 2026-07-16
+- **Verify a candidate date against the actual HELD TEXT, not just the modification history.** 31H's
+  supplied change date (11 Feb 2019) predated our earliest held consolidation (v2019 = 3 Aug 2019),
+  so it was already baked in and NOT demonstrable. The change we could actually show gap-free was a
+  DIFFERENT, later one (CEP billing transparency, 31 Dec 2020 — same SI as 21B). A $0 word-level diff
+  of v2019 vs v2022 surfaced the real change and its EU-directive fingerprint before any spend.
+- **A condition can be introduced AND text-changed (27A).** Don't assume "introduced" = pure
+  existence boundary. 27A was introduced 15 Dec 2020 AND text-changed 8 Nov 2023 (involuntary-PPM
+  credit, the same reform as Cond 28). It needed a TEXT_CHANGES entry with an `introduced` marker, not
+  a MAPPED entry (MAPPED asserts "current text applies" — wrong for the pre-change middle segment).
+- **Introduced text-change conditions need existence-boundary semantics before introduction.** For a
+  pre-introduction date, `version_for` must serve CURRENT text (like 25E/4D) so the model states
+  "did not exist, introduced [date]" — returning None made synthesis refuse with an empty answer.
+  Fixed with an `introduced`-aware branch; blast radius provably limited to introduced TEXT_CHANGES.
+- **Crowded retrieval can arbitrate an existence-boundary fact away (T13).** "What ongoing fit and
+  proper requirements must a supplier meet?" pulled a pack of related conditions (34/45A/4), and
+  synthesis flickered between refusing and answering-without-citing-4C — losing 4C's introduction
+  fact. An ISOLATING phrasing ("does a licensee have to remain fit and proper on an ongoing basis?")
+  gave the clean "4C introduced 18 Mar 2021" answer. The mapping was sound; the crowded question
+  tested scope-arbitration, not the map. Fix the eval phrasing to test what the case is FOR — and log
+  the crowded-topic edge as a real (low-priority) product limitation, don't hide it.
+- **Batching the ship-gate paid off:** one 40-case regression + faithfulness run verified all four
+  new conditions together (decision 40/40, faithfulness 36/36, version 12/12, 0 false refusals) —
+  instead of four separate ~$5 runs. Do the $0 local logic/retrieval/diff checks per condition, then
+  ONE gate for the batch.

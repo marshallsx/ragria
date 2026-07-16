@@ -117,8 +117,10 @@ def view(condition: str, as_of: date) -> dict | None:
 def _text_change_view(cond: str, as_of: date) -> dict:
     tc = temporal.TEXT_CHANGES[cond]
     segs = tc["segments"]
+    intro = tc.get("introduced")
     markers = [
-        {"date": temporal.fmt(s["start"]), "label": ("original text" if i == 0 else "text changed"),
+        {"date": temporal.fmt(s["start"]),
+         "label": ("introduced" if i == 0 and intro else "original text" if i == 0 else "text changed"),
          "note": s["note"]}
         for i, s in enumerate(segs)
     ]

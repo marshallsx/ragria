@@ -33,6 +33,17 @@ MAPPED: dict[str, dict] = {
         "title": "Protecting Domestic Customer Credit Balances",
         "introduced": date(2023, 9, 20),   # Decision OFG1163 (26 Jul 2023) + 56 days
     },
+    # Supplier Licensing Review "ongoing requirements" — both introduced 18 Mar 2021 (Scott-verified).
+    # Verified absent in v2019, present + text-stable v2022==v2025 (sim 1.00), so pure existence
+    # boundary: no historic body to serve, we just state non-existence before the introduction date.
+    "4C": {
+        "title": "Ongoing fit and proper requirement",
+        "introduced": date(2021, 3, 18),
+    },
+    "19C": {
+        "title": "Customer supply continuity plans",
+        "introduced": date(2021, 3, 18),
+    },
 }
 
 # --- Text-change conditions. Segments are contiguous and gap-free by construction:
@@ -85,6 +96,67 @@ TEXT_CHANGES: dict[str, dict] = {
                          "the Standards of Conduct apply to ALL Non-Domestic Customers, not just "
                          "microbusinesses; every 'Micro Business Consumer' reference became "
                          "'Non-Domestic Customer'"),
+            },
+        ],
+    },
+    "27A": {
+        "title": "Self-disconnection",
+        # INTRODUCED 15 Dec 2020 (Ofgem self-disconnection / self-rationing prepayment decision) —
+        # verified absent in v2019, present from v2022 (Scott-confirmed effective date). Before this
+        # date it did NOT exist, so a pre-introduction query asserts NON-EXISTENCE (existence
+        # boundary), not the "text not held" caveat. Then a SINGLE text change effective 8 Nov 2023
+        # (the involuntary-prepayment-meter Code of Practice — the SAME reform that changed Condition
+        # 28): paragraphs 27A.7A-27A.7C (Involuntary Prepayment Meter Credit) were inserted, nothing
+        # removed. Text verified stable from introduction through the v2022 consolidation. Gap-free:
+        # v2022 holds the pre-IPPM text, v2025 the post-IPPM text.
+        "introduced": date(2020, 12, 15),   # existence boundary: before this it did NOT exist
+        "earliest": date(2020, 12, 15),
+        "segments": [
+            {
+                "start": date(2020, 12, 15),
+                "end": date(2023, 11, 8),
+                "version": "2022-04-14",
+                "note": ("the pre-involuntary-PPM text: identifying self-disconnection and offering "
+                         "support, Emergency Credit and Friendly-hours Credit — but NOT the "
+                         "Involuntary Prepayment Meter Credit paragraphs (27A.7A-27A.7C) added later"),
+            },
+            {
+                "start": date(2023, 11, 8),
+                "end": None,  # open — current
+                "version": "2025-08-01",
+                "note": ("expanded by the involuntary-prepayment-meter Code of Practice (effective "
+                         "8 November 2023, the same reform as Condition 28): paragraphs 27A.7A-27A.7C "
+                         "added, requiring Involuntary Prepayment Meter Credit on each occasion an "
+                         "involuntary prepayment meter is installed under SLC 28.7"),
+            },
+        ],
+    },
+    "31H": {
+        "title": "Relevant Billing Information, Bills and statements of account",
+        # Verified single change effective 31 Dec 2020 (Clean Energy Package / recast Electricity
+        # Directive transposition into domestic law — the SAME date as 21B): bills must show a price
+        # breakdown corresponding to the three main components, plus added payment-timing information
+        # and recast-Directive references. BEFORE side = v2019; text then stable v2022 == v2025
+        # (sim 1.00). NOTE: an earlier 11 Feb 2019 change predates our earliest held consolidation
+        # (already baked into v2019) so it is not demonstrable and is NOT mapped. Gap-free.
+        "earliest": date(2019, 8, 3),
+        "segments": [
+            {
+                "start": date(2019, 8, 3),
+                "end": date(2020, 12, 31),
+                "version": "2019-08-03",
+                "note": ("the pre-Clean-Energy-Package billing text: without the requirement to show a "
+                         "price breakdown corresponding to the three main components, and without the "
+                         "added payment-timing information"),
+            },
+            {
+                "start": date(2020, 12, 31),
+                "end": None,  # open — current (text unchanged from v2022 through v2025)
+                "version": "2025-08-01",
+                "note": ("expanded by the Clean Energy Package / recast Electricity Directive "
+                         "transposition (effective 31 December 2020, the same change as Condition 21B): "
+                         "bills must show a price breakdown corresponding to the three main components "
+                         "and set out when and how the customer must make payments"),
             },
         ],
     },
@@ -161,6 +233,14 @@ def version_for(condition: str, as_of: date) -> str | None:
     if seg is None:
         return versions.CURRENT_LABEL
     if seg == "TOO_EARLY":
+        # For an INTRODUCED condition, "before earliest" means it did NOT exist yet — behave like a
+        # pure existence-boundary condition (25E/4D): serve the CURRENT text so the model can state
+        # non-existence and describe what the condition now requires, framed by the "did not exist,
+        # introduced [date]" temporal note. For a NON-introduced condition, before our earliest held
+        # text is genuinely unknown territory → None (caller caveats; asserts no content).
+        tc = TEXT_CHANGES.get(condition)
+        if tc and tc.get("introduced"):
+            return versions.CURRENT_LABEL
         return None
     return seg["version"]
 
@@ -212,11 +292,21 @@ def text_change_notes(conditions: set[str], as_of: date) -> list[str]:
         change_dates = ", ".join(fmt(s["start"]) for s in tc["segments"][1:])
         seg = _segment(c, as_of)
         if seg == "TOO_EARLY":
-            notes.append(
-                f"Condition {c} ({tc['title']}): its text changed on {change_dates}, but our "
-                f"earliest held text is {fmt(tc['earliest'])}. As of {fmt(as_of)} (earlier) the "
-                f"historic text is NOT held — do not assert its content; say it cannot be confirmed."
-            )
+            if tc.get("introduced"):
+                # Introduced condition: before its introduction it genuinely DID NOT EXIST — assert
+                # that (existence boundary), NOT the weaker "text not held" caveat used when a
+                # condition existed earlier but we simply don't hold its historic consolidation.
+                notes.append(
+                    f"Condition {c} ({tc['title']}) was introduced into the licence on "
+                    f"{fmt(tc['introduced'])}. As of {fmt(as_of)} it did NOT yet exist — do not "
+                    f"present any obligation under it as applying on that date."
+                )
+            else:
+                notes.append(
+                    f"Condition {c} ({tc['title']}): its text changed on {change_dates}, but our "
+                    f"earliest held text is {fmt(tc['earliest'])}. As of {fmt(as_of)} (earlier) the "
+                    f"historic text is NOT held — do not assert its content; say it cannot be confirmed."
+                )
             continue
         v = versions.BY_LABEL[seg["version"]]
         rng = f"from {fmt(seg['start'])}" + (f" until {fmt(seg['end'])}" if seg["end"] else " to now")
