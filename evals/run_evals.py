@@ -83,7 +83,8 @@ def judge_faithfulness(answer: str, source: str, client, model: str) -> dict:
     return json.loads(txt)
 
 
-def run(label: str, model: str, judge: bool = True) -> dict:
+def run(label: str, model: str, judge: bool = True, judge_model: str | None = None) -> dict:
+    judge_model = judge_model or model   # default: same model judges; override for an INDEPENDENT judge
     cases = yaml.safe_load(CASES.read_text(encoding="utf-8"))
     coll, client = get_collection(), get_client()
 
@@ -116,7 +117,7 @@ def run(label: str, model: str, judge: bool = True) -> dict:
         # Faithfulness judge (answered cases only).
         faithful, faith_reason = None, None
         if judge and is_answer and not r["refused"] and r.get("answer"):
-            v = judge_faithfulness(r["answer"], r.get("prompt", ""), client, model)
+            v = judge_faithfulness(r["answer"], r.get("prompt", ""), client, judge_model)
             faithful, faith_reason = v["faithful"], (v.get("unsupported_claims") or v.get("reason"))
 
         rows.append({
@@ -155,7 +156,7 @@ def run(label: str, model: str, judge: bool = True) -> dict:
     unfaithful = [r["id"] for r in rows if r["faithful"] is False]
 
     summary = {
-        "label": label, "model": model, "n": n, "judge": judge,
+        "label": label, "model": model, "judge_model": judge_model if judge else None, "n": n, "judge": judge,
         "decision_accuracy": f"{decision_acc}/{n}",
         "retrieval_hit_rate": f"{ret_hits}/{n_ans}",
         "recall@1": f"{recall_at[1]}/{n_ans}", "recall@3": f"{recall_at[3]}/{n_ans}",
@@ -198,6 +199,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--label", required=True)
     ap.add_argument("--model", default=MODEL)
+    ap.add_argument("--judge-model", default=None,
+                    help="independent faithfulness judge model (default: same as --model)")
     ap.add_argument("--no-judge", action="store_true", help="skip the faithfulness LLM judge")
     args = ap.parse_args()
-    run(args.label, args.model, judge=not args.no_judge)
+    run(args.label, args.model, judge=not args.no_judge, judge_model=args.judge_model)

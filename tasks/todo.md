@@ -840,3 +840,22 @@ AVOID (volatile, need intermediate consolidations): 47, 14A, 27, 28AD, 55, 1, 12
 2. Confirm it's gap-free across held versions (single change / clean intro / clean cease).
 3. Add to `src/temporal.py` (TEXT_CHANGES timeline / INTRODUCED / a new CEASED map).
 4. Add eval cases + verify (dated query resolves; undated unchanged; regression green).
+
+## Synthesis-cost A/B — DONE, Sonnet REJECTED (2026-07-16)
+Goal: could a cheaper model replace **Opus** on the grouped-synthesis step (the dominant per-broad-
+query cost; planner is already Haiku)? Screened Opus vs Sonnet 5 vs Haiku over the 20 body-verified
+broad anchors (shared union per anchor; only synthesis model varied), then ship-gated the survivor.
+- **Screen (`evals/synth_model_ab.py`):** Opus 47/47 (100%) · **Sonnet 47/47 (100%)**, same precision
+  noise · Haiku 28/47 (60%), +175 noise, 2 false refusals (Haiku path has no adaptive thinking → not
+  viable). Sonnet TIED Opus on broad recall/precision.
+- **Ship-gate (`run_evals.py --model claude-sonnet-5 --judge-model claude-opus-4-8`, new independent-
+  judge flag):** Sonnet FAILED the correctness gate. Faithfulness 24/26 vs Opus 27/27 — T1 asserted
+  UNMAPPED Cond 4A as "verified-historical"; T5 relied on UNMAPPED Cond 27A as a past-date position
+  (both break the core temporal rule: unmapped + past date → never present current text as historic).
+  Plus D2 false-refused a compound-scope case Opus answers. Coherent failure mode, not noise.
+- **DECISION (Scott): reject Sonnet, synthesis STAYS on Opus.** Temporal correctness is RIA's
+  differentiator; Sonnet trades away the one property most worth protecting. No pipeline change → no
+  app reboot needed. If cost pressure returns, only live option = HYBRID routing (broad-undated →
+  cheaper, temporal/narrow → Opus), NOT a global swap; needs a broad-faithfulness check first.
+- Kept: `evals/synth_model_ab.py`, `evals/synth_sonnet_variance.py`, `run_evals.py --judge-model`
+  (independent faithfulness judge — a genuine harness improvement). See memory synthesis-model-ab-rejected.
