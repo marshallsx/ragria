@@ -1062,6 +1062,9 @@ faithfulness 36/36, 0 false refusals. GREEN → commit + push + reboot.
 - VERIFIED $0 (no API): `_copy_text` on a realistic template answer → all assertions pass (no `**`,
   no stray `_`, no em-dash, question + as-of present, Source lines + disclaimer intact); `st.code`
   signature confirmed for Streamlit 1.58; file parses.
-- SHIPS WITH THE GATE COMMIT: it lives in `app/main.py`, which already holds the coupled chrome claim.
-  It is NOT itself gate-dependent (evals never touch `app/main.py`) — splitting it out would need
-  interactive hunk staging, judged not worth the risk for a 3-day wait.
+- **SHIPPED SEPARATELY + PUSHED (ead77a4, 2026-07-17)** — Scott chose to split it out rather than wait
+  for Monday's gate. Done by reverting the chrome claim, committing the copy button ALONE (verified
+  purely additive: 36 insertions, 0 deletions, no planner import), pushing, then reinstating the chrome
+  claim in the working tree. Legitimate because the copy button is NOT gate-dependent (evals never
+  touch `app/main.py`); it only shared a FILE with the coupled chrome claim, not a dependency.
+  ⚠️ Live UI change → needs the app reboot (Scott doing it).
