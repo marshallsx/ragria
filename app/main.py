@@ -425,6 +425,11 @@ if ask and question.strip():
         # by default: it is furniture for the people who want it, invisible to everyone else.
         with st.expander("📋 Copy question and answer"):
             st.code(_copy_text(question, result), language=None, wrap_lines=True)
+            # The copy icon only appears on hover, in the box's top-right - undiscoverable if you
+            # don't already know it's there (it caught Scott out first time). Readers here are
+            # non-technical, so say it plainly rather than assume the affordance.
+            st.caption("Hover over the box and click the copy icon (top-right) to copy it all. "
+                       "Pastes as plain text into Word, Outlook or an email.")
 
     # --- Version history "what changed" panel (mapped conditions in the answer) ---
     # Defensive: this panel is a supplementary enhancement — the answer + citations are already
