@@ -1040,3 +1040,28 @@ ONE gate covers BOTH uncommitted changes: `src/planner.py` (schema + prompt + fo
 exhaustive", which reads as self-contradiction.
 `venv/bin/python evals/run_evals.py --label completeness_footer` → expect decision 40/40,
 faithfulness 36/36, 0 false refusals. GREEN → commit + push + reboot.
+
+## Copy-out button — BUILT, UNCOMMITTED (2026-07-17). UI-only, no API, no pipeline risk.
+"📋 Copy question and answer" — a collapsed expander under each (non-refused) answer containing
+`st.code(..., language=None, wrap_lines=True)`, which carries Streamlit's OWN copy icon.
+- **PLAIN TEXT, not Markdown — deliberate, do not "improve" this.** The audience is non-technical and
+  pastes into **Word / Outlook, which do NOT render Markdown** (Slack/Teams/Notion do; they are not
+  the audience). Copying raw Markdown would show literal `**asterisk soup**`. Cost of stripping: bold
+  headings only — structure survives on line breaks. The audit trail (per-block `Source: Condition N
+  (pp.)` + version note, the version/as-of footer, the "Not covered here" disclaimer) travels intact.
+  This is the payoff for keeping the disclaimer IN the answer rather than in chrome (see footer split).
+- **Copied artefact = `Question:` + `As of:` + the answer.** A pasted answer with no question is
+  contextless to the colleague receiving it; the as-of date is what makes a regulatory position
+  meaningful. The footer repeats as-of — deliberate (context at top, provenance at bottom).
+- `_plain_text()` / `_copy_text()` in `app/main.py`: unwrap `_..._` BEFORE `**...**` (so
+  `_**Please note:** x_` → `x`), strip Markdown hard-break spaces, `—`→`-` to match the display.
+- REJECTED: a custom HTML component + `navigator.clipboard` (would give real bold in Word) — clipboard
+  writes from Streamlit's sandboxed iframe need `allow="clipboard-write"` we don't control: works
+  locally, fails SILENTLY on Community Cloud. Not worth it for bold headings.
+- Refusals get no copy button (agreed scope) — one line, not worth the furniture. Easy to add later.
+- VERIFIED $0 (no API): `_copy_text` on a realistic template answer → all assertions pass (no `**`,
+  no stray `_`, no em-dash, question + as-of present, Source lines + disclaimer intact); `st.code`
+  signature confirmed for Streamlit 1.58; file parses.
+- SHIPS WITH THE GATE COMMIT: it lives in `app/main.py`, which already holds the coupled chrome claim.
+  It is NOT itself gate-dependent (evals never touch `app/main.py`) — splitting it out would need
+  interactive hunk staging, judged not worth the risk for a 3-day wait.
