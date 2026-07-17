@@ -423,13 +423,19 @@ if ask and question.strip():
         # Copy-out. st.code() carries Streamlit's own copy icon, so this needs no JS and cannot
         # silently fail the way a clipboard call from Streamlit's sandboxed iframe can. Collapsed
         # by default: it is furniture for the people who want it, invisible to everyone else.
-        with st.expander("📋 Copy question and answer"):
-            st.code(_copy_text(question, result), language=None, wrap_lines=True)
-            # The copy icon only appears on hover, in the box's top-right - undiscoverable if you
-            # don't already know it's there (it caught Scott out first time). Readers here are
-            # non-technical, so say it plainly rather than assume the affordance.
-            st.caption("Hover over the box and click the copy icon (top-right) to copy it all. "
-                       "Pastes as plain text into Word, Outlook or an email.")
+        # The label must describe what opening this REVEALS, not an action it performs. Labelling it
+        # "Copy question and answer" promised a copy, delivered a box, and read as broken software -
+        # the copy icon inside is the only control that should promise copying.
+        with st.expander("📋 Plain-text version (question + answer) - to copy"):
+            # The instruction goes ABOVE the box: below it, on a long broad answer, the reader has
+            # scrolled past the icon before they learn it exists.
+            st.caption("Hover over the box below and click the copy icon in its **top-right corner** "
+                       "to copy everything. It pastes as plain text into Word, Outlook or an email.")
+            # height= is load-bearing, NOT cosmetic. The default ("content") grows the box to the full
+            # length of the answer, and the copy icon sits at the top-right OF THE BLOCK - so on a long
+            # broad answer it scrolls out of view and reads as "the icon disappeared". A fixed height
+            # makes the box scroll internally and keeps its toolbar in reach.
+            st.code(_copy_text(question, result), language=None, wrap_lines=True, height=260)
 
     # --- Version history "what changed" panel (mapped conditions in the answer) ---
     # Defensive: this panel is a supplementary enhancement — the answer + citations are already
