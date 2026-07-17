@@ -9,6 +9,7 @@ panel of the retrieved sources (transparency during the PoC).
 Run: streamlit run app/main.py
 """
 import os
+import re
 import sys
 from datetime import date
 from pathlib import Path
@@ -165,6 +166,35 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+
+_MD_ITALIC_LINE = re.compile(r"(?m)^_(.+)_$")   # footer lines: _**Please note:** x_
+_MD_BOLD = re.compile(r"\*\*(.+?)\*\*", re.S)   # headings + inline emphasis
+_MD_LINEBREAK = re.compile(r"[ \t]+\n")         # markdown's trailing-two-space hard breaks
+
+
+def _plain_text(md: str) -> str:
+    """Markdown -> plain text, for copying out.
+
+    RIA's readers are non-technical and paste into Word / Outlook, which do NOT render Markdown -
+    they would show literal `**asterisk soup**`. Stripping the markers costs only bold headings;
+    the structure survives on line breaks alone, and the parts that matter for an audit trail (the
+    per-block Source lines, the version/as-of footer, the scope disclaimer) travel intact.
+    """
+    t = md.replace("—", "-")            # match what the page displays
+    t = _MD_ITALIC_LINE.sub(r"\1", t)   # unwrap italics BEFORE bold, so _**x:** y_ -> x: y
+    t = _MD_BOLD.sub(r"\1", t)
+    t = _MD_LINEBREAK.sub("\n", t)
+    return t.strip()
+
+
+def _copy_text(question: str, result: dict) -> str:
+    """The copied artefact: self-contained and auditable. A pasted answer with no question is
+    contextless to the colleague receiving it, and the as-of date is what makes a regulatory
+    position meaningful - so both lead. (The footer repeats the as-of date as provenance; that is
+    deliberate - context at the top, provenance at the bottom.)"""
+    as_of = temporal.fmt(date.fromisoformat(result["as_of"]))
+    return _plain_text(f"Question: {question}\nAs of: {as_of}\n\n{result['answer']}")
 
 
 @st.cache_resource(show_spinner=False)
@@ -389,6 +419,12 @@ if ask and question.strip():
         # "Source: Condition X" lines (with deterministic version/effective dates) — so the separate
         # Citations list is redundant. Full titles + pages remain in the retrieved-sources expander.
         st.markdown(result["answer"].replace("—", "-"))
+
+        # Copy-out. st.code() carries Streamlit's own copy icon, so this needs no JS and cannot
+        # silently fail the way a clipboard call from Streamlit's sandboxed iframe can. Collapsed
+        # by default: it is furniture for the people who want it, invisible to everyone else.
+        with st.expander("📋 Copy question and answer"):
+            st.code(_copy_text(question, result), language=None, wrap_lines=True)
 
     # --- Version history "what changed" panel (mapped conditions in the answer) ---
     # Defensive: this panel is a supplementary enhancement — the answer + citations are already
