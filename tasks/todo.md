@@ -998,3 +998,45 @@ a HARD account block (not the transient 503 the planner retry wrapper handles) �
   format) are already gated + pushed, just not live.
 - SEQUENCING NOTE: settle the two open judgement calls (footer weight, BUDGET/K_PER) BEFORE the gate —
   if they change the footer wording we want ONE gate on the final version, not two.
+
+## Footer split — "keep the disclaimer, move the claim" (AGREED 2026-07-17, BUILT, GATE-BLOCKED)
+Resolved open judgement call A (footer weight). PRINCIPLE ADOPTED: **the footer carries what VARIES
+with this answer; constant claims about the SYSTEM belong in the UI chrome.** Constant footer text is
+wallpaper whether it hedges OR reassures — the confident "RIA searched all 111 conditions" line was
+always-on for 19/20 anchors, i.e. the same structural flaw as the "may not be exhaustive" line it
+replaced (right sentiment, unchanged structure).
+- **MOVED (claim):** `src/planner.py` confident branch DELETED. The claim now sits once in the app's
+  Broad-questions chrome: "Every question is searched against all {condition_count()} conditions of
+  the electricity supply licence" (`app/main.py`, count derived from the store — never hardcoded).
+  WORDING TRAP (deliberate): chrome says **searched**, not **read** — retrieval scores all 111 on
+  every question; synthesis reads the union. So it does NOT contradict the "could read in one pass"
+  hedge. Do not "simplify" this to "reads".
+- **KEPT (disclaimer):** the "Not covered here" boundary stays IN the footer despite being constant —
+  deliberate override of the principle. It is a scope disclaimer, and disclaimers must travel with
+  text that gets copied / screenshotted / pasted into an email. The completeness claim is positioning;
+  the boundary is protection. Different jobs.
+- **KEPT (earned hedge):** "Possibly more:" stays in the footer — it genuinely varies (union_truncated).
+- NET: common broad footer = version + [Please note] → 2-3 lines, no heavier than before this work.
+- Verified $0 (no API): condition_count=111 from the store; `_collection()` defined (172) before the
+  caption uses it (324); both files parse; confident branch absent, hedge present.
+
+### Open judgement call B (BUDGET/K_PER) — DECIDED: leave at 40, revisit with measurement
+Raising BUDGET to ~48 would clear BQ8's 44-chunk union for ~4 extra chunks on 1 anchor in 20 — cheap —
+but would put the budget ABOVE the max union the pipeline can produce, making `union_truncated`
+provably always False. The hedge would be dead by construction and we'd be back to an unconditional
+claim — the exact shape just removed. Keeping BUDGET=40 preserves the only runtime evidence we have.
+HONEST CAVEAT (logged, not hidden): the hedge has fired 1/20, on BQ8, which scored 3/3 Core — every
+firing so far is a false alarm. It is defensible ("reached more than it could read in one pass" is
+literally true, not "this answer is incomplete") but it is NOT the strong signal the design implies.
+DEEPER INCOHERENCE (unresolved, measurement-gated): MAX_SUBQUERIES(6) × K_PER(6) = 36 < BUDGET(40) —
+the cap was sized for a pipeline WITHOUT hint sub-queries, so it now binds only on hint-boosted
+questions by accident, not design. Either it sits below the ceiling and truly caps (hurts recall = the
+product), or above it as a pure safety net (hedge dies). Right now it is neither. Needs API to measure.
+
+### ⚠️ GATE SCOPE (when spend is raised — Mon 2026-07-20 earliest)
+ONE gate covers BOTH uncommitted changes: `src/planner.py` (schema + prompt + footer) AND
+`app/main.py` (chrome claim). They are COUPLED — do not ship either alone: chrome alone would claim
+"searches all 111" while the live committed planner still emits the old always-on "may not be
+exhaustive", which reads as self-contradiction.
+`venv/bin/python evals/run_evals.py --label completeness_footer` → expect decision 40/40,
+faithfulness 36/36, 0 false refusals. GREEN → commit + push + reboot.
