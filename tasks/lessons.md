@@ -452,3 +452,24 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   (40) — impossible without hint sub-queries. A cheap probe over the 20 anchors confirmed it fires
   1/20 (BQ8 tariffs: 2 hints → 8 subs → 44 unique). Rare-but-real was the right answer; a signal that
   fired 0/20 would have been decorative honesty. Measure the trigger, not just the fix.
+- **String tests can pass while the feature is broken for the user.** The copy-out button's text was
+  verified hard ($0, assertions on markers/question/as-of/Source lines/disclaimer) and was correct
+  every time — meanwhile the FEATURE was unusable: the label promised a copy it didn't perform, the
+  instruction sat below the box, and `st.code`'s default `height="content"` grew the box to the full
+  answer length so its top-right copy icon scrolled out of view ("the icon disappeared"). Three UI
+  judgements made without ever seeing the thing rendered; two were wrong. Testing the OUTPUT is not
+  testing the INTERACTION. For UI, someone has to actually click it — Scott found all three in seconds.
+- **A control's label must name what it DOES, not what it's about.** "📋 Copy question and answer" was
+  an expander: clicking it revealed a box. The user reasonably read the chevron + label as two controls
+  doing the same thing, and read "clicked Copy, nothing copied" as broken software. Renamed to describe
+  what it REVEALS ("Plain-text version … - to copy") so the copy icon inside is the only thing
+  promising a copy. One promise per control.
+- **"It works" from a spot-check isn't confirmation the feature works.** Asked whether the copy icon
+  was present, the answer was yes — on a SHORT answer. That was taken as the feature being sound, and
+  a caption was shipped on top of an unnoticed layout bug that only manifests on LONG (broad) answers.
+  Confirmations are only as broad as the case they were tested on; ask which case was checked.
+- **Ship what isn't gated, gate what is — but only if the split is honest.** The copy button shared a
+  FILE with the gate-blocked chrome claim, not a dependency (evals never touch `app/main.py`). Splitting
+  it out (revert chrome → commit UI alone → verify the diff is purely additive → push → reinstate) let
+  three UI fixes ship live while `src/planner.py` stayed correctly unshipped. File-coupling is not
+  logical coupling — but check the diff, don't assume it.

@@ -1059,6 +1059,17 @@ faithfulness 36/36, 0 false refusals. GREEN → commit + push + reboot.
   writes from Streamlit's sandboxed iframe need `allow="clipboard-write"` we don't control: works
   locally, fails SILENTLY on Community Cloud. Not worth it for bold headings.
 - Refusals get no copy button (agreed scope) — one line, not worth the furniture. Easy to add later.
+- **THREE UI FIXES AFTER SCOTT ACTUALLY CLICKED IT (7cd5cf4, LIVE)** — the text was right, the feature
+  was not. Do not undo these:
+  * **Label renamed** → "📋 Plain-text version (question + answer) - to copy". The old "Copy question
+    and answer" was an EXPANDER promising an action it didn't perform (clicked Copy → got a box). The
+    copy icon inside is the only control that should promise a copy. One promise per control.
+  * **Caption moved ABOVE the box** — below it, on a long broad answer, the reader scrolls past the
+    icon before learning it exists.
+  * **`st.code(..., height=260)` is LOAD-BEARING, not cosmetic.** The default `height="content"` grows
+    the box to the FULL answer length, and the copy icon sits top-right OF THE BLOCK — so on a broad
+    answer it scrolls out of view and reads as "the icon disappeared". A fixed height makes the box
+    scroll internally and keeps the toolbar in reach.
 - VERIFIED $0 (no API): `_copy_text` on a realistic template answer → all assertions pass (no `**`,
   no stray `_`, no em-dash, question + as-of present, Source lines + disclaimer intact); `st.code`
   signature confirmed for Streamlit 1.58; file parses.
@@ -1068,3 +1079,50 @@ faithfulness 36/36, 0 false refusals. GREEN → commit + push + reboot.
   claim in the working tree. Legitimate because the copy button is NOT gate-dependent (evals never
   touch `app/main.py`); it only shared a FILE with the coupled chrome claim, not a dependency.
   ⚠️ Live UI change → needs the app reboot (Scott doing it).
+
+## SESSION CLOSE — 2026-07-17 (weekend) · RESUME MONDAY
+Short session, blocked on spend. Shipped UI only; the pipeline change is intact and unshipped.
+
+### ⛔ THE BLOCKER (the whole reason nothing else shipped)
+`evals/run_evals.py` 400s immediately: **"You have reached your specified API usage limits. You will
+regain access on 2026-08-01."** Hard account block, not a transient 503 — no retry helps. Scott said
+he **may raise the spend limit on Monday 2026-07-20**; otherwise access self-restores 1 Aug.
+NOTHING that needs an API call can run until then. $0 local work is unaffected.
+
+### Shipped + LIVE today (app rebooted by Scott, verified by him in-browser)
+- **ead77a4** — copy-out button ("📋 Plain-text version (question + answer) - to copy"): plain text
+  (NOT Markdown — the audience pastes into Word/Outlook, which don't render it), leads with
+  `Question:` + `As of:`, carries the full audit trail (Source lines, version footer, disclaimer).
+- **e98db11** — caption telling users where the copy icon is (it only appears on hover).
+- **7cd5cf4** — the three real UI fixes found by Scott CLICKING it: honest label, caption above the
+  box, `height=260`. See the copy-out section above; all three are load-bearing.
+- Also live from earlier, picked up by today's reboot: BREADTH batch 1 (f761684) + answer-format
+  change (4181c4d). The reboot backlog is now CLEAR.
+
+### ⚠️ MONDAY — FIRST ACTIONS, IN ORDER
+1. **Confirm spend is raised** (Scott). If not, everything below waits for 1 Aug.
+2. **Run the ONE gate covering BOTH uncommitted changes:**
+   `venv/bin/python evals/run_evals.py --label completeness_footer`
+   Expect: decision 40/40, faithfulness 36/36, 0 false refusals. GREEN → commit + push + **reboot**.
+   - `src/planner.py` — exhaustiveness_note removed from schema+prompt; earned hedge only.
+   - `app/main.py` — the chrome claim ("Every question is searched against all 111 conditions…").
+   - **COUPLED — do not ship either alone.** Chrome alone would claim "searches all 111" while the
+     live committed planner still emits the old always-on "may not be exhaustive" = self-contradiction.
+   - The copy button already shipped separately (it shared a FILE, not a dependency).
+3. If the gate is RED: the change is presentation-adjacent but touches the synthesis SCHEMA + PROMPT —
+   suspect false refusals first (that failure mode has bitten twice: the Problem-B loose trigger, and
+   the T10 existence-boundary path).
+
+### STATE OF PLAY (unchanged from 2026-07-16 except the UI)
+- Working tree holds ONLY the gate work: ` M src/planner.py`, ` M app/main.py` (+ chroma churn).
+- Regression baseline to protect: 40-case suite. Last GREEN = `results_format_change_v2.json`
+  (decision 40/40, citation 36/36, content 19/19, version 12/12, history 6/6, faithfulness 36/36).
+- Decisions made today (both recorded in full above, don't re-litigate):
+  * **Footer split** — footer carries what VARIES; constant system claims go to UI chrome. The
+    "Not covered here" disclaimer STAYS in the footer (deliberate exception: disclaimers must travel
+    with copied text — which is exactly what the copy button now does).
+  * **BUDGET stays 40** — raising it to ~48 would put it above the max possible union, making
+    `union_truncated` provably always False and the hedge dead by construction. Honest caveat logged:
+    the hedge has fired 1/20, on BQ8, which scored 3/3 Core — every firing so far is a false alarm.
+- Still open / not started: BREADTH batch 2 (24, 8, 9, 31G, 4A — needs Scott to Ofgem-verify dates
+  first; AVOID 4B + the volatile set); ceased category (28A, 45) unbuilt.
