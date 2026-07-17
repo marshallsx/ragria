@@ -984,3 +984,17 @@ fact about OUR retrieval that it cannot know. Agreed fix = **earned hedge + conf
   `BUDGET=40` sits ABOVE the no-hint ceiling of 36, so the budget only ever binds on hint-boosted
   questions. Raising `K_PER`/`BUDGET` is a real lever if we'd rather widen than hedge (cost/latency
   trade — measure first).
+
+## ⛔ BLOCKED — API spend limit exhausted (2026-07-17) · gate deferred to Mon 2026-07-20 (earliest)
+Ran the completeness-footer ship-gate; it died on the FIRST case's planner call:
+`anthropic.BadRequestError: 400 — You have reached your specified API usage limits. You will regain
+access on 2026-08-01 at 00:00 UTC.` No results file written, nothing graded, zero cases run. This is
+a HARD account block (not the transient 503 the planner retry wrapper handles) — retrying is futile.
+- **`src/planner.py` REMAINS UNCOMMITTED, by design.** A synthesis prompt + schema change does not go
+  to main ungated (the "presentation-only" change that caused a false refusal is why the gate exists).
+- **Scott may raise the spend limit Monday 2026-07-20** to unblock; otherwise access self-restores
+  1 Aug. Either way the change is built, measured and documented — it keeps.
+- Reboot is INDEPENDENT of this and still worth doing: f761684 (BREADTH batch 1) + 4181c4d (answer
+  format) are already gated + pushed, just not live.
+- SEQUENCING NOTE: settle the two open judgement calls (footer weight, BUDGET/K_PER) BEFORE the gate —
+  if they change the footer wording we want ONE gate on the final version, not two.
