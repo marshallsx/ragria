@@ -19,6 +19,11 @@ Per condition it reports one of:
   - MULTI-CHANGE    text changed in >= 2 intervals         -> volatile, avoid (e.g. SLC 47)
   - ANOMALY         non-monotonic presence (removed then re-added)
 
+Change detection is EXACT: any difference in normalized text counts. It is deliberately
+NOT a similarity threshold — see the comment in classify(). A 0.97 threshold previously
+missed 29 of 86 real changes, including the activation of Condition 31G's 24/7 duty and an
+insertion into Condition 28 that we had already mapped as unchanged.
+
 IMPORTANT caveat (honest): a snapshot diff only sees the ENDPOINTS of an interval.
 "SINGLE-CHANGE" means "changed once BETWEEN snapshots" — Ofgem may have modified the
 condition several times within that interval and we only see the net difference. So
@@ -49,7 +54,7 @@ RAW = ROOT / "data" / "raw"
 REPORT = ROOT / "docs" / "change-map.md"
 
 BODY_START = 7                         # cover=1, ToC=2..6 (same for every held version)
-CHANGE_THRESH = 0.97                   # normalized-text ratio below this = "changed"
+SMALL_EDIT_RATIO = 0.97                # changed, but above this = a SMALL edit (flag, don't hide)
 MIN_SUBSTANTIVE = 30                   # normalized chars; below this = absent / "Not used"
 
 COND = re.compile(r"^Condition\s+(\d+[A-Z]{0,3}(?:\.[A-Z])?)[.:]\s+(.+)")
@@ -144,17 +149,35 @@ def classify(cond: str, versions: list[tuple[date, dict]]):
                 return "REMOVED", {"interval": i, "presence": pres}
 
     # Present throughout — compare text across intervals.
+    #
+    # The decision is EXACT INEQUALITY on the normalized text, not a similarity threshold.
+    # `norm()` has already stripped every non-alphanumeric character, so PDF extraction noise
+    # (word splits like "relatio n", lost spaces like "electricitycaused", punctuation and
+    # whitespace differences) normalizes away BEFORE we compare. Anything still differing is
+    # real licence text.
+    #
+    # A ratio threshold cannot do this job, because similarity scales with condition LENGTH:
+    # deleting one whole sentence from Condition 31G scored 0.988 and the old 0.97 threshold
+    # called it unchanged — yet that sentence was the dormancy caveat, and removing it ACTIVATED
+    # a live 24/7 obligation. Across the five held snapshots the threshold missed 29 of 86 real
+    # changes, including one inside Condition 28 that we had already mapped as "unchanged".
+    #
+    # `sims` is kept, but only as a MAGNITUDE hint for curation. A high sim means a small edit;
+    # it does NOT mean an immaterial one. Judge materiality by word-diffing the interval.
     sims = []
     changed = []
     for i in range(1, len(versions)):
-        s = ratio(recs[i - 1]["norm"], recs[i]["norm"])
-        sims.append(s)
-        changed.append(s < CHANGE_THRESH)
+        sims.append(ratio(recs[i - 1]["norm"], recs[i]["norm"]))
+        changed.append(recs[i - 1]["norm"] != recs[i]["norm"])
     n_changes = sum(changed)
     detail = {
         "sims": [round(s, 3) for s in sims],
         "changed_intervals": [i + 1 for i, ch in enumerate(changed) if ch],
         "chars": [len(recs[i]["raw"]) for i in range(len(recs))],
+        # Intervals that changed but score above the old threshold — the class the detector used
+        # to hide. Surfaced so curation looks at them rather than trusting a tidy number.
+        "small_edits": [i + 1 for i, (ch, s) in enumerate(zip(changed, sims))
+                        if ch and s >= SMALL_EDIT_RATIO],
     }
     if n_changes == 0:
         return "STABLE", detail
@@ -254,12 +277,16 @@ def main() -> int:
     sc = buckets.get("SINGLE-CHANGE", [])
     lines.append("## Text-change CANDIDATES (single-interval) — verify before mapping\n")
     lines.append("Sorted by change size (smallest similarity = biggest text change). "
-                 "`sims` = similarity per interval; the changed interval is where it dropped.\n")
+                 "`sims` = similarity per interval; the changed interval is where it dropped. "
+                 "A ⚠ marks a SMALL edit (sim ≥ 0.97) — small is not immaterial: deleting one "
+                 "sentence from 31G scored 0.988 and activated a live 24/7 obligation. "
+                 "**Word-diff every interval before mapping it.**\n")
     sc_sorted = sorted(sc, key=lambda x: min(x[1]["sims"]))
     lines.append("| Cond | Title | changed in | sims | chars (per snapshot) |")
     lines.append("|---|---|---|---|---|")
     for c, d in sc_sorted:
-        chg = ", ".join(f"I{i}" for i in d["changed_intervals"])
+        chg = ", ".join(f"I{i}{' ⚠' if i in d.get('small_edits', []) else ''}"
+                        for i in d["changed_intervals"])
         lines.append(f"| {c}{already_mapped(c)} | {title(c)} | {chg} | {d['sims']} | {d['chars']} |")
     lines.append("")
 
@@ -272,14 +299,20 @@ def main() -> int:
         lines.append(f"| {c}{already_mapped(c)} | {title(c)} | I{d['interval']} ({intervals[d['interval']-1]}) |")
     lines.append("")
 
-    # MULTI-CHANGE — volatile, avoid for clean gap-free demos.
+    # MULTI-CHANGE — more than one interval changed.
     mc = buckets.get("MULTI-CHANGE", [])
-    lines.append("## Volatile (multi-interval change) — AVOID unless holding every version\n")
+    lines.append("## Multi-interval change — mappable ONLY if every change is bracketed\n")
+    lines.append("Multi-change is not automatically disqualifying: what the gap-free rule requires "
+                 "is that each interval contains exactly ONE change, so every state has a held "
+                 "snapshot. Adding snapshots moves conditions INTO this bucket while making them "
+                 "MORE mappable, not less — 31G changed in I2 and I4, and both are bracketed. "
+                 "⚠ marks a small edit (sim ≥ 0.97); small is not immaterial.\n")
     lines.append("| Cond | Title | changed in | sims |")
     lines.append("|---|---|---|---|")
     for c, d in sorted(mc, key=lambda x: title(x[0])):
-        chg = ", ".join(f"I{i}" for i in d["changed_intervals"])
-        lines.append(f"| {c} | {title(c)} | {chg} | {d['sims']} |")
+        chg = ", ".join(f"I{i}{' ⚠' if i in d.get('small_edits', []) else ''}"
+                        for i in d["changed_intervals"])
+        lines.append(f"| {c}{already_mapped(c)} | {title(c)} | {chg} | {d['sims']} |")
     lines.append("")
 
     # REMOVED / ANOMALY for completeness.
