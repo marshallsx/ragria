@@ -1126,3 +1126,97 @@ NOTHING that needs an API call can run until then. $0 local work is unaffected.
     the hedge has fired 1/20, on BQ8, which scored 3/3 Core — every firing so far is a false alarm.
 - Still open / not started: BREADTH batch 2 (24, 8, 9, 31G, 4A — needs Scott to Ofgem-verify dates
   first; AVOID 4B + the volatile set); ceased category (28A, 45) unbuilt.
+
+## SESSION 2026-07-20 (Mon) — gate SHIPPED, a real temporal DEFECT found + fixed (UNGATED)
+Spend limit lifted by Scott. Three things happened: the blocked gate shipped, two extra
+consolidations were discovered, and a live correctness bug was found in a shipped mapping.
+
+### 1. Completeness-footer gate — GREEN + SHIPPED (05b4602)
+`run_evals.py --label completeness_footer` (40 cases, Opus synth + Opus judge):
+**decision 40/40 · retrieval+citation 36/36 · content 19/19 · version 12/12 · history 6/6 ·
+faithfulness 36/36 · 0 false refusals · 0 false answers** (recall@1 29/36, mean_rank 1.28).
+Shipped the COUPLED pair: `src/planner.py` (earned hedge only, no confident counterpart) +
+`app/main.py` (chrome claim, count from the store). ⚠️ LIVE pipeline change → **app reboot still
+pending** (nothing since has been rebooted either).
+
+### 2. TWO extra consolidations found (Wayback) — NOT ingested, decision pending
+Scott asked how to find sources we'd missed. Directory browsing is disabled on ofgem.gov.uk (that
+was the 404), so used the **Wayback CDX API**. Ofgem OVERWRITES `.../2023-03/…- Current.pdf` in
+place, so the archive holds the texts it used to serve. Recovered + verified:
+- **1 July 2024** (607pp, 110 conditions) · **1 October 2024** (608pp, 111 conditions)
+- Both self-identify in their header ("Consolidated to 1 July 2024" / "01 October 2024"), parse
+  cleanly with the production chunker, and slot into the progression 89 → 105 → 110 → 111 → 111.
+- Files: `data/raw/candidates/es-slc-wayback-2024-{07-29,10-01}.pdf` + name-matched copies in
+  `data/raw/` (so the detector picks them up). **Nothing ingested; chroma untouched.**
+- Value: cuts our biggest blind spot (Apr 2022 → Aug 2025, 3y4m) into three windows. Condition 60
+  introduced between Jul and Oct 2024 = a 3-month existence boundary. Condition set stable Oct 2024
+  → Aug 2025, corroborating that **no newer consolidation exists** (the live "Current" URL still
+  serves 1 Aug 2025 as of a Mar 2026 archive capture → RIA's "current" is NOT stale).
+- Provenance caveat if adopted: these are ARCHIVE captures of an overwritten URL, not Ofgem-served
+  downloads. Still public Ofgem material. Record honestly with original last-modified as evidence.
+- ⚠️ Scott's Condition 9A / Oct 2025 note is NOT corroborated: 9A is absent from all five snapshots
+  and from the current published consolidation. Treat that research item as unreliable.
+
+### 3. Change detector FIXED (c55ea2d, committed + pushed)
+`CHANGE_THRESH = 0.97` was the wrong instrument — similarity scales with condition LENGTH, so it
+missed **29 of 86** real changes. Now EXACT inequality on normalized text (norm() already strips
+non-alphanumerics, so extraction noise is gone before comparison); `sims` kept as a magnitude hint;
+small edits (≥0.97) flagged ⚠ instead of dropped; multi-change section no longer says "AVOID"
+(with 5 snapshots, multi-change is mappable when each change is BRACKETED). Buckets moved:
+STABLE 44→31, SINGLE-CHANGE 28→33, MULTI-CHANGE 9→17. Curation aid only → no eval gate.
+
+### 4. ⛔ REAL DEFECT in shipped behaviour — Condition 28 (FIXED, NOT YET GATED/COMMITTED)
+The fixed detector immediately flagged our OWN mapping: 28 detected MULTI-CHANGE while
+`temporal.py` treated it as single-change.
+- **Cause:** paragraph **(bb)** ("Emergency Credit, Friendly-hours Credit and Additional Support
+  Credit … as defined in SLC 27A") was INSERTED between v2019 and v2022, similarity 0.973 → the old
+  threshold reported "unchanged", and both `temporal.py` and `provenance.md` recorded that as
+  "verified". 28's first segment therefore spanned TWO different texts.
+- **User-visible wrongness:** a dated prepayment query between 3 Aug 2019 and 15 Dec 2020 served
+  v2022 text citing **SLC 27A — a condition that did not exist on those dates.** Wrong AND
+  self-contradictory (we map 27A as introduced 15 Dec 2020 ourselves).
+- **Date CONFIRMED by Scott from Ofgem:** effective **15 Dec 2020** (decision published 19 Oct 2020,
+  56-day standstill). The SAME s.11A notice modified SLC 27, modified SLC 28, and introduced SLC 27A
+  — one package. (Also confirmed: SLC 28 dates from the inaugural conditions of 1 Oct 2001, so it is
+  NOT an introduced condition; `earliest = 2019-08-03` is a KNOWLEDGE boundary, correctly refusing
+  before it.)
+- **FIX (in working tree, ungated):** 28 split into THREE segments —
+  `2019-08-03 → 2020-12-15 : v2019` · `2020-12-15 → 2023-11-08 : v2022` · `2023-11-08 → open : v2025`.
+  Verified locally: timeline contiguous, boundaries exact, pre-earliest still returns None (caveat,
+  no content). T4 (2021-06-01) unaffected; its citation now also names "effective from 15 Dec 2020".
+- Scott declined a stop-gap (raising `earliest` to 2022-04-14 to refuse instead) — fixing properly.
+
+### 5. Re-audit of all 9 mapped conditions vs EXACT detection
+| Verdict | Conditions |
+|---|---|
+| ✅ clean | 25E, 4C, 19C (existence) · 21B, 0A, 27A, 31H (text-change — every change lands on a declared boundary) |
+| ⚠️ benign | 4D — 3 grammatical errata post-intro (`the Authority`→`Authority's` etc.), no obligation change, NO fix |
+| ❌ defect | 28 — see above |
+HONEST LIMIT: this audit only sees changes BETWEEN snapshots. Two changes inside one interval still
+read as one net change and PASS. "8 of 9 clean" = clean at the resolution we hold.
+
+### ⚠️ FIRST ACTIONS TOMORROW
+1. **Run the gate for the Condition 28 fix** — `venv/bin/python evals/run_evals.py --label cond28_fix`
+   (**41 cases now** — T19 added as the regression guard: as_of 2020-06-01 must serve v2019).
+   Expect T19 pass, T4/T5 unchanged, decision 41/41, faithfulness clean, 0 false refusals.
+   GREEN → commit + push `src/temporal.py` + `evals/cases.yaml` + `docs/provenance.md` → **reboot**.
+2. **Decide the 2024 snapshots** (the agreed discussion). If adopted: extract → chunk → re-embed
+   (~6 min/version, no API), update `src/versions.py` + provenance, then re-run the detector.
+   NOTE: `docs/change-map.md` in the working tree is ALREADY regenerated from five versions — it
+   presumes adoption. Revert it if the answer is no.
+
+### Working tree (all deliberate, nothing half-done)
+`M src/temporal.py` · `M evals/cases.yaml` · `M docs/provenance.md` (28 correction) ·
+`M docs/change-map.md` (5-version regen — adoption-dependent) · `M chroma/chroma.sqlite3` (churn).
+
+### BREADTH batch 2 — status after today (dates still needed from Scott)
+Mappable once dates are sourced: **5A** (intro 15 Dec 2020), **5B** + **19D** (intro 22 Jan 2021) —
+all three text-stable across ALL FIVE snapshots, confirmed. Plus **24** (one change, 2019→2022),
+**8** (one substantive 2019→2022 + a cosmetic `6(a)`→`7(a)` renumber), **9** (one change, 2022→2024;
+its apparent "revert" was PDF noise `relation`→`relatio n`), **4A** (intro 2019→2022 + one change),
+and **31G — RESCUED** (rejected earlier as unmappable; the 2024 snapshots bracket its Dec 2023 and
+1 Aug 2025 changes. The 1 Aug 2025 edit is TEXT-CONFIRMED: it deletes the sentence making 31G.3A(c)
+dormant = activation of the 24/7 duty). **19AA still REJECTED** — intro Jan 2021 AND amendment Feb
+2022 both fall inside the 2019→2022 interval, so the original text is unheld.
+⚠️ Scott's "Cond 8 changed Nov 2024" is CONTRADICTED by the corpus (8 is byte-identical Jul 2024 →
+Oct 2024 → Aug 2025); its second change predates 1 Jul 2024.

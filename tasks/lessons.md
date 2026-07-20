@@ -473,3 +473,39 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   it out (revert chrome → commit UI alone → verify the diff is purely additive → push → reinstate) let
   three UI fixes ship live while `src/planner.py` stayed correctly unshipped. File-coupling is not
   logical coupling — but check the diff, don't assume it.
+- **A similarity threshold is the wrong instrument for change detection — it scales with LENGTH.**
+  `detect_changes.py` called an interval "changed" when normalized similarity fell below 0.97. That
+  hid 29 of 86 real changes across five snapshots, because one deleted sentence in a long condition
+  scores ~0.99. Two of the hidden ones mattered: 31G (0.988) DELETED the dormancy caveat on 31G.3A —
+  the edit that ACTIVATED a live 24/7 obligation; and 28 (0.973) gained paragraph (bb). No higher
+  number fixes this: the same edit scores differently in a short vs long condition. The right rule is
+  EXACT inequality on normalized text — `norm()` already strips every non-alphanumeric char, so PDF
+  noise ("relatio n", "electricitycaused") is gone before comparison and any residual difference is
+  real text. Keep the ratio as a MAGNITUDE hint only, and flag small edits rather than dropping them.
+- **A "verified" comment is only as trustworthy as the tool that verified it — so record the TOOL.**
+  `temporal.py` and `provenance.md` both asserted "Condition 28 unchanged 2019→2022". Both were
+  written in good faith from the change-map, and both were false, so 28's first segment spanned two
+  different texts and served 2019-2020 queries a paragraph citing SLC 27A before 27A existed. When a
+  curation tool is fixed, every downstream claim it produced becomes suspect — re-audit, don't assume.
+  The re-audit of all 9 mapped conditions found 28 (real defect) + 4D (3 grammatical errata, benign)
+  and CONFIRMED the other 7, which is also the value: the same method that finds bugs earns trust.
+- **Impossible-looking data means your comparison is wrong, not that reality is strange.** A diff
+  showed Condition 24 changing and then reverting to a byte-identical earlier hash. Regulatory text
+  does not do that. Cause: comparing stored CHUNKS (windowed with 25-word overlap, so re-joining
+  duplicates words) against freshly-parsed PDF text. Every "change" sat exactly at a data-source
+  boundary — the tell. Compare like with like, and treat a physically implausible result as a bug in
+  the instrument. Chasing it as if real would have produced a confidently wrong mapping.
+- **Web servers don't list directories — use the Wayback CDX API to enumerate.** Trying to browse
+  `ofgem.gov.uk/sites/default/files/` 404s by design; you can only fetch a file whose exact name you
+  already know. `web.archive.org/cdx/search/cdx?url=<path>&matchType=prefix&fl=original` enumerates
+  everything ever crawled. `collapse=digest` on a SINGLE url lists every distinct VERSION of that file
+  — which is how two intermediate consolidations (1 Jul 2024, 1 Oct 2024) surfaced.
+- **A "Current" URL is a moving target; a dated URL is a snapshot.** Ofgem's `.../2023-03/…- Current.pdf`
+  is overwritten in place — it now serves the Aug 2025 text, so the `2023-03` in the path means only
+  when the pointer was created. That is why the project chose dated PDFs for reproducibility. Useful
+  corollary: because it IS overwritten, the archive holds the older texts it used to serve.
+- **Inference that turns out RIGHT is still not evidence.** Paragraph (bb) cites SLC 27A, so 15 Dec 2020
+  (27A's introduction) was the obvious insertion date — and it was correct, confirmed by Ofgem's s.11A
+  notice modifying 27, 28 and introducing 27A in one package. But inference of exactly this kind
+  ("verified unchanged") is what created the defect. Being right by luck and right by evidence look
+  identical afterwards; only one of them is repeatable. Get the notice.
