@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src import temporal, history  # noqa: E402
+from src.planner import condition_count  # noqa: E402
 from src.rag import STORE, TOP_K, answer_question, get_client, get_collection  # noqa: E402
 
 # --- Public-demo safeguards ---
@@ -349,7 +350,9 @@ for start in range(0, len(EXAMPLES), PER_ROW):
 
 st.write("**Broad questions** - open “what are all our duties around …?” questions. "
          "RIA plans focused sub-searches and answers **grouped by obligation**, surfacing every "
-         "relevant condition rather than only the closest match:")
+         "relevant condition rather than only the closest match. "
+         f"Every question is searched against all {condition_count(_collection())} conditions of "
+         "the electricity supply licence:")
 for start in range(0, len(BROAD_EXAMPLES), PER_ROW):
     cols = st.columns(PER_ROW)
     for col, (label, q) in zip(cols, BROAD_EXAMPLES[start : start + PER_ROW]):

@@ -231,16 +231,37 @@ def plan(question: str, coll=None, client=None, model: str | None = None) -> dic
 K_PER = 6       # chunks pulled per sub-query (reuses the existing hybrid retriever)
 BUDGET = 40     # max unique chunks in the union fed to synthesis (context/cost cap)
 
+_COND_COUNT: int | None = None
+
+
+def condition_count(coll=None) -> int:
+    """How many distinct conditions the CURRENT version of the corpus holds. Derived from the store
+    (never hardcoded) so it self-updates with the corpus, and cached — one metadata read per process."""
+    global _COND_COUNT
+    if _COND_COUNT is None:
+        coll = coll or rag.get_collection()
+        got = coll.get(where={"version_label": rag.versions.CURRENT_LABEL}, include=["metadatas"])
+        _COND_COUNT = len({m["condition"] for m in got["metadatas"]})
+    return _COND_COUNT
+
 
 def plan_and_retrieve(question: str, coll=None, client=None, model: str | None = None,
                       k_per: int = K_PER, budget: int = BUDGET) -> tuple[dict, list[dict]]:
     """Plan sub-queries, retrieve each via the existing hybrid retriever, then UNION + dedup by
     chunk id with ROUND-ROBIN interleave across sub-queries: each obligation area contributes its
     rank-1 chunk before any contributes its rank-2, so the budget cap can't starve a whole area.
-    Returns (plan, union_chunks). A specific question → one sub-query → behaves like today."""
+    Returns (plan, union_chunks). A specific question → one sub-query → behaves like today.
+
+    Also sets p["union_truncated"]: True only when the sub-queries surfaced MORE unique chunks than
+    the budget could carry, i.e. we genuinely did not read everything we found. This is the ONLY
+    runtime evidence that an answer might be incomplete, so it is the only thing that earns a
+    completeness hedge in the footer. It is rare by construction — without hint sub-queries the
+    ceiling is MAX_SUBQUERIES * K_PER = 36 unique, below BUDGET — so it fires only on hint-boosted
+    questions (measured: 1 of the 20 broad anchors, BQ8 tariffs at 8 sub-queries / 44 unique)."""
     coll = coll or rag.get_collection()
     p = plan(question, coll=coll, client=client, model=model)
     lists = [rag.hybrid_retrieve(sq, k_per, coll)[0] for sq in p["subqueries"]]
+    p["union_truncated"] = len({c["id"] for lst in lists for c in lst}) > budget
     union: list[dict] = []
     seen: set[str] = set()
     maxlen = max((len(lst) for lst in lists), default=0)
@@ -280,9 +301,7 @@ _GROUPED_TAIL = (
     "addresses the question must appear in at least one obligation's citations; a condition that is only "
     "tangential need not be cited. "
     "Include an obligation ONLY if the extracts support it — do "
-    "NOT pad with tangential conditions that merely appeared among the extracts. Always set "
-    "exhaustiveness_note to one line stating the answer reflects the retrieved sections and may not be "
-    "exhaustive. "
+    "NOT pad with tangential conditions that merely appeared among the extracts. "
     "SCOPE DISCIPLINE. The extracts come from a BROAD search and may include conditions only "
     "tangentially related to the question; answer only what these Electricity Supply licence "
     "conditions actually address. "
@@ -346,16 +365,20 @@ GROUPED_SCHEMA = {
             },
         },
         "reason": {"type": "string"},
-        "exhaustiveness_note": {"type": "string"},
+        # NOTE: no exhaustiveness_note here ON PURPOSE. How much of the licence RIA actually read is a
+        # fact about OUR retrieval, not about the extracts — the model cannot know it, so it must not
+        # author it. It is rendered deterministically in the footer from `union_truncated` (same
+        # content-from-model / facts-from-code split as the version dates).
         "out_of_scope_note": {"type": "string"},
     },
-    "required": ["refused", "headline", "obligations", "reason", "exhaustiveness_note", "out_of_scope_note"],
+    "required": ["refused", "headline", "obligations", "reason", "out_of_scope_note"],
     "additionalProperties": False,
 }
 
 
 def synthesize(question: str, union_chunks: list[dict], coll=None, as_of: date | None = None,
-               client=None, model: str | None = None, is_broad: bool = False) -> dict:
+               client=None, model: str | None = None, is_broad: bool = False,
+               union_truncated: bool = False) -> dict:
     """Grounded, grouped-by-obligation synthesis over the union chunks. Returns the grouped result
     PLUS backward-compatible `answer` (markdown) + `citations` (deduped) so the existing UI / evals
     / temporal-history consumers keep working unchanged."""
@@ -478,9 +501,20 @@ def synthesize(question: str, union_chunks: list[dict], coll=None, as_of: date |
             "licence, and whether any given supplier is actually complying — RIA interprets the "
             "electricity supply licence, it does not verify compliance._"
         )
-    ex = (result.get("exhaustiveness_note") or "").strip()
-    if ex and is_broad:
+    # Completeness hedge (broad answers only) — EARNED, so it appears ONLY when the union genuinely
+    # truncated (we found more than we could read). The old always-on "may not be exhaustive" carried
+    # no signal: it fired identically at 5/5 recall and at 2/5, teaching users to ignore it while
+    # underselling measured ~98% broad-anchor Core recall.
+    # There is deliberately NO confident counterpart here. That RIA searches every condition is a
+    # property of the SYSTEM, not of this answer — constant text repeated on every answer is wallpaper
+    # whether it hedges or reassures, so it lives in the UI chrome and is stated once (app/main.py,
+    # via condition_count). The footer carries only what VARIES with this answer.
+    if is_broad and union_truncated and not result.get("refused"):
+        ex = ("**Possibly more:** this question reached more of the licence than RIA could read in "
+              "one pass, so there may be further obligations — ask about a specific area for full "
+              "coverage.")
         footer.append(f"_{ex}_")
+        result["exhaustiveness_note"] = ex
 
     result["answer"] = "" if result.get("refused") else "\n\n".join(body_parts + footer)
     result["as_of"] = as_of.isoformat()
@@ -500,7 +534,8 @@ def answer_broad(question: str, coll=None, as_of: date | None = None, client=Non
     # cheap plan step doesn't inherit the expensive synthesis model.
     p, union = plan_and_retrieve(question, coll=coll, client=client)
     result = synthesize(question, union, coll=coll, as_of=as_of, client=client, model=model,
-                        is_broad=bool(p.get("is_broad")))
+                        is_broad=bool(p.get("is_broad")),
+                        union_truncated=bool(p.get("union_truncated")))
     result["plan"] = p
     result["_union"] = union   # raw union chunks so callers can build retrieval/transparency meta
     return result
