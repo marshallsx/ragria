@@ -524,3 +524,25 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   tracked one dead. Committing only `chroma.sqlite3` would ship an inconsistent store. Verify which
   uuid the live sqlite references (`SELECT id FROM segments`), git-add the live dir, git-rm the
   orphan. Don't assume `git add chroma/` DTRT.
+- **A correctness fix can break a downstream consumer that hard-coded the OLD data shape.** Splitting
+  Condition 28 from 2 segments to 3 (a correct temporal fix) broke the version-history PANEL, which
+  assumed "one change = first-vs-last diff, labelled with the first change date." The answer stayed
+  correct; the panel started mis-dating a change — the exact failure the temporal feature exists to
+  prevent, arriving through a presentation helper. Lesson: when you generalise a data structure
+  (N=2 → N≥2), grep every consumer of the old cardinality assumption BEFORE shipping, not after a
+  screenshot. The consumers of a "timeline" are the first place a two-becomes-three bug hides.
+- **A check that asserts "a thing of the right TYPE exists" gives false confidence — assert the
+  invariant that matters.** The eval's history_check verified a version-history view of the expected
+  KIND was produced; it passed 6/6 while the panel mislabelled its diff, because it never read the
+  date or the diff. "Green" meant "a panel exists," not "the panel is right." Shallow existence/type
+  checks are worse than no check: they actively signal safety. Strengthened it to assert the
+  semantic invariant (the labelled change == the change the diff brackets == a real timeline marker),
+  re-derived deterministically ($0). Rule: a check should fail on the bug you actually fear, and you
+  should PROVE it does by feeding it the broken input.
+- **Match the verification to the blast radius, not to habit.** Reflex said "shipped pipeline change
+  → full 41-case API gate." But the history-panel fix is a try/except-wrapped presentation helper
+  outside the answer path — it cannot move a decision, citation, refusal, or served version. A full
+  Opus-planning+synthesis+judge regression would have spent real money re-testing things the change
+  can't touch, AND couldn't have caught the bug anyway (the history_check was type-only). The right
+  verification was a deterministic $0 test of history.py directly — more thorough for THIS change
+  than the API suite, and free. Ask "what can this change actually break?" before reaching for the gate.

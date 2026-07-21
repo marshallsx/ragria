@@ -1370,3 +1370,40 @@ occasionally-demoed artefact. Revisit only if that changes.
 **TRIGGER to execute the migration:** `chroma.sqlite3` approaching **~90MB**, OR a second corpus
 (gas) going in — whichever first. Concrete threshold so it's acted on BEFORE a push is rejected, not
 after. Until then: no action; keep committing the store.
+
+## Version-history PANEL bug — FIXED + check strengthened (2026-07-21, commits 42abc65 + d36d396)
+Found by Scott inspecting the LIVE "vulnerable customers" answer (screenshots in a .docx he shared;
+extracted via python zipfile — `unzip` isn't installed). The answer itself was correct + well-formed
+(grouped, grounded, cited 0/26/27/27A/28/31G; the Condition 28 timeline fix was visibly live).
+THE BUG (presentation, not answer): the Condition 28 version-history panel labelled its diff "What
+changed on 15 December 2020" but the diff spanned 2019→2025 (BOTH the 15 Dec 2020 (bb) insertion AND
+the 8 Nov 2023 involuntary-PPM reform), and the drill-down mislabelled it "before vs after 8 Nov 2023".
+- ROOT CAUSE: `src/history.py` assumed each condition changed ONCE (2 segments) — diffed first-vs-last
+  but labelled with the FIRST change date. Today's Condition 28 correctness fix split it into THREE
+  segments, breaking that assumption. 28 was the only 3-segment mapped condition, so the only one
+  affected; 27A + the rest (2 segments) were fine.
+- FIX (42abc65): panel is now relative to the SERVED version. `_bracketed_change` finds the change
+  that produced the served segment (or the first upcoming change if before all of them); diff = that
+  segment vs its immediate predecessor, so "what changed on X" always covers exactly change X.
+  `showing` (the served version's date) now comes from the view, not re-derived in the app as "last
+  marker" (wrong for a middle segment). `compare()` takes as_of + brackets the same change. Today →
+  28 shows "8 November 2023" + the IPPM reform; a 2021 date → "15 December 2020" + the (bb) insertion.
+- NO full regression run (Scott's call; agreed correct): history.py is a try/except-wrapped
+  presentation helper OUTSIDE the answer path — cannot change decisions/citations/refusals/served
+  version. Verified instead with a deterministic $0 test across every mapped condition × dates
+  (change_date == diff bracket, AND diff CONTENT correct: 2023 reform today, 2020 (bb) for 2021).
+- CHECK STRENGTHENED (d36d396): the eval history_check only asserted a view of the right KIND existed
+  (why it passed 6/6 with the bug). Now it asserts the label==diff-bracket invariant on every
+  text-change view, re-derived via history.compare against r["as_of"] ($0, no API). Verified it
+  passes on fixed code and CATCHES the exact old mislabel + a bogus non-marker date. A future gate
+  would now fail on this bug class.
+- ⚠️ LIVE UI change → app reboot needed (bundle with next reboot).
+
+## OPEN — P6 faithfulness flicker (still logged, not chased; pre-existing/live, non-deterministic)
+Undated fixed-term-tariff paraphrase (22C/23/31I). Judge caught the answer saying the Domestic
+Statement of Renewal Terms "may be combined with the equivalent gas notice for a dual fuel account" —
+per 31I.7 it must be provided SEPARATELY; the dual-fuel gas exception (31I.5) applies only to the
+Relevant Contract Change Notice (31I.1(a)/(b)), NOT the end-of-fixed-term renewal notice (31I.1(c)).
+Fired 1/2 gate runs (36/37 on cond28_fix; 37/37 clean on ingest_2024) → non-deterministic. Class:
+synthesis over-generalisation on a multi-part condition. Low priority; investigate as its own item
+(2-3 P6 reruns to gauge frequency before deciding whether/how to fix).
