@@ -270,7 +270,10 @@ def render_history(h: dict) -> None:
             f'● <b>{m["date"]}</b> <span class="vh-sub">({m["label"]})</span>' for m in h["markers"]
         )
         timeline = f'<div class="vh-timeline">{marks} <span class="vh-line">──→ today</span></div>'
-        showing = h["markers"][-1]["date"] if h["on_after"] else h["markers"][0]["date"]
+        # The served version's date comes from the view (which knows WHICH segment applies), not
+        # re-derived from the markers here: for a condition with >1 change, "last marker" is not the
+        # served version when the as-of date lands in a middle segment.
+        showing = h["showing"]
         side = "on/after" if h["on_after"] else "before"
         here = (f'<div class="vh-sub" style="margin:4px 0 8px">You asked <b>as of {h["as_of"]}</b> - '
                 f'<span class="vh-here">{side}</span> the {h["change_date"]} change, so RIA shows the '
@@ -291,10 +294,10 @@ def render_history(h: dict) -> None:
     st.markdown(f'<div class="vh-card">{body}</div>', unsafe_allow_html=True)
 
 
-def render_compare(condition: str) -> None:
+def render_compare(condition: str, as_of: date) -> None:
     """Full before/after side-by-side for a text-change condition — a drill-down under its
-    version-history card, so it always shows the condition the user asked about."""
-    cmp = history.compare(condition)
+    version-history card, bracketing the SAME change the card describes for `as_of`."""
+    cmp = history.compare(condition, as_of)
     if not cmp:
         return
     with st.expander(f"🔀 Compare the full text side by side — before vs after {cmp['change_date']}"):
@@ -449,7 +452,7 @@ if ask and question.strip():
         try:
             render_history(h)
             if h["kind"] == "text-change":
-                render_compare(h["condition"])  # full side-by-side, always for the asked condition
+                render_compare(h["condition"], date.fromisoformat(result["as_of"]))
         except Exception as e:  # noqa: BLE001 — supplementary UI must never break the answer
             print(f"[version-history panel skipped] {type(e).__name__}: {e}", flush=True)
     if result.get("history"):
