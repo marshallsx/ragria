@@ -203,6 +203,53 @@ TEXT_CHANGES: dict[str, dict] = {
             },
         ],
     },
+    "31G": {
+        "title": "Assistance and advice information",
+        # 31G was introduced 11 Feb 2019 (created 17 Dec 2018), before our earliest held consolidation
+        # and text-stable 2019-08-03 == 2022-04-14 — so it is NOT an introduced condition here;
+        # `earliest` is the knowledge boundary (dated queries before 3 Aug 2019 refuse).
+        #
+        # TWO Scott-verified single changes, each bracketed by held consolidations — the FIRST mapping
+        # to use the 2024 consolidations (v2024-07):
+        #  1. 14 Dec 2023 (Consumer Standards decision 18 Oct 2023, in force 14 Dec 2023): the whole
+        #     31G.3A "Contact Ease" enquiry-service framework was added, INCLUDING 31G.3A(c) inserted
+        #     as a DORMANT rule (its own caveat said it would only take effect after further Notice).
+        #     Verified single change in the 2022-04-14 → 2024-07-01 window (Scott, Ofgem mod history).
+        #  2. 1 Aug 2025 (24/7 Metering Support decision Apr 2025): 31G.3A(c) ACTIVATED — the dormancy
+        #     caveat sentence was DELETED, making the 24-hour enquiry-service duty live. Verified the
+        #     only change in the 2024-10-01 → 2025-08-01 window.
+        # Gap-free: v2019 holds the pre-2023 text, v2024-07 the dormant-3A(c) text (stable through
+        # v2024-10), v2025 the activated text.
+        "earliest": date(2019, 8, 3),
+        "segments": [
+            {
+                "start": date(2019, 8, 3),
+                "end": date(2023, 12, 14),
+                "version": "2019-08-03",
+                "note": ("before the Consumer Standards reforms: the enquiry-service / 'Contact Ease' "
+                         "framework of 31G.3A had not yet been added — suppliers were not yet required "
+                         "to offer a range of contact methods meeting customers' needs"),
+            },
+            {
+                "start": date(2023, 12, 14),
+                "end": date(2025, 8, 1),
+                "version": "2024-07-01",
+                "note": ("31G.3A 'Contact Ease' enquiry-service framework added (Consumer Standards, "
+                         "effective 14 December 2023): a range of contact methods and adequate hours "
+                         "meeting customers' needs. The 24-hour requirement (31G.3A(c)) was present "
+                         "but DORMANT — not yet in force"),
+            },
+            {
+                "start": date(2025, 8, 1),
+                "end": None,  # open — current
+                "version": "2025-08-01",
+                "note": ("the dormant 24-hour rule (31G.3A(c)) was ACTIVATED (24/7 Metering Support "
+                         "decision, effective 1 August 2025): suppliers must now keep an enquiry "
+                         "service open 24 hours a day for domestic customers off-supply due to a "
+                         "faulty meter"),
+            },
+        ],
+    },
 }
 
 

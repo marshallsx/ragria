@@ -321,3 +321,37 @@
   expect_version: "2025-08-01"
   expect_contains: "31 December 2020"
   expect_history: "text-change"
+
+# --- 31G (Assistance and advice information) — two Scott-verified changes: the 14 Dec 2023
+# Consumer Standards "Contact Ease" framework (with 31G.3A(c) dormant), then the 1 Aug 2025
+# 24/7 activation. Three segments spanning v2019 / v2024-07 / v2025 — the FIRST cases to
+# exercise the newly-ingested 2024 consolidation end to end.
+- id: T20  # 31G BEFORE the 14 Dec 2023 Consumer Standards change
+  category: Temporal
+  question: What are a supplier's obligations to provide an enquiry service and advice to domestic customers?
+  as_of: 2022-06-01
+  expected: answer
+  expect_conditions: ["31G"]
+  expect_version: "2019-08-03"
+  expect_contains: "3 August 2019"
+  expect_history: "text-change"
+
+- id: T21  # 31G in the DORMANT window (Contact Ease added, 24/7 not yet live) — served from v2024-07
+  category: Temporal
+  question: What are a supplier's obligations to provide an enquiry service and advice to domestic customers?
+  as_of: 2024-06-01
+  expected: answer
+  expect_conditions: ["31G"]
+  expect_version: "2024-07-01"
+  expect_contains: "14 December 2023"
+  expect_history: "text-change"
+
+- id: T22  # 31G AFTER the 1 Aug 2025 24/7 activation
+  category: Temporal
+  question: What are a supplier's obligations to provide an enquiry service and advice to domestic customers?
+  as_of: 2025-10-01
+  expected: answer
+  expect_conditions: ["31G"]
+  expect_version: "2025-08-01"
+  expect_contains: "1 August 2025"
+  expect_history: "text-change"
