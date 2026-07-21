@@ -1339,3 +1339,34 @@ startup-rebuild path and time it before committing to the approach.
   single-change conditions now in a bracketed window.
 - OPEN BUGS: P6 faithfulness flicker (undated fixed-term-tariff; over-generalises 31I.5's dual-fuel
   gas exception to the wrong notice; pre-existing/live, non-deterministic — logged, not chased).
+
+## STORAGE ARCHITECTURE — DECIDED (2026-07-21, Scott signed off)
+The store-in-git scaling question (58.9MB chroma.sqlite3, 100MB GitHub hard-reject) is RESOLVED as
+a direction. Two-part decision:
+
+**NOW (this PoC, electricity-only): NO CHANGE.** Keep committing the store. It is 58.9MB and would
+need ~10 electricity versions (~19MB/2 versions) to approach 100MB; BREADTH ingests a consolidation
+only occasionally (to bracket a change), so the PoC has real headroom. Changing now = premature work
+trading a working setup for deploy-time complexity, for no benefit while electricity-only.
+
+**TARGET (when it crosses the trigger): REBUILD-ON-DEPLOY.** Commit only the TEXT
+(`data/interim/slc_chunks.jsonl`, the true source of truth — 8.6MB, scales linearly; gas ~doubles to
+~17MB, trivial), STOP committing `chroma/*`, and have the app build the store on startup FROM the
+chunks (embeddings are derived; no PDFs needed at build time). Rationale: the vector store is a
+derived CACHE, not an asset; keeps everything self-contained (no external infra/secrets/cost — right
+for a demo artefact); git footprint scales as cheap text, not binary vectors.
+- **The one thing to PROTOTYPE before flipping:** deploy-time embed cost (~46min locally on the 4GB
+  box). Confirm Community Cloud persists the container filesystem across reboots (so a rebuild happens
+  only on cold deploy / code change, not every restart) and doesn't time out on cold start. Measure,
+  don't assume. [[ragria-machine-4gb-ram-constraint]] applies.
+
+**REJECTED — Git LFS:** fixes the per-file limit but NOT the growth curve; free-tier LFS bandwidth
+(1GB/mo) is burned by full-store pulls on every deploy; adds a permanent dependency. A can-kick.
+
+**ESCAPE HATCH — external/hosted vector store:** cleanest IF RIA ever outgrows PoC into a real
+multi-corpus product with traffic. Infra + secrets + recurring cost not justified for an
+occasionally-demoed artefact. Revisit only if that changes.
+
+**TRIGGER to execute the migration:** `chroma.sqlite3` approaching **~90MB**, OR a second corpus
+(gas) going in — whichever first. Concrete threshold so it's acted on BEFORE a push is rejected, not
+after. Until then: no action; keep committing the store.
