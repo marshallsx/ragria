@@ -87,3 +87,38 @@ Ingested to open up **pre-2022** text-change conditions (those that changed betw
 - Same "not formal Public Register documents / should not be relied on" caveat as the
   other consolidations; used for reproducibility of the historic text.
 - Ingested as version-tagged chunks alongside v2022 and v2025 (89 conditions → 918 chunks).
+
+## 4 & 5. Electricity Supply — SLCs, consolidated to 1 July 2024 and 1 October 2024 (archived)
+
+Two intermediate consolidations recovered to split the old 14 Apr 2022 → 1 Aug 2025 blind
+spot (3 years 4 months) into three windows. Held for FUTURE temporal mappings (e.g. Cond 31G,
+whose Dec 2023 and 1 Aug 2025 changes these two snapshots bracket; the Cond 60 introduction
+between Jul and Oct 2024). **Inert in retrieval** until a condition's timeline points at them —
+default/undated answers are unaffected (retrieval is scoped to the current version).
+
+| Field | 1 July 2024 | 1 October 2024 |
+|---|---|---|
+| **Local file** | `data/raw/electricity-supply-slc-consolidated-2024-07-01.pdf` | `…-2024-10-01.pdf` |
+| **Consolidated to** | 1 July 2024 (self-identified in header) | 01 October 2024 (self-identified) |
+| **Pages / conditions** | 607 pp · 110 conditions · 1126 chunks | 608 pp · 111 conditions · 1129 chunks |
+| **Original last-modified** | 29 Jul 2024 (from archive headers) | 1 Oct 2024 |
+| **Retrieved** | 2026-07-21 | 2026-07-21 |
+| **Format** | PDF 1.7, extractable text (verified via pypdf) | same |
+
+**Provenance — read this honestly:**
+- ⚠️ **These are NOT direct downloads from Ofgem's live site.** They were recovered from the
+  **Wayback Machine**, which had captured Ofgem's `.../2023-03/…- Current.pdf` URL at earlier
+  dates. Ofgem **overwrites that "Current" URL in place** (it now serves the 1 Aug 2025 text),
+  so the only way to obtain the intermediate consolidations it used to serve is via the archive.
+- **Archive capture URLs (the actual source):**
+  - v2024-07: `https://web.archive.org/web/20240823130511id_/https://www.ofgem.gov.uk/sites/default/files/2023-03/Electricity%20Supply%20Standard%20Consolidated%20Licence%20Conditions%20-%20Current.pdf`
+  - v2024-10: `https://web.archive.org/web/20250211205540id_/…same path…`
+- **Still public Ofgem material** — these are Ofgem's own published consolidations, captured by a
+  third-party public archive; no non-public data. The project's "public Ofgem data only" rule holds.
+- **Authenticity evidence:** each self-identifies in its header ("Consolidated to 1 July 2024" /
+  "01 October 2024"), parses with the production chunker into the expected condition progression
+  (89 → 105 → **110 → 111** → 111), and the archive records original `last-modified` dates matching
+  the consolidation dates. `authority` is tagged `consolidated-archived` in `src/versions.py` — one
+  notch below the three direct-download consolidations, upgradable if ever re-downloaded from Ofgem.
+- Ingested 2026-07-21; store rebuilt to 5306 chunks. Gate `results_ingest_2024.json` confirmed
+  undated/temporal behaviour unchanged (41/41 decisions, faithfulness 37/37, 0 false refusals).
