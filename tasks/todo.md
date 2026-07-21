@@ -1247,3 +1247,37 @@ Surfaced by the Condition 28 ship-gate (faithfulness 36/37) but has NOTHING to d
   grounding on cross-referenced sub-paragraphs, or a targeted note; measure first, don't assume.
 - **Priority:** real but low-frequency + pre-existing (already live regardless of the 28 fix).
   Not a blocker. Investigate as its own item; do NOT bundle with unrelated work.
+
+## 2024 snapshots INGESTED — 3→5 held versions, gate GREEN + committed (cf62f27, 2026-07-21)
+Decision was "ingest now, gate, stop" — map nothing yet (mapping waits on an Ofgem-verification
+session with Scott). Executed end to end:
+- `src/versions.py`: +2 rows (2024-07-01, 2024-10-01), authority `consolidated-archived`. CURRENT
+  stays 2025-08-01 (derived as latest). Docstring says "five".
+- extract → chunk → embed rebuild: **3050 → 5306 chunks** (918/1000/1126/1129/1133 per version).
+  Embed ran ~46 min on the 4GB box, backgrounded + memory-monitored; avail oscillated 790-1150MB,
+  never at risk (batch=200 keeps peak flat). No OOM.
+- `docs/provenance.md`: new §4&5 — HONEST archive provenance (Wayback captures of Ofgem's overwritten
+  "Current" URL; self-identifying headers; original last-modified matches; still public Ofgem data).
+- `docs/change-map.md`: the 5-version regen (was already in the tree) now committed alongside.
+- **Store committed** (chroma.sqlite3 + new HNSW uuid dir; old orphaned dir git-rm'd) + slc_chunks.jsonl
+  — matches the c1e91b7 precedent (both are tracked; .gitignore notes chunks IS committed).
+- GATE `results_ingest_2024.json` (41 cases, Opus synth + Opus judge): decision 41/41,
+  retrieval+citation 37/37, content 20/20, version 13/13, history 6/6, **faithfulness 37/37**,
+  0 false refusals/answers. Undated + temporal behaviour PROVEN unchanged (the 2024 chunks are
+  inert: retrieval is scoped to CURRENT; a $0 probe confirmed a current-scoped query returns ONLY
+  2025 chunks). P6 did NOT reproduce this run → confirms it a flicker (still logged as open).
+- ⚠️ LIVE change (new store + versions.py) → **app reboot needed** to go live.
+
+### ⚠️ NEW CONSTRAINT — chroma.sqlite3 is 58.9MB, approaching GitHub's 100MB hard limit
+GitHub warned on push (>50MB recommended max; 100MB is the HARD limit that REJECTS a push). The store
+grew ~ +19MB for these 2 versions. A few more ingestions WILL hit 100MB and block a push. Decide
+before the next ingestion: (a) Git LFS for chroma.sqlite3 + the .bin index, or (b) stop committing the
+store and rebuild-on-deploy (needs the deploy to run embed.py — slow on Community Cloud, and the 4GB
+constraint), or (c) prune old HNSW dirs / vacuum. NOT urgent today, but do NOT ingest another version
+without resolving this first.
+
+### Now UNLOCKED for the next Ofgem-verification session (data is held; dates still needed from Scott)
+31G (RESCUED — Dec 2023 + 1 Aug 2025 both bracketed; 1 Aug 2025 edit text-confirmed = 24/7 activation)
+· 60 (introduced Jul–Oct 2024, ~3-month existence boundary) · plus any 2022→2025 single-change
+condition whose change now falls in a bracketed window. Process unchanged: Scott Ofgem-verifies the
+effective date(s) → $0 local shape-check → map in temporal.py → batch ship-gate.
