@@ -72,16 +72,29 @@ def judge_faithfulness(answer: str, source: str, client, model: str) -> dict:
     user = (f"SOURCE MATERIAL (everything the model was given, including the question):\n\n{source}"
             f"\n\n---\n\nANSWER TO CHECK:\n\n{answer}")
     fmt = {"type": "json_schema", "schema": FAITH_SCHEMA}
-    kwargs = dict(model=model, max_tokens=1024, system=FAITH_SYSTEM,
-                  messages=[{"role": "user", "content": user}])
-    if "haiku" in model:
-        kwargs["output_config"] = {"format": fmt}
-    else:
-        kwargs["thinking"] = {"type": "adaptive"}
-        kwargs["output_config"] = {"effort": "low", "format": fmt}
-    resp = client.messages.create(**kwargs)
-    txt = next(b.text for b in resp.content if b.type == "text")
-    return json.loads(txt)
+
+    def call(max_tokens: int) -> str:
+        kwargs = dict(model=model, max_tokens=max_tokens, system=FAITH_SYSTEM,
+                      messages=[{"role": "user", "content": user}])
+        if "haiku" in model:
+            kwargs["output_config"] = {"format": fmt}
+        else:
+            kwargs["thinking"] = {"type": "adaptive"}
+            kwargs["output_config"] = {"effort": "low", "format": fmt}
+        resp = client.messages.create(**kwargs)
+        return next((b.text for b in resp.content if b.type == "text"), "")
+
+    # Adaptive thinking SHARES the token budget, so a long answer can truncate the JSON output —
+    # and a bare json.loads on a truncated string crashes the ENTIRE run, discarding every graded
+    # case (max_tokens was 1024). Give it real room, retry once far higher on a parse failure, then
+    # degrade to faithful=None (frac() excludes None) so one bad judge response is never fatal.
+    for mt in (2048, 8192):
+        try:
+            return json.loads(call(mt))
+        except (json.JSONDecodeError, StopIteration, ValueError):
+            continue
+    return {"faithful": None, "unsupported_claims": [],
+            "reason": "judge response could not be parsed (truncated/malformed) after retry"}
 
 
 def run(label: str, model: str, judge: bool = True, judge_model: str | None = None) -> dict:
@@ -180,6 +193,10 @@ def run(label: str, model: str, judge: bool = True, judge_model: str | None = No
     history_rows, history_ok_n = frac(lambda r: r["history_ok"], rows)
     faith_rows, faith_ok_n = frac(lambda r: r["faithful"], rows)
     unfaithful = [r["id"] for r in rows if r["faithful"] is False]
+    # Answered cases the judge should have scored but couldn't parse (degraded, not counted above) —
+    # surfaced so a judge failure is visible, never silently excluded from the denominator.
+    judge_unparsed = [r["id"] for r in rows
+                      if r["expected"] == "answer" and not r["refused"] and r["faithful"] is None]
 
     summary = {
         "label": label, "model": model, "judge_model": judge_model if judge else None, "n": n, "judge": judge,
@@ -193,6 +210,7 @@ def run(label: str, model: str, judge: bool = True, judge_model: str | None = No
         "history_checks": f"{history_ok_n}/{len(history_rows)}",
         "faithfulness": (f"{faith_ok_n}/{len(faith_rows)}" if faith_rows else "n/a (skipped)"),
         "unfaithful": unfaithful,
+        "judge_unparsed": judge_unparsed,
         "false_refusals": false_refusals,
         "correct_refusals": correct_refusals,
         "false_answers": false_answers,
