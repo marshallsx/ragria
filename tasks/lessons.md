@@ -546,3 +546,17 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   can't touch, AND couldn't have caught the bug anyway (the history_check was type-only). The right
   verification was a deterministic $0 test of history.py directly — more thorough for THIS change
   than the API suite, and free. Ask "what can this change actually break?" before reaching for the gate.
+- **Harden the TEST HARNESS like production — a crash in the grader discards evidence.** The eval's
+  faithfulness judge ran at max_tokens=1024 WITH adaptive thinking (shares the budget), so a long
+  answer truncated its JSON and a bare json.loads crashed the ENTIRE 44-case run before any results
+  were written. It was the exact truncation-crash class we'd already fixed in the serving path
+  (planner.py, 7f13b84) — the fix just never got applied to the harness. A grader that can crash is
+  as costly as a product that can crash: it throws away a full run's spend and evidence. Same
+  discipline both sides — real token headroom, retry, degrade-don't-die (faithful=None, excluded from
+  the count), and SURFACE the degradation (judge_unparsed) so it's never a silent drop.
+- **When you generalise a data structure, its downstream consumers include the EVAL that checks it.**
+  Today's Condition 28 fix (2→3 segments) needed fixes in three places that assumed "one change":
+  history.py (the panel), and — a step removed — the eval's history check was too shallow to notice.
+  Mapping 31G (also 3 segments) then rode on all of it. The lesson compounds: a cardinality change
+  ripples through the panel, the grader, AND any later mapping of the same shape. Grep every consumer,
+  including the tests.

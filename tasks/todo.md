@@ -1407,3 +1407,62 @@ Relevant Contract Change Notice (31I.1(a)/(b)), NOT the end-of-fixed-term renewa
 Fired 1/2 gate runs (36/37 on cond28_fix; 37/37 clean on ingest_2024) → non-deterministic. Class:
 synthesis over-generalisation on a multi-part condition. Low priority; investigate as its own item
 (2-3 P6 reruns to gauge frequency before deciding whether/how to fix).
+
+## BREADTH batch 2 — Condition 31G MAPPED (2026-07-21, commits 9b54140 + eb5a118). Mapped set 9 → 10.
+FIRST mapping to serve a 2024 consolidation — the archive-recovery → ingest → map → serve chain is
+now proven end to end. Scott Ofgem-verified both effective dates.
+- 31G (Assistance and advice information) — TWO single changes, each bracketed, gap-free over 3 segments:
+  * `3 Aug 2019 → 14 Dec 2023` : **v2019** (pre-Consumer-Standards; no 31G.3A enquiry service)
+  * `14 Dec 2023 → 1 Aug 2025` : **v2024-07** (Contact Ease / 31G.3A added; 31G.3A(c) DORMANT)
+  * `1 Aug 2025 → today`       : **v2025** (24/7 activated; dormancy caveat sentence deleted)
+- Dates (Scott, Ofgem): change #1 decision 18 Oct 2023, EFFECTIVE **14 Dec 2023**; change #2 decision
+  Apr 2025, EFFECTIVE **1 Aug 2025**. Each verified the ONLY 31G change in its window (gap-free rule).
+  31G introduced 11 Feb 2019 (created 17 Dec 2018) — predates our earliest snapshot + text-stable
+  2019→2022, so NOT an introduced condition; earliest = 3 Aug 2019 knowledge boundary.
+- CODE: `src/temporal.py` 31G entry (3 segments, title "Assistance and advice information");
+  `evals/cases.yaml` T20 (before→v2019) / T21 (dormant→v2024-07) / T22 (after→v2025).
+- SHIP-GATE `results_breadth_31G.json` (44 cases, Opus synth + Opus judge): decision 44/44,
+  retrieval+citation 40/40, content 23/23, **version 16/16** (+3 new 31G swaps), **history 24/24**
+  (strengthened invariant, covers 28 + 31G 3-segment panels), **faithfulness 39/40** (the 1 = P6,
+  pre-existing unrelated flicker), judge_unparsed [], 0 false refusals/answers.
+- ⚠️ LIVE pipeline change → **app reboot needed** (bundle with the pending history-panel-fix reboot).
+
+## Harness hardened — faithfulness judge no longer crashes the run (commit 9b54140)
+The FIRST breadth_31G gate run CRASHED (not the mapping): judge_faithfulness ran max_tokens=1024 WITH
+adaptive thinking → truncated JSON → bare json.loads killed the whole 44-case run before writing
+anything (wasted that run's spend). Same truncation class as planner.py 7f13b84, never applied to the
+harness. FIX: judge retries 2048→8192 on parse failure, then degrades to faithful=None (frac() excludes
+it), + a `judge_unparsed` summary line so degradation is visible. Protects all future gates. See lessons.
+
+## SESSION CLOSE — 2026-07-21 (end) · RESUME HERE
+Long, productive day: two correctness fixes, a corpus expansion, a UI-bug fix, and the first BREADTH
+mapping in months — all shipped, gated, pushed. Commits today, in order:
+- 05b4602 completeness footer (earned hedge + chrome claim) · c55ea2d change-detector exact-diff fix ·
+  41bcb71 Condition 28 timeline defect fix (paragraph (bb), 15 Dec 2020) · cf62f27 ingest two 2024
+  consolidations (3→5 versions) · 42abc65 version-history panel multi-change fix · d36d396 strengthen
+  eval history check · 9b54140 harden faithfulness judge · eb5a118 map Condition 31G (9→10). Plus doc/todo.
+
+### ⚠️ FIRST ACTIONS NEXT SESSION
+1. **REBOOT the Streamlit app** — LIVE-but-unshipped: the version-history panel fix (42abc65) and the
+   31G mapping (eb5a118). Demo-check: a dated 31G enquiry-service question in the dormant window (e.g.
+   as-of 1 June 2024 → should serve v2024-07 / "effective from 14 December 2023"), and a broad
+   vulnerable-customers answer (28 panel now labels "8 November 2023" correctly).
+2. Confirm 31G shows in the app's coverage line (self-updates from temporal).
+
+### STATE OF PLAY
+- Mapped temporal set = **10**: 0A, 4C, 4D, 19C, 21B, 25E, 27A, 28, 31G, 31H.
+- Held versions = **5**: v2019, v2022, v2024-07, v2024-10, v2025. Regression baseline = 44-case suite;
+  last GREEN = `results_breadth_31G.json`.
+- OPEN: **P6** faithfulness flicker (undated fixed-term-tariff; 31I.5 dual-fuel gas over-generalisation;
+  fired 2 of 4 recent gate runs → non-deterministic, pre-existing, low priority — investigate as its
+  own bounded item). **Storage architecture** decided (rebuild-on-deploy at the ~90MB/gas trigger; no
+  action until then). **Diff density** in the version-history panel (accurate but noisy for lay readers)
+  — optional polish, logged only.
+
+### RESUME OPTIONS (BREADTH process now proven + repeatable)
+- More BREADTH mappings — 2024 data unlocked **Condition 60** (introduced Jul–Oct 2024, clean 3-month
+  existence boundary) + single-change candidates **24, 8, 9, 4A**. Each = one Scott Ofgem-verify pass
+  ($0 local shape-check first) + a batched 44-case gate. Existence boundaries (60, + the earlier 5A/5B/19D
+  batch) are the cheapest — intro-date-only.
+- Or the bounded P6 look; or low-priority polish. Recommendation: keep BREADTH rolling — it's the
+  differentiator and the pipeline is warm.
