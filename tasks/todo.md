@@ -1220,3 +1220,30 @@ dormant = activation of the 24/7 duty). **19AA still REJECTED** — intro Jan 20
 2022 both fall inside the 2019→2022 interval, so the original text is unheld.
 ⚠️ Scott's "Cond 8 changed Nov 2024" is CONTRADICTED by the corpus (8 is byte-identical Jul 2024 →
 Oct 2024 → Aug 2025); its second change predates 1 Jul 2024.
+
+## Condition 28 fix — SHIPPED (41bcb71, 2026-07-21). ⚠️ app reboot pending.
+Ship-gate `results_cond28_fix.json` (41 cases, Opus synth + Opus judge): decision 41/41,
+retrieval+citation 37/37, content 20/20 (new **T19**: as_of 2020-06-01 → v2019 — the exact query
+that was wrong), version 13/13, history 6/6, 0 false refusals, 0 false answers. Committed
+`src/temporal.py` + `evals/cases.yaml` (T19) + `docs/provenance.md` (correction). Live change →
+reboot to go live. Working tree now holds ONLY `docs/change-map.md` (5-version regen, snapshot
+decision pending) + chroma churn.
+
+## ⚠️ OPEN BUG — P6 faithfulness miss (LIVE, pre-existing, NOT from the 28 fix) · LOGGED 2026-07-21
+Surfaced by the Condition 28 ship-gate (faithfulness 36/37) but has NOTHING to do with Condition 28.
+- **Case:** P6, undated paraphrase — "What must a supplier tell a customer before their fixed-term
+  tariff comes to an end?" (core 22C/23/31I). No `as_of`, cites 22C/31I/7A — Condition 28 never in
+  the path. My temporal.py diff cannot reach it; this is the LIVE synthesis pipeline's own behaviour,
+  caught this run by synthesis non-determinism (36/36 clean on the prior identical run yesterday).
+- **What the judge caught (looks genuinely correct, paragraph-precise — not a judge hallucination):**
+  the answer said the *Domestic Statement of Renewal Terms* "may be combined with the equivalent gas
+  notice for a dual fuel account." Per **31I.7** that statement must be provided SEPARATELY; the
+  dual-fuel gas-combination exception (**31I.5**) applies only to the *Relevant Contract Change
+  Notice* (31I.1(a)/(b)), NOT the end-of-fixed-term renewal notice (31I.1(c)). Synthesis
+  over-generalised a real exception to the wrong notice type.
+- **Class:** hallucination / over-generalisation on a multi-part condition (31I), undated path.
+  Likely intermittent (non-deterministic) — needs 2-3 reruns of P6 to gauge how often it fires
+  before deciding whether/how to fix. Candidate fix direction (unconfirmed): tighten synthesis
+  grounding on cross-referenced sub-paragraphs, or a targeted note; measure first, don't assume.
+- **Priority:** real but low-frequency + pre-existing (already live regardless of the 28 fix).
+  Not a blocker. Investigate as its own item; do NOT bundle with unrelated work.
