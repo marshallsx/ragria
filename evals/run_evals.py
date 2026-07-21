@@ -37,6 +37,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.rag import MODEL, answer_question, get_client, get_collection  # noqa: E402
+from src import history  # noqa: E402  (deterministic, no-API — used for the history-panel invariant)
 
 CASES = ROOT / "evals" / "cases.yaml"
 
@@ -112,7 +113,32 @@ def run(label: str, model: str, judge: bool = True, judge_model: str | None = No
         version_ok = any(served.get(cond) == want_ver for cond in expect) if want_ver else None
         want_hist = c.get("expect_history")
         hist_kind = {h["condition"]: h["kind"] for h in r.get("history", [])}
-        history_ok = any(hist_kind.get(cond) == want_hist for cond in expect) if want_hist else None
+        kind_ok = any(hist_kind.get(cond) == want_hist for cond in expect) if want_hist else None
+        # History-panel INVARIANT (checked whenever a text-change view is produced, not only when a
+        # case sets expect_history — the old kind-only check passed 6/6 while Condition 28's panel
+        # mislabelled a 2019→2025 diff "15 December 2020" after it gained a third segment). Every
+        # text-change view must be internally consistent: the change it LABELS must be the change its
+        # diff/compare BRACKETS, and a real change point (one of the timeline markers). Re-derive
+        # against the resolved as-of the view actually used (r["as_of"] — today for undated cases),
+        # not the raw case as_of (None for undated). Deterministic, no API.
+        hist_view_as_of = date.fromisoformat(r["as_of"]) if r.get("as_of") else None
+        tc_views = [h for h in r.get("history", []) if h.get("kind") == "text-change"]
+        invariant_ok = True
+        if hist_view_as_of is not None:
+            for h in tc_views:
+                cmp = history.compare(h["condition"], hist_view_as_of)
+                marker_dates = {m["date"] for m in h.get("markers", [])}
+                if cmp is None or cmp["change_date"] != h.get("change_date") \
+                        or h.get("change_date") not in marker_dates:
+                    invariant_ok = False
+        if not invariant_ok:
+            history_ok = False                 # a text-change panel mislabels its diff — the bug class
+        elif want_hist:
+            history_ok = kind_ok               # explicit per-case kind expectation
+        elif tc_views and hist_view_as_of is not None:
+            history_ok = True                  # invariant checked a text-change view and it held
+        else:
+            history_ok = None                  # nothing to check
 
         # Faithfulness judge (answered cases only).
         faithful, faith_reason = None, None
