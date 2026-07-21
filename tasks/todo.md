@@ -1281,3 +1281,61 @@ without resolving this first.
 · 60 (introduced Jul–Oct 2024, ~3-month existence boundary) · plus any 2022→2025 single-change
 condition whose change now falls in a bracketed window. Process unchanged: Scott Ofgem-verifies the
 effective date(s) → $0 local shape-check → map in temporal.py → batch ship-gate.
+
+## SESSION CLOSE — 2026-07-21 · RESUME HERE NEXT TIME
+Big correctness + corpus day. Everything committed + pushed; working tree clean. Reboot pending.
+
+### Shipped today (all on origin/main, in order)
+- **c55ea2d** — change detector now EXACT (was a 0.97 similarity threshold that hid 29 of 86 real
+  changes; similarity scales with condition length). Curation aid, no gate.
+- **41bcb71** — Condition 28 timeline CORRECTED (real live defect): paragraph (bb) was inserted
+  15 Dec 2020 (Scott Ofgem-verified: same s.11A package that introduced 27A + amended 27), so 28 is
+  now THREE segments (v2019 → v2022 → v2025), not one. Dated 2019-2020 prepayment queries no longer
+  cite SLC 27A before it existed. Gate 41/41, faithfulness 36/37 (the 1 = P6, unrelated flicker).
+- **cf62f27** — INGESTED two 2024 consolidations (1 Jul + 1 Oct 2024), 3→5 held versions, store
+  3050→5306 chunks. Held-but-inert (retrieval scoped to CURRENT=2025). Gate 41/41, faithfulness
+  37/37, 0 false refusals. Provenance recorded as honest Wayback archive captures.
+- Plus doc/todo commits (30276e8, and today's todo saves).
+
+### ⚠️ FIRST ACTIONS NEXT SESSION
+1. **REBOOT the Streamlit app** — Condition 28 fix (41bcb71) + the new 5-version store (cf62f27) +
+   yesterday's completeness footer (05b4602) are all LIVE pipeline/data changes, none visible until
+   reboot. Demo-check: a dated 2020 prepayment question (should serve v2019, NOT cite 27A) + a broad
+   vulnerable-customers question (new format).
+2. **DECIDE the store-in-git architecture BEFORE ingesting anything else** — see below. This now
+   gates all further BREADTH work.
+
+### ⛔ ARCHITECTURE DECISION REQUIRED — committing the vector store to git does NOT scale
+Scott's call (correct): the 50MB-warn / **100MB-hard-reject** per-file GitHub limit is not a corner
+case, it is inevitable. `chroma.sqlite3` is **58.9MB** at 5 electricity versions. The store grows with
+BOTH axes RIA is designed to expand along:
+- more temporal versions of electricity (the differentiator — corpus grows by whole consolidations);
+- **a second corpus (gas supply SLCs)** ~doubles the condition set on its own.
+So 100MB is a near-term certainty, and it REJECTS the push (not just warns). Must resolve before the
+next ingestion. Options to weigh next session (measure/prototype, don't guess):
+- **(A) Rebuild-on-deploy, commit only the TEXT.** `slc_chunks.jsonl` (8.6MB, plain text, the real
+  source of truth) scales far better than the 59MB binary; embeddings are DERIVED. Stop committing
+  chroma/*; have the app build the store on first run. BLOCKER: embed took ~46min on the 4GB box and
+  Community Cloud is resource-limited — startup embed may time out. Also needs the raw PDFs at build
+  time (currently gitignored) OR build purely from the committed chunks (embeddings only need text →
+  feasible: embed from slc_chunks.jsonl, no PDFs needed). LEADING CANDIDATE if startup cost is
+  acceptable / cacheable.
+- **(B) Git LFS** for chroma.sqlite3 + the .bin index. Keeps the store in-repo, but free-tier LFS has
+  1GB storage + 1GB/month bandwidth caps; a 59MB+ store pulled per deploy burns bandwidth fast, and
+  Community Cloud LFS support must be confirmed. Kicks the can, doesn't fix the growth curve.
+- **(C) External store** (hosted vector DB, or object storage the app pulls at startup). Cleanest for
+  multi-corpus scale; new infra + secrets to manage. The "grown-up" answer if RIA keeps expanding.
+- (D) Stopgap only: prune orphaned HNSW uuid dirs + VACUUM sqlite — buys a little headroom, not a fix.
+Recommendation to explore first: **(A)**, because the text chunks are the durable artefact and the
+binary store is a rebuildable cache — but it hinges on deploy-time embed being viable. Prototype the
+startup-rebuild path and time it before committing to the approach.
+
+### State of record (unchanged except today's commits)
+- Regression baseline: 41-case hardened suite. Last GREEN = `results_ingest_2024.json` (decision
+  41/41, retrieval+citation 37/37, content 20/20, version 13/13, history 6/6, faithfulness 37/37,
+  0 false refusals/answers).
+- Mapped temporal set: 9 conditions (unchanged today — ingestion mapped nothing). UNLOCKED by the
+  2024 data for the next Ofgem session: 31G (rescued), 60 (Jul–Oct 2024 intro), + 2022→2025
+  single-change conditions now in a bracketed window.
+- OPEN BUGS: P6 faithfulness flicker (undated fixed-term-tariff; over-generalises 31I.5's dual-fuel
+  gas exception to the wrong notice; pre-existing/live, non-deterministic — logged, not chased).

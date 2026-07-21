@@ -509,3 +509,18 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   notice modifying 27, 28 and introducing 27A in one package. But inference of exactly this kind
   ("verified unchanged") is what created the defect. Being right by luck and right by evidence look
   identical afterwards; only one of them is repeatable. Get the notice.
+- **A derived binary artefact committed to git is a scaling trap — commit the SOURCE, rebuild the
+  cache.** RIA commits its ChromaDB vector store (`chroma.sqlite3` + HNSW `.bin` dirs) so the deployed
+  app has it. That worked at 3 versions; at 5 electricity versions it is 58.9MB, and GitHub REJECTS
+  (not just warns) any file over 100MB per push. The store grows along both axes RIA expands on —
+  temporal versions AND a future gas corpus — so the limit is arithmetic, not bad luck. The tell: the
+  8.6MB `slc_chunks.jsonl` (plain TEXT, the real source of truth) scales far better than the 59MB
+  binary DERIVED from it. Lesson for any RAG/embeddings project: treat the vector store as a
+  build-time cache, not a committed asset — commit the chunks, rebuild embeddings on deploy (or host
+  the store externally). Decide this BEFORE the corpus grows, because migrating a committed-binary
+  history later means rewriting it or carrying LFS.
+- **When embed.py deletes+recreates a collection, the old HNSW uuid dir is orphaned — commit a
+  CONSISTENT store.** A rebuild leaves a new `chroma/<uuid>/` dir (untracked) and the previously-
+  tracked one dead. Committing only `chroma.sqlite3` would ship an inconsistent store. Verify which
+  uuid the live sqlite references (`SELECT id FROM segments`), git-add the live dir, git-rm the
+  orphan. Don't assume `git add chroma/` DTRT.
