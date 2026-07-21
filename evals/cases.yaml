@@ -107,6 +107,20 @@
   expect_version: "2022-04-14"
   expect_contains: "14 April 2022"
 
+# Regression guard for a REAL defect: Condition 28 was mapped as a single pre-reform segment
+# running from 3 Aug 2019, on a false "verified unchanged" claim. Paragraph (bb) (Emergency
+# Credit / Friendly-hours Credit / Additional Support Credit, "as defined in SLC 27A") was
+# inserted effective 15 Dec 2020, so this date must serve v2019 - the text BEFORE that package.
+# Serving v2022 here cites SLC 27A, which did not exist on this date.
+- id: T19
+  category: Temporal
+  question: What protections apply when a supplier installs a prepayment meter?
+  as_of: 2020-06-01
+  expected: answer
+  expect_conditions: ["28"]
+  expect_version: "2019-08-03"
+  expect_contains: "3 August 2019"
+
 - id: T5
   category: Temporal
   question: What protections apply when a supplier installs a prepayment meter?

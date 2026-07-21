@@ -55,8 +55,16 @@ Condition 28 (Prepayment Meters) text change of 8 November 2023.
 **Notes:**
 - Same "not formal Public Register documents / should not be relied on" caveat as the
   current version; used here for reproducibility of the historic text.
-- Verified: Condition 28's text is unchanged 3 Aug 2019 → 14 Apr 2022, so this snapshot
-  correctly represents the pre-reform text for the whole period up to 8 Nov 2023.
+- ~~Verified: Condition 28's text is unchanged 3 Aug 2019 → 14 Apr 2022, so this snapshot
+  correctly represents the pre-reform text for the whole period up to 8 Nov 2023.~~
+  **WRONG — corrected.** Condition 28 *did* change in that interval: paragraph (bb)
+  (Emergency Credit, Friendly-hours Credit, Additional Support Credit, "as defined in
+  SLC 27A") was inserted effective **15 Dec 2020**, by the same s.11A modification that
+  introduced SLC 27A and amended SLC 27. The v2022 snapshot is therefore the correct text
+  only from 15 Dec 2020; **v2019 carries the text for 3 Aug 2019 → 15 Dec 2020**, and
+  `temporal.py` now splits the segment accordingly.
+  The original claim came from a change detector using a 0.97 similarity threshold, which
+  scored this insertion 0.973 and reported "unchanged". Detection is now exact (c55ea2d).
 
 ## 3. Electricity Supply — SLCs, consolidated to 3 August 2019 (historic version)
 

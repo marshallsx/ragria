@@ -162,17 +162,36 @@ TEXT_CHANGES: dict[str, dict] = {
     },
     "28": {
         "title": "Prepayment Meters",
-        # Earliest date we can vouch for the text. Verified unchanged 2019-08-03 -> 2022-04-14
-        # (so the v2022 snapshot's text is correct back to the 2019 consolidation); before
-        # that is outside our knowledge.
+        # Condition 28 dates back to the inaugural standard conditions of 1 Oct 2001, so it is not
+        # an introduced condition. `earliest` is not when it began - it is the limit of what we can
+        # EVIDENCE: 3 Aug 2019 is our oldest held consolidation, and dated queries before it refuse.
+        #
+        # CORRECTION (was a real defect): this previously ran ONE segment from 2019-08-03 to
+        # 2023-11-08 on the v2022 text, commented "verified unchanged 2019-08-03 -> 2022-04-14".
+        # That was false. Paragraph (bb) (Emergency Credit, Friendly-hours Credit and Additional
+        # Support Credit "as defined in SLC 27A") was INSERTED effective 15 Dec 2020, so the old
+        # first segment spanned two different texts and served 2019-2020 queries a paragraph
+        # citing SLC 27A - a condition that did not exist on those dates. The similarity-threshold
+        # change detector scored the edit 0.973 and reported it as unchanged; see c55ea2d.
         "earliest": date(2019, 8, 3),
         "segments": [
             {
                 "start": date(2019, 8, 3),
+                "end": date(2020, 12, 15),
+                "version": "2019-08-03",
+                "note": ("before the Ability to Pay / self-disconnection package: Condition 28 did "
+                         "not yet require suppliers to explain Emergency Credit, Friendly-hours "
+                         "Credit and Additional Support Credit, because SLC 27A - which defines "
+                         "them - did not exist yet"),
+            },
+            {
+                "start": date(2020, 12, 15),
                 "end": date(2023, 11, 8),
                 "version": "2022-04-14",
-                "note": ("the shorter pre-reform text; the involuntary-prepayment-meter Code of "
-                         "Practice had not yet been written into the licence"),
+                "note": ("the pre-reform text as amended by the 15 December 2020 package "
+                         "(paragraph (bb) added, cross-referring to the new SLC 27A); the "
+                         "involuntary-prepayment-meter Code of Practice had not yet been written "
+                         "into the licence"),
             },
             {
                 "start": date(2023, 11, 8),
