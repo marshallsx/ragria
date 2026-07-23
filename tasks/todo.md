@@ -1500,3 +1500,37 @@ gate is deferred until ≥1 more condition is ready to batch with it.
   verification) · 9 (shows a change-then-revert across 2024 versions — likely extraction noise, needs
   a $0 word-diff before trusting). When ≥1 is ready: map it, then ONE gate covering 4A + it.
 - Mapped set is 14 committed; 4A held would make 15 once its batch gates.
+
+## BREADTH batch 4 — DONE (2026-07-23). 4A + 8 mapped (14 → 16) + a latent citation bug fixed.
+Batched gate (one run for the pair, per the cost strategy — actually two runs: the first surfaced a
+real bug, the second confirmed the fix). Commits 5ceb770 (fix) + 38bb73c (mapping).
+- **4A Operational capability** — introduced 22 Jan 2021, then 4A.2 ("Sufficient Control over
+  Material Economic and Operational Assets") added 21 Oct 2022. Introduced+text-change (like 27A).
+- **8 Obligations under Last Resort Supply Direction** — substantive honour-commitments duty
+  22 Jan 2021, then a COSMETIC cross-ref renumber (6(a)->7(a)) 1 Oct 2022. 3 segments, mapped
+  faithfully (correctness rule = serve exact text per date) though amendment #2 is trivial.
+- Both Scott-verified, gap-free (each change bracketed). Cases T31-T36.
+- SHIP-GATE `results_breadth_4A_8_v2.json` (58 cases): decision 58/58, retrieval+citation 54/54,
+  content 33/33, version 21/21, history 34/34, faithfulness 54/54, 0 false refusals/answers.
+- ⚠️ LIVE pipeline change → app reboot needed (joins the history-panel-fix + 31G + batch-3 reboots).
+
+### LATENT BUG FIXED (5ceb770) — citation "N — Title" broke the version-history panel silently
+The first 4A+8 gate flagged T35 (Cond 8 middle segment): citation "miss" + history "miss". Root cause
+was NOT a mapping error — the synthesis emitted the citation condition field as "8 — Obligations under
+Last Resort Supply Direction" instead of "8". That field is a KEY (history.views_for + citation_note
+look up by it), so a "8 — Title" key matched no mapped condition → the version-history panel silently
+did not render and the effective-date note was dropped, non-deterministically, on ANY answer. Fix:
+planner.py normalises the citation condition to the bare leading id (8 / 31G / 27A / 0A) after
+stripping the "Condition " prefix. Re-gate: citation 53->54, history 33->34, 0 regressions. This was a
+pre-existing live bug, not introduced by the mapping — the gate found it.
+
+### Still deferred
+- **9 (Claims for Last Resort Supply Payment)** — 6 May 2022 (Scott 95% confident); the change is
+  corpus-confirmed (single reform: (ba) interest/finance costs + 9.7A transfer + Valid Claim def), the
+  Oct-2024 "revert" is PROVEN extraction noise (relation/relatio n). Scott to REVISIT/firm the date
+  before mapping. Ready to map the moment the date is confirmed (2-segment single-change).
+- **24 (Termination of Domestic Supply Contracts)** — BLOCKED: 24.3A ("proportionate… not exceed
+  direct economic loss") is in our v2022+v2025 corpus but Scott can't find it in Ofgem's authoritative
+  material; reconcile before mapping. Plus a v2019 tracked-changes markup data-quality flag on Cond 24.
+- REJECTED: 8's... no. Rejected pile: 19AA, SLC 47, and Cond 8's ORIGINAL (1 Oct 2020) dates — but the
+  corrected 1 Oct 2022 made 8 mappable.
