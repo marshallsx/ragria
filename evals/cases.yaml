@@ -418,3 +418,60 @@
   as_of: 2025-01-01
   expected: answer
   expect_conditions: ["60"]
+
+# --- 4A (Operational capability) — introduced 22 Jan 2021 THEN 4A.2 added 21 Oct 2022 (both
+# Scott-verified). Same introduced+text-change shape as 27A: didn't exist → introduced text → post-4A.2.
+- id: T31  # 4A BEFORE introduction (existence boundary)
+  category: Temporal
+  question: Must a supplier have sufficient control over the assets needed to run its supply business?
+  as_of: 2020-06-01
+  expected: answer
+  expect_conditions: ["4A"]
+  expect_contains: "22 January 2021"
+- id: T32  # 4A introduced but BEFORE the 21 Oct 2022 change (pre-4A.2 window)
+  category: Temporal
+  question: Must a supplier have sufficient control over the assets needed to run its supply business?
+  as_of: 2022-01-01
+  expected: answer
+  expect_conditions: ["4A"]
+  expect_version: "2022-04-14"
+  expect_contains: "14 April 2022"
+- id: T33  # 4A AFTER the 21 Oct 2022 change (4A.2 added)
+  category: Temporal
+  question: Must a supplier have sufficient control over the assets needed to run its supply business?
+  as_of: 2023-06-01
+  expected: answer
+  expect_conditions: ["4A"]
+  expect_version: "2025-08-01"
+  expect_contains: "21 October 2022"
+  expect_history: "text-change"
+
+# --- 8 (Obligations under Last Resort Supply Direction) — two Scott-verified changes: substantive
+# honour-commitments duty 22 Jan 2021, then a cosmetic cross-ref renumber 1 Oct 2022. Three segments.
+- id: T34  # 8 BEFORE the 22 Jan 2021 amendment
+  category: Temporal
+  question: What are a licensee's obligations under a Last Resort Supply Direction?
+  as_of: 2020-06-01
+  expected: answer
+  expect_conditions: ["8"]
+  expect_version: "2019-08-03"
+  expect_contains: "3 August 2019"
+  expect_history: "text-change"
+- id: T35  # 8 in the middle segment (after 22 Jan 2021, before 1 Oct 2022)
+  category: Temporal
+  question: What are a licensee's obligations under a Last Resort Supply Direction?
+  as_of: 2022-01-01
+  expected: answer
+  expect_conditions: ["8"]
+  expect_version: "2022-04-14"
+  expect_contains: "22 January 2021"
+  expect_history: "text-change"
+- id: T36  # 8 AFTER the 1 Oct 2022 renumber
+  category: Temporal
+  question: What are a licensee's obligations under a Last Resort Supply Direction?
+  as_of: 2023-06-01
+  expected: answer
+  expect_conditions: ["8"]
+  expect_version: "2025-08-01"
+  expect_contains: "1 October 2022"
+  expect_history: "text-change"

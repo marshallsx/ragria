@@ -272,6 +272,73 @@ TEXT_CHANGES: dict[str, dict] = {
             },
         ],
     },
+    "4A": {
+        "title": "Operational capability",
+        # INTRODUCED 22 Jan 2021 (Supplier Licensing Review — the same date as 5A/5B/19D;
+        # Scott-verified, Ofgem). Absent v2019, present v2022 — before 22 Jan 2021 it did NOT exist
+        # (existence boundary). Then a SINGLE text change effective 21 Oct 2022: paragraph 4A.2
+        # ("Sufficient Control over the Material Economic and Operational Assets") added. The change
+        # is BRACKETED — v2022 (14 Apr 2022) holds the pre-4A.2 introduced text, v2024-07 (1 Jul 2024)
+        # the post-4A.2 text (stable through v2025) — so gap-free.
+        "introduced": date(2021, 1, 22),   # existence boundary: before this it did NOT exist
+        "earliest": date(2021, 1, 22),
+        "segments": [
+            {
+                "start": date(2021, 1, 22),
+                "end": date(2022, 10, 21),
+                "version": "2022-04-14",
+                "note": ("the operational-capability principle as introduced — before paragraph 4A.2 "
+                         "(Sufficient Control over the Material Economic and Operational Assets needed "
+                         "to run the supply business) was added"),
+            },
+            {
+                "start": date(2022, 10, 21),
+                "end": None,  # open — current (text stable v2024-07 through v2025)
+                "version": "2025-08-01",
+                "note": ("paragraph 4A.2 added (effective 21 October 2022): the licensee must have "
+                         "Sufficient Control over the Material Economic and Operational Assets used "
+                         "or needed to run its supply business"),
+            },
+        ],
+    },
+    "8": {
+        "title": "Obligations under Last Resort Supply Direction",
+        # Condition 8 predates our corpus (introduced 6 Apr 2007), so `earliest` = 3 Aug 2019
+        # knowledge boundary. TWO Scott-verified changes, each bracketed (one per held-version window):
+        #  - 22 Jan 2021 (SUBSTANTIVE): added the duty to take all reasonable steps to honour any
+        #    commitment made to the Authority before a Last Resort Supply Direction was given (with
+        #    consequential paragraph renumbering). v2019 (pre) -> v2022 (post).
+        #  - 1 Oct 2022 (COSMETIC): a single cross-reference renumber (6(a) -> 7(a)), no substantive
+        #    change. v2022 (pre) -> v2024-07 (post). Mapped as its own segment for per-date TEXT
+        #    fidelity (the correctness rule serves the exact text in force on date X), though the
+        #    obligations are unchanged across it.
+        "earliest": date(2019, 8, 3),
+        "segments": [
+            {
+                "start": date(2019, 8, 3),
+                "end": date(2021, 1, 22),
+                "version": "2019-08-03",
+                "note": ("before the 22 January 2021 amendment: without the express duty to honour, "
+                         "in complying with a Last Resort Supply Direction, any commitment made to "
+                         "the Authority before that direction was given"),
+            },
+            {
+                "start": date(2021, 1, 22),
+                "end": date(2022, 10, 1),
+                "version": "2022-04-14",
+                "note": ("as amended 22 January 2021: the licensee must take all reasonable steps to "
+                         "honour any commitment made to the Authority before a Last Resort Supply "
+                         "Direction was given"),
+            },
+            {
+                "start": date(2022, 10, 1),
+                "end": None,  # open — current
+                "version": "2025-08-01",
+                "note": ("as amended 1 October 2022: a minor cross-reference renumber only (6(a) -> "
+                         "7(a)); the substantive obligations are unchanged from the 22 January 2021 text"),
+            },
+        ],
+    },
 }
 
 
