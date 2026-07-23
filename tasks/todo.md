@@ -1466,3 +1466,37 @@ mapping in months — all shipped, gated, pushed. Commits today, in order:
   batch) are the cheapest — intro-date-only.
 - Or the bounded P6 look; or low-priority polish. Recommendation: keep BREADTH rolling — it's the
   differentiator and the pipeline is warm.
+
+## BREADTH batch 4 — IN PROGRESS (2026-07-23). 4A mapped + verified but HELD UNCOMMITTED for the batch.
+Cost strategy (Scott): gate after a FEW conditions, not each. So 4A is mapped + $0-verified but the
+gate is deferred until ≥1 more condition is ready to batch with it.
+
+### 4A (Operational capability) — MAPPED + $0-VERIFIED, uncommitted in working tree
+- Introduced **22 Jan 2021** (Supplier Licensing Review, same date as 5A/5B/19D) THEN paragraph
+  **4A.2** ("Sufficient Control over the Material Economic and Operational Assets") added **21 Oct
+  2022**. Both Scott-verified. Introduced+text-change shape (like 27A). Gap-free: 4A.2 change (21 Oct
+  2022) is bracketed by v2022 (14 Apr 2022, pre-4A.2) and v2024-07 (1 Jul 2024, post-4A.2).
+- CODE (UNCOMMITTED): `src/temporal.py` 4A entry in TEXT_CHANGES (introduced marker + 2 segments);
+  `evals/cases.yaml` T31 (before intro) / T32 (pre-4A.2 window → v2022) / T33 (post-4A.2 → v2025).
+- VERIFIED $0: version_for + citation_note + history invariant all correct; temporal notes are
+  byte-parallel to 27A (the gate-passing introduced+text-change reference) at every lifecycle point.
+- NOT gated, NOT committed — folds into the next batched gate.
+
+### 24 (Termination of Domestic Supply Contracts) — ON HOLD, needs authoritative-source reconciliation
+- Corpus shows one change v2019→v2022: paragraph **24.3A** added (Termination Fee must be
+  "proportionate" and "not exceed the direct economic loss to the licensee"). It IS in our v2022 AND
+  v2025 consolidations (exact wording confirmed), absent in v2019.
+- **BLOCKER: Scott cannot locate 24.3A in Ofgem's authoritative material.** Per the project rule
+  (verify against the licence, not our convenience copy), DO NOT map until reconciled — 24.3A should
+  be in the current EPR consolidated SLC under Condition 24 (search "24.3A" / "direct economic loss");
+  if genuinely not locatable authoritatively, do not map.
+- **DATA-QUALITY FLAG:** our v2019 extraction of Cond 24 carries tracked-changes markup ("Deleted:
+  Master Commented [A57]: Ref: 37 RCC SCR … Registration Agreement") — the v2019 PDF is a marked-up
+  version for this condition. Cosmetic (doesn't change the 24.3A finding) but any v2019-served historic
+  answer for Cond 24 could carry markup noise. Worth a broader check of v2019 extraction quality.
+
+### Next batch candidates (need Scott Ofgem-dates; $0 shape-checks done)
+- 24 (once 24.3A reconciled) · 8 (two changes, one substantive + one cosmetic renumber — more
+  verification) · 9 (shows a change-then-revert across 2024 versions — likely extraction noise, needs
+  a $0 word-diff before trusting). When ≥1 is ready: map it, then ONE gate covering 4A + it.
+- Mapped set is 14 committed; 4A held would make 15 once its batch gates.
