@@ -44,6 +44,28 @@ MAPPED: dict[str, dict] = {
         "title": "Customer supply continuity plans",
         "introduced": date(2021, 3, 18),
     },
+    # Supplier Licensing Review governance conditions — all introduced 22 Jan 2021 (Scott-verified,
+    # Ofgem). Verified absent in v2019, present + text-stable across v2022 → v2025 (pure existence
+    # boundaries: no historic body to serve, we just state non-existence before the introduction date).
+    "5A": {
+        "title": "Principle to be open and cooperative",  # corpus title has a typo ("Priniciple")
+        "introduced": date(2021, 1, 22),
+    },
+    "5B": {
+        "title": "Independent Audits",
+        "introduced": date(2021, 1, 22),
+    },
+    "19D": {
+        "title": "Trade Sales",
+        "introduced": date(2021, 1, 22),
+    },
+    # Elexon ownership — introduced 1 Oct 2024 (decision 13 Sep 2024, Scott-verified). Absent through
+    # v2024-07, present from v2024-10; the SECOND mapping to rely on a 2024 consolidation, and the
+    # first whose existence boundary falls between the two 2024 snapshots.
+    "60": {
+        "title": "Elexon ownership",
+        "introduced": date(2024, 10, 1),
+    },
 }
 
 # --- Text-change conditions. Segments are contiguous and gap-free by construction:

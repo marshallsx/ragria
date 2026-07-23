@@ -355,3 +355,66 @@
   expect_version: "2025-08-01"
   expect_contains: "1 August 2025"
   expect_history: "text-change"
+
+# --- Existence-boundary batch (all Scott-verified, Ofgem): 5A/5B/19D introduced 22 Jan 2021,
+# 60 (Elexon ownership) introduced 1 Oct 2024. Questions phrased to ISOLATE each condition (broad
+# phrasing pulls a crowd that arbitrates the introduction fact away — see T13's note).
+- id: T23  # 5A BEFORE introduction
+  category: Temporal
+  question: Must a licensee be open and cooperative with Ofgem and share information?
+  as_of: 2020-06-01
+  expected: answer
+  expect_conditions: ["5A"]
+  expect_contains: "22 January 2021"
+  expect_history: "introduced"
+- id: T24  # 5A AFTER introduction
+  category: Temporal
+  question: Must a licensee be open and cooperative with Ofgem and share information?
+  as_of: 2021-09-01
+  expected: answer
+  expect_conditions: ["5A"]
+
+- id: T25  # 5B BEFORE introduction
+  category: Temporal
+  question: Can the Authority require a supplier to arrange an independent audit?
+  as_of: 2020-06-01
+  expected: answer
+  expect_conditions: ["5B"]
+  expect_contains: "22 January 2021"
+  expect_history: "introduced"
+- id: T26  # 5B AFTER introduction
+  category: Temporal
+  question: Can the Authority require a supplier to arrange an independent audit?
+  as_of: 2021-09-01
+  expected: answer
+  expect_conditions: ["5B"]
+
+- id: T27  # 19D BEFORE introduction
+  category: Temporal
+  question: What must a supplier do when it makes a trade sale of its business?
+  as_of: 2020-06-01
+  expected: answer
+  expect_conditions: ["19D"]
+  expect_contains: "22 January 2021"
+  expect_history: "introduced"
+- id: T28  # 19D AFTER introduction
+  category: Temporal
+  question: What must a supplier do when it makes a trade sale of its business?
+  as_of: 2021-09-01
+  expected: answer
+  expect_conditions: ["19D"]
+
+- id: T29  # 60 BEFORE introduction (1 Oct 2024 — falls between the two 2024 snapshots)
+  category: Temporal
+  question: What are the requirements relating to the ownership of Elexon?
+  as_of: 2024-08-01
+  expected: answer
+  expect_conditions: ["60"]
+  expect_contains: "1 October 2024"
+  expect_history: "introduced"
+- id: T30  # 60 AFTER introduction
+  category: Temporal
+  question: What are the requirements relating to the ownership of Elexon?
+  as_of: 2025-01-01
+  expected: answer
+  expect_conditions: ["60"]
