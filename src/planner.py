@@ -443,11 +443,19 @@ def synthesize(question: str, union_chunks: list[dict], coll=None, as_of: date |
                 "answer": "_The full answer could not be generated for this broad question — please ask about a more specific obligation._",
                 "context": context, "temporal_facts": notes, "prompt": user_content}
     obligations = result.get("obligations", [])
-    # Sanitise citation condition refs (strip stray "Condition " prefix) + derive deduped citations.
+    # Sanitise citation condition refs to the BARE condition id + derive deduped citations.
+    # The synthesis sometimes emits the condition field as "8 — Obligations under…" (id + title)
+    # instead of "8". That bare-id normalisation is load-bearing, not cosmetic: the id keys the
+    # version-history lookup (history.views_for) and citation_note — a malformed "8 — Title" key
+    # matches no mapped condition, so the history panel silently fails to render and the effective
+    # date isn't attached. Strip a stray "Condition " prefix, then keep only the leading id
+    # (digits + optional letters, e.g. 8 / 31G / 27A / 0A); the title already lives in condition_title.
     citations, seen = [], set()
     for ob in obligations:
         for ci in ob.get("citations", []):
-            ci["condition"] = re.sub(r"(?i)^\s*condition\s+", "", str(ci.get("condition", ""))).strip()
+            raw = re.sub(r"(?i)^\s*condition\s+", "", str(ci.get("condition", ""))).strip()
+            m = re.match(r"(\d+[A-Z]{0,3})\b", raw)
+            ci["condition"] = m.group(1) if m else raw
             if ci["condition"] and ci["condition"] not in seen:
                 seen.add(ci["condition"])
                 citations.append(ci)
