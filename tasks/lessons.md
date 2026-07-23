@@ -560,3 +560,23 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   Mapping 31G (also 3 segments) then rode on all of it. The lesson compounds: a cardinality change
   ripples through the panel, the grader, AND any later mapping of the same shape. Grep every consumer,
   including the tests.
+- **A strict-grader "miss" can be a real bug in disguise — investigate before dismissing it as a
+  format nit.** The 4A+8 gate flagged T35 with a citation "miss". The known "citation-format grader is
+  strict" limitation made it tempting to wave off. Looking at the actual row showed condition 8 WAS
+  cited — as "8 — Obligations under Last Resort Supply Direction" instead of "8". But that field is a
+  KEY (history.views_for + citation_note look conditions up by it), so the malformed value silently
+  dropped the version-history panel on the live app, non-deterministically, for any answer. The
+  "grader nit" was a months-old serving-path bug. Rule: when a grader flags something, read the actual
+  output before concluding the grader is wrong — the miss may be pointing at a real defect downstream.
+- **A value that is BOTH displayed and used as a key must be normalised at the source.** The citation
+  condition field was human-facing ("Condition 8 — Title" reads fine) AND a lookup key into the
+  temporal maps. Those two jobs conflict: the display-friendly form breaks the key. Fix was to store
+  the bare id (the key) and keep the title in a separate field for display. Whenever a field does
+  double duty as label + key, normalise it to the key form the moment it enters the system, before
+  anything looks it up.
+- **The gap-free verdict is exquisitely sensitive to WHICH window a change falls in — one date fixes
+  or kills a mapping.** Condition 8 was REJECTED when its second amendment was dated 1 Oct 2020 (two
+  changes in the 2019→2022 window → unheld intermediate state), then became mappable the instant the
+  date was corrected to 1 Oct 2022 (one change per window). Same condition, same corpus — a single
+  date moved it across the line. So "verify the effective date" isn't box-ticking; the date IS the
+  mappability test. A hedged date ("I believe") is exactly why Condition 9 stays parked.

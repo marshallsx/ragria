@@ -1534,3 +1534,35 @@ pre-existing live bug, not introduced by the mapping — the gate found it.
   material; reconcile before mapping. Plus a v2019 tracked-changes markup data-quality flag on Cond 24.
 - REJECTED: 8's... no. Rejected pile: 19AA, SLC 47, and Cond 8's ORIGINAL (1 Oct 2020) dates — but the
   corrected 1 Oct 2022 made 8 mappable.
+
+## SESSION CLOSE — 2026-07-23 · RESUME HERE
+BREADTH sprint: mapped set 10 → 16 across two batched gates, + a real latent bug found and fixed.
+All committed + pushed. Cost strategy worked (batch the gate, not per-condition).
+
+### Shipped today (origin/main, in order)
+- 3fa35e4 — existence boundaries 5A/5B/19D/60 (set 10→14), one gate.
+- 5ceb770 — citation-id normalisation (fixes silent version-history-panel drop; a pre-existing live bug).
+- 38bb73c — 4A + 8 (set 14→16), one gate (+ a re-gate that confirmed the citation fix).
+- Plus 9b54140 (harden faithfulness judge — from the 31G session earlier today) and eb5a118 (31G).
+- Mapped temporal set now **16**: 0A, 4A, 4C, 4D, 5A, 5B, 8, 19C, 19D, 21B, 25E, 27A, 28, 31G, 31H, 60.
+
+### ⚠️ FIRST ACTION NEXT SESSION
+**REBOOT the Streamlit app** — everything today (batch 3, 31G, 4A+8, the citation fix, the
+history-panel fix) is LIVE in code but NOT on the deployed site. Demo-check: a dated Cond 8 or 31G
+question (version swap + history panel renders), and confirm the coverage line lists all 16.
+
+### Deferred / blocked (need Scott)
+- **9 (Claims for LRS Payment)** — READY to map; only needs the 6 May 2022 date firmed (Scott 95%).
+  Corpus-confirmed single change; Oct-2024 "revert" proven to be extraction noise. 2-segment map.
+- **24 (Termination of Domestic Supply Contracts)** — BLOCKED: reconcile 24.3A against Ofgem's
+  authoritative source (it's in our v2022+v2025 corpus but Scott couldn't locate it); + v2019
+  tracked-changes markup data-quality flag on Cond 24.
+- REJECTED pile (need intermediate consolidations): 19AA, SLC 47.
+
+### Regression baseline
+58-case suite; last GREEN = `results_breadth_4A_8_v2.json` (decision 58/58, retrieval+citation 54/54,
+version 21/21, history 34/34, faithfulness 54/54, 0 false refusals/answers).
+
+### Next BREADTH candidates when Scott has dates
+9 (firm the date) · then re-scan the change-map for more single-change / introduced conditions now
+that 5 versions are held. Existence boundaries remain the cheapest (intro-date-only).
