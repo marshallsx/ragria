@@ -1566,3 +1566,28 @@ version 21/21, history 34/34, faithfulness 54/54, 0 false refusals/answers).
 ### Next BREADTH candidates when Scott has dates
 9 (firm the date) · then re-scan the change-map for more single-change / introduced conditions now
 that 5 versions are held. Existence boundaries remain the cheapest (intro-date-only).
+
+## UI REBRAND — DONE + pushed (c028910, 2026-07-24). scottdmarshall.com three-accent palette.
+Scott rebranded the site; RIA's UI now matches. Old theme was orange/white; new is three accents on
+near-black, assigned BY ROLE from a screenshot of the live site (the site is Cloudflare-JS-challenged
+so it can't be scraped — WebFetch/curl both 403; Scott supplied the palette + a screenshot).
+- **Palette:** coral `#E93E43` (h1 hero title, uppercase/900/tight) · lime `#ECFF1A` (h2 section
+  headings, dividers, the ⚡ bolt, primary "Ask RIA" button) · teal `#00C2C1` (links, h3
+  sub-headings, example-chip buttons). Surfaces: bg `#0E0E0D`, card `#262624`, body text `#DCEA8C`,
+  secondary `#A3B77E`, hairline `#3A3A35`, outline `#6B6B62`. Font unchanged (Archivo 400/600/800/900).
+- **THE brand rule (baked in + commented so it isn't "fixed" later):** text on any lime OR teal fill
+  is the near-black `--on-accent`, NEVER white (white-on-lime ≈ 1.2:1, illegible).
+- **Files:** `.streamlit/config.toml` (theme tokens → widgets get the brand natively) + `app/main.py`
+  (`:root` vars, filled/outline button split, SVG bolt, body-colour intro) + `docs/deployment.md`
+  (one embed-link colour). UI-only — no pipeline/eval change, so no gate (evals never touch app/main.py).
+- **Two fixes made along the way** (see lessons): the ⚡ emoji can't be recoloured by CSS → replaced
+  with an inline lime-filled SVG; the "button text washes into the button" report was a LATENT bug —
+  the label colour was only set on `<button>`, not the inner label element Streamlit wraps it in, so a
+  pale default label sat on the bright fill (marginally legible on old orange, invisible on lime). Now
+  forced on `... *`. Verified the example-button→question-box wiring still works via a headless
+  `AppTest` click (a transient laptop freeze, not a regression — Scott confirmed).
+- ⚠️ **Live UI change → app reboot needed** (joins the existing reboot backlog below).
+
+### ⚠️ FIRST ACTION NEXT SESSION (updated)
+**REBOOT the Streamlit app** — now covers the rebrand (c028910) AND everything from 2026-07-23
+(batch 3, 31G, 4A+8, citation fix, history-panel fix). None of it is on the deployed site until reboot.

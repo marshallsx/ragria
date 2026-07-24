@@ -580,3 +580,31 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   date was corrected to 1 Oct 2022 (one change per window). Same condition, same corpus — a single
   date moved it across the line. So "verify the effective date" isn't box-ticking; the date IS the
   mappability test. A hedged date ("I believe") is exactly why Condition 9 stays parked.
+
+## UI / brand (2026-07-24 rebrand)
+- **Emoji cannot be recoloured with CSS `color`.** Colour emoji (⚡, 📋, etc.) carry their own baked-in
+  glyph colour; `color:` does nothing to them. To get a brand-coloured icon, replace the emoji with an
+  inline SVG and set `fill`, OR use a text-presentation glyph (unicode + U+FE0E, but browser support is
+  patchy). The SVG is the reliable route — and it takes any future colour change as a one-value edit.
+- **When styling a framework widget, set the colour on the element that actually renders the text, not
+  just its container.** Streamlit wraps a button's label in an inner element; a `color` set only on
+  `[data-testid="stBaseButton-primary"]` left the label at its pale default, sitting on the bright fill.
+  Symptom: "the button text is unreadable, it's the same colour as the button." The old orange theme
+  had the SAME latent bug — white-on-orange was ~2.9:1 (marginally legible, so nobody noticed); the
+  brighter lime fill dropped it to ~1.2:1 and exposed it. Fix: force the colour on descendants too
+  (`[data-testid="…"] , [data-testid="…"] *`). Lesson: a brighter colour can EXPOSE a contrast bug that
+  a duller one merely hid — don't assume "it looked fine before" means the rule was correct.
+- **On a two-or-three-accent brand, distribute the accents by ROLE or the result reads as monochrome.**
+  First cut used the one accent I'd been given (lime) everywhere → Scott: "only lime, no teal or coral
+  at all." The brand had three accents with distinct jobs (coral=hero title, lime=section/primary
+  action, teal=links/interactive), visible only in a screenshot of the live site. Get the ROLE MAP, not
+  just the hex list — "which colour on which element" is the brand, not the palette.
+- **A Cloudflare-JS-challenged site cannot be scraped — WebFetch and curl both 403 ("Just a moment…").**
+  scottdmarshall.com sits behind Cloudflare's challenge; no automated fetch works and there were no
+  Wayback snapshots. The only path was to ask the user for the palette + a screenshot. Don't burn
+  attempts on user-agent spoofing; recognise `cf-mitigated: challenge` / "Just a moment" and ask.
+- **Reproduce a "did my change break X?" report before touching anything — the click wiring was fine, a
+  laptop froze.** "Question doesn't appear when I click a button" looked like a regression, but the code
+  was untouched by the rebrand and a headless `streamlit.testing.v1.AppTest` click confirmed the value
+  lands in the box with no exception. It was a transient freeze. AppTest simulates button clicks with no
+  API cost — the right tool to isolate UI-state bugs from environment flukes.
