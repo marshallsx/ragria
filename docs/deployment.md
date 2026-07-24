@@ -76,7 +76,7 @@ Add this to your AI Demo page. `?embed=true` gives a clean, chrome-less embed.
   </iframe>
   <p style="text-align:center; margin-top:0.5rem;">
     <a href="https://YOUR-APP-NAME.streamlit.app" target="_blank" rel="noopener"
-       style="color:#FF6600;">Open the demo full-screen ↗</a>
+       style="color:#ECFF1A;">Open the demo full-screen ↗</a>
   </p>
 </div>
 ```

@@ -113,53 +113,124 @@ try:
 except Exception:  # noqa: BLE001 - no secrets.toml locally is fine
     pass
 
-# --- Brand theme to match scottdmarshall.com/ai-demo (Archivo font, orange headings) ---
+# --- Brand theme to match scottdmarshall.com (Archivo font, lime accent on near-black) ---
+# Palette tokens mirror the site's brand guide. The one rule that trips people up: text on any
+# lime fill is the near-black --on-accent, NEVER white (white on lime is ~1.2:1, illegible).
 st.markdown(
     """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800;900&display=swap');
+    :root {
+        --accent: #ECFF1A;      /* lime — section headings, divider/accents, primary action */
+        --teal: #00C2C1;        /* teal — links, sub-headings, interactive chips */
+        --coral: #E93E43;       /* coral — the hero page title */
+        --on-accent: #0E0E0D;   /* text/icon on a lime OR teal fill (never white) */
+        --bg: #0E0E0D;          /* page background */
+        --surface: #262624;     /* card / panel surface */
+        --text: #DCEA8C;        /* body text */
+        --text-2: #A3B77E;      /* secondary / label text */
+        --hairline: #3A3A35;    /* hairlines and dividers */
+        --outline: #6B6B62;     /* card outlines */
+    }
     html, body, .stApp, [data-testid="stAppViewContainer"],
     .stMarkdown, p, li, label, input, textarea, button, .stButton button {
-        font-family: 'Archivo', sans-serif;
+        font-family: 'Archivo', system-ui, sans-serif;
     }
-    .stApp h1, .stApp h2, .stApp h3 {
-        color: #FF6600;
-        font-family: 'Archivo', sans-serif;
-        font-weight: 800;
+    .stApp, [data-testid="stAppViewContainer"] { background-color: var(--bg); }
+    .stApp, .stMarkdown, p, li, label { color: var(--text); }
+    a, .stMarkdown a { color: var(--teal); }   /* links = teal, as the site's nav */
+
+    /* Headings mirror the site's three-accent hierarchy:
+       h1 = coral hero title, uppercase + heavy + tight (like "PREVIOUS PROJECTS");
+       h2 = lime section heading, title case (like "Claude Enterprise");
+       h3 = teal sub-heading (like "Digital Natives Claude Improvements"). */
+    .stApp h1 {
+        color: var(--coral);
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        text-transform: uppercase;
     }
-    /* All buttons orange with white text */
+    .stApp h2 { color: var(--accent); font-weight: 900; letter-spacing: -0.02em; }
+    .stApp h3 { color: var(--teal); font-weight: 800; }
+
+    /* Secondary / label text: muted olive */
+    [data-testid="stCaptionContainer"], .stCaption, small { color: var(--text-2); }
+    /* The header intro: caption size, but body-text colour (matches "Try an example:"). */
+    .ria-intro { color: var(--text); font-size: 0.875rem; line-height: 1.5; margin-bottom: 0.5rem; }
+    hr { border-color: var(--hairline) !important; }
+
+    /* --- Buttons ---
+       Shared shape: pill radius, heavy weight, uppercase with wide positive tracking (the
+       "small label" side of the brand's tracking contrast). Colours split by role below. */
     .stButton button, [data-testid="stBaseButton-secondary"], [data-testid="stBaseButton-primary"] {
-        background-color: #FF6600 !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        font-weight: 600;
+        border-radius: 999px !important;
+        font-weight: 800 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
     }
-    .stButton button:hover, [data-testid="stBaseButton-secondary"]:hover, [data-testid="stBaseButton-primary"]:hover {
-        background-color: #E65C00 !important;   /* slightly darker on hover */
-        color: #FFFFFF !important;
+    /* Primary (filled): lime fill, near-black text — the hero action (Ask RIA).
+       Colour is forced on descendants too (`... *`): Streamlit wraps the label in an inner
+       element, so a colour set only on the <button> leaves a pale default label on the bright
+       fill — that was the "text washes into the button" bug. Hover inverts to a lime outline. */
+    [data-testid="stBaseButton-primary"],
+    [data-testid="stBaseButton-primary"] * { color: var(--on-accent) !important; }
+    [data-testid="stBaseButton-primary"] {
+        background-color: var(--accent) !important;
+        border: 2px solid var(--accent) !important;
     }
-    .stButton button:focus, .stButton button:active {
-        background-color: #E65C00 !important;
-        color: #FFFFFF !important;
+    [data-testid="stBaseButton-primary"]:hover, [data-testid="stBaseButton-primary"]:hover *,
+    [data-testid="stBaseButton-primary"]:focus, [data-testid="stBaseButton-primary"]:focus *,
+    [data-testid="stBaseButton-primary"]:active, [data-testid="stBaseButton-primary"]:active * {
+        color: var(--accent) !important;
+    }
+    [data-testid="stBaseButton-primary"]:hover,
+    [data-testid="stBaseButton-primary"]:focus,
+    [data-testid="stBaseButton-primary"]:active {
+        background-color: transparent !important;
+        border: 2px solid var(--accent) !important;
         box-shadow: none !important;
     }
+    /* Secondary (outline): the example chips take TEAL — the site's interactive/nav colour — so
+       the palette reads as three-accent, not monochrome lime. Surface fill, teal text + border;
+       hover fills teal with near-black text. Descendant colour forced for the same reason. */
+    [data-testid="stBaseButton-secondary"],
+    [data-testid="stBaseButton-secondary"] * { color: var(--teal) !important; }
+    [data-testid="stBaseButton-secondary"] {
+        background-color: var(--surface) !important;
+        border: 1px solid var(--teal) !important;
+    }
+    [data-testid="stBaseButton-secondary"]:hover, [data-testid="stBaseButton-secondary"]:hover *,
+    [data-testid="stBaseButton-secondary"]:focus, [data-testid="stBaseButton-secondary"]:focus *,
+    [data-testid="stBaseButton-secondary"]:active, [data-testid="stBaseButton-secondary"]:active * {
+        color: var(--on-accent) !important;
+    }
+    [data-testid="stBaseButton-secondary"]:hover,
+    [data-testid="stBaseButton-secondary"]:focus,
+    [data-testid="stBaseButton-secondary"]:active {
+        background-color: var(--teal) !important;
+        border: 1px solid var(--teal) !important;
+        box-shadow: none !important;
+    }
+
     /* Version-history "what changed" panel */
-    .vh-card { border:1px solid #333; border-left:3px solid #FF6600; border-radius:8px;
-               padding:12px 16px; margin:10px 0; background:rgba(255,102,0,0.05); }
-    .vh-title { font-weight:800; color:#FF6600; margin-bottom:8px; font-size:1.02em; }
+    .vh-card { border:1px solid var(--outline); border-left:3px solid var(--accent); border-radius:8px;
+               padding:12px 16px; margin:10px 0; background:var(--surface); }
+    .vh-title { font-weight:800; color:var(--accent); margin-bottom:8px; font-size:1.02em; }
     .vh-timeline { font-size:0.9em; margin:4px 0; }
-    .vh-sub { opacity:0.7; }
-    .vh-line { color:#FF6600; opacity:0.75; }
-    .vh-here { color:#FF6600; font-weight:700; }
+    .vh-sub { color:var(--text-2); }
+    .vh-line { color:var(--accent); opacity:0.75; }
+    .vh-here { color:var(--accent); font-weight:700; }
     .vh-diff { font-size:0.9em; line-height:1.9; background:rgba(255,255,255,0.04);
                border-radius:6px; padding:10px 12px; margin-top:6px; }
+    /* Diff add/remove stay green/red — functional convention, not brand tokens (green reads as
+       "added", red as "removed"; the lime accent is yellower, so they don't collide). */
     .vh-add { background:rgba(60,200,60,0.25); color:#9dff9d; border-radius:3px; padding:1px 4px; }
     .vh-del { color:#ff8a8a; text-decoration:line-through; opacity:0.8; }
-    .vh-ctx { opacity:0.6; }
-    .vh-gap { color:#FF6600; opacity:0.6; padding:0 4px; }
+    .vh-ctx { color:var(--text-2); opacity:0.85; }
+    .vh-gap { color:var(--accent); opacity:0.6; padding:0 4px; }
     /* Compare-two-dates side-by-side column */
-    .cmp-col { max-height:460px; overflow-y:auto; padding:10px 12px; border:1px solid #333;
-               border-radius:8px; background:rgba(255,255,255,0.03); font-size:0.85em; line-height:1.75; }
+    .cmp-col { max-height:460px; overflow-y:auto; padding:10px 12px; border:1px solid var(--hairline);
+               border-radius:8px; background:var(--surface); font-size:0.85em; line-height:1.75; }
 
     /* Hide Streamlit chrome for a clean embed */
     #MainMenu, footer, [data-testid="stToolbar"] { visibility: hidden; height: 0; }
@@ -314,18 +385,34 @@ def render_compare(condition: str, as_of: date) -> None:
 
 
 # --- Header ---
-st.title("⚡ Regulatory Intelligence Assistant (RIA)")
-st.caption(
-    "**RIA** is a proof-of-concept, scoped to **Ofgem electricity supply licence "
-    "conditions** and grounded in the current consolidated version "
+# Emoji ignore CSS `color` (they carry their own built-in yellow), so the bolt is an inline SVG
+# with an explicit lime fill (--accent, the Ask RIA colour). The title text stays coral/uppercase
+# via the .stApp h1 rule; the SVG fill is independent of it.
+_BOLT_SVG = (
+    '<svg viewBox="0 0 24 24" width="0.82em" height="0.82em" role="img" aria-label="lightning bolt" '
+    'style="vertical-align:-0.02em;margin-right:0.12em">'
+    '<path fill="#ECFF1A" d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12 '
+    'C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"/>'
+    '</svg>'
+)
+st.markdown(f'<h1>{_BOLT_SVG}Regulatory Intelligence Assistant (RIA)</h1>', unsafe_allow_html=True)
+# Rendered as HTML (not st.caption) so it can take the body-text colour while keeping caption
+# size — see .ria-intro. Markdown isn't processed inside a raw HTML block, so **bold**/_italic_
+# are written as <b>/<i>.
+st.markdown(
+    "<p class='ria-intro'>"
+    "<b>RIA</b> is a proof-of-concept, scoped to <b>Ofgem electricity supply licence "
+    "conditions</b> and grounded in the current consolidated version "
     f"({temporal.current_version_str()}). "
-    "She can also answer **as of a past date** - pick a date and ask, and she'll tell you "
+    "She can also answer <b>as of a past date</b> - pick a date and ask, and she'll tell you "
     "whether a given protection was in force then, when it was introduced, and how its wording "
     "has changed - with historic coverage expanding condition by condition. Unlike a generic AI, "
     "RIA answers only from "
     "the licence text: when the answer isn't there, or she can't verify the position on a "
     "past date, she says so plainly rather than inventing (hallucinating) one - and every "
-    "answer is backed by specific citations. _Informational only - not legal advice._"
+    "answer is backed by specific citations. <i>Informational only - not legal advice.</i>"
+    "</p>",
+    unsafe_allow_html=True,
 )
 
 # --- Store present? ---

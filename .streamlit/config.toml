@@ -1,13 +1,15 @@
-# Theme to match scottdmarshall.com/ai-demo (dark: black bg, orange accent, white text).
+# Theme to match scottdmarshall.com (dark: near-black bg, lime accent, soft-lime text).
 # Read by Streamlit locally and on Streamlit Community Cloud.
+# NB: text on any lime fill must be the near-black --on-accent, never white (see app/main.py).
 
 [theme]
 base = "dark"
-primaryColor = "#FF6600"            # vivid orange — buttons, widgets, accents
-backgroundColor = "#000000"         # black page background
-secondaryBackgroundColor = "#141414"  # near-black for inputs / expanders / panels
-textColor = "#FFFFFF"               # white body text
-font = "sans serif"                 # base fallback; Archivo applied via CSS in app/main.py
+primaryColor = "#ECFF1A"              # lime accent — buttons, widgets, focus rings
+backgroundColor = "#0E0E0D"           # near-black page background (--bg)
+secondaryBackgroundColor = "#262624"  # card / panel surface — inputs, expanders, panels
+textColor = "#DCEA8C"                 # soft-lime body text
+borderColor = "#3A3A35"               # hairlines and dividers
+font = "sans serif"                   # base fallback; Archivo applied via CSS in app/main.py
 
 [browser]
 gatherUsageStats = false
