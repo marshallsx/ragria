@@ -1633,3 +1633,33 @@ Covers the coral-removal (d805758) + Condition 9 (e3e5dd5) + everything still-pe
   Ofgem's authoritative source (in our v2022+v2025 corpus but Scott couldn't locate it) + v2019
   tracked-changes markup data-quality flag on Cond 24.
 - **P6 faithfulness flicker** — didn't fire this run; still logged, low priority.
+
+## BREADTH → EPR PIPELINE PIVOT (2026-07-28)
+Manual per-condition Ofgem-date verification is the bottleneck AND has a correctness
+ceiling (a corpus snapshot-diff only sees window endpoints, so intra-window multi-changes
+are invisible). Scott approved building a systematic **EPR change-history extraction
+pipeline** instead (his PRD, "EPR SLC Change-History Extraction Pipeline").
+
+### Recce done (2026-07-28) — feasibility CONFIRMED, access far better than PRD's worst case
+- EPR (`epr.ofgem.gov.uk`) is a static SPA backed by a **PUBLIC GraphQL API**
+  (`epre-api.ofgem.gov.uk/graphql/`, **no auth on reads**; OIDC only guards writes).
+- Hierarchy navigable to condition + sub-paragraph level; the `workHistory` type carries
+  `operationalPeriod{start end}` (effective dates) + isAmendment/isRenumbered/isRepealed/
+  isRetroactive + instrument name. Bonus: `workVariant.html` = per-version condition TEXT;
+  legacy collection = ~985 historic instrument PDFs + consolidations back to 2012.
+- One open build detail (not a blocker): the node→workId bridge for workHistory is masked
+  by the backend's generic error handling → capture it from a browser network tab (Phase 1).
+
+### New repo (separate, by design): ~/projects/ria-epr-pipeline  (git main, commit 949771a)
+Skeleton committed: working `src/epr_client.py` (validated queries + real electricity-supply
+IDs), `docs/recce-findings.md` (full recce), `validation/known_dates.py` (24 hand-verified
+events / 19 conditions = the BLOCKING acceptance test), `tasks/todo.md` (build phases).
+Produces the change-history dataset RIA's temporal module will consume. NOT yet pushed to GitHub.
+
+### ⚠️ HELD in ragria working tree (uncommitted): 57 + 7A temporal mappings
+`src/temporal.py` + `evals/cases.yaml` carry 57 (SEG, introduced 1 Jan 2020) + 7A (Micro
+Business, amended 1 Oct 2022) — both $0-verified correct, NOT gated/committed. Options:
+gate+ship now (one 64-case run), or hold as pipeline validation data, or revert (pipeline
+re-derives). Decision pending. (Cond 9 already shipped, e3e5dd5. Cond 26 held — cross-ref conflict.)
+
+### Legal/reuse terms for the public register (Crown/Ofgem) — human check before republishing.
