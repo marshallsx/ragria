@@ -339,6 +339,37 @@ TEXT_CHANGES: dict[str, dict] = {
             },
         ],
     },
+    "9": {
+        "title": "Claims for Last Resort Supply Payment",
+        # Condition 9 predates our corpus (Last Resort Supply framework), so `earliest` = 3 Aug 2019
+        # knowledge boundary — it is NOT an introduced condition. ONE Scott-verified change effective
+        # 6 May 2022: paragraph (ba) added so a Last Resort Supply Payment claim may include finance
+        # costs, paragraph 9.7A added governing the transfer/assignment of a claim, and a definition of
+        # "Valid Claim" introduced. $0 corpus diff confirms gap-free: v2019 == v2022 (identical pre-
+        # change text, both before 6 May 2022) and v2024-07 == v2025 (stable post-change text). The
+        # lone v2024-10 blip is proven PDF-extraction noise (scattered single-token OCR errors, e.g.
+        # "relatio n" -> "relation"), NOT a second change — v2024-07 and v2025 are byte-identical. So
+        # v2022 brackets the change on the pre side and v2024-07 on the post side.
+        "earliest": date(2019, 8, 3),
+        "segments": [
+            {
+                "start": date(2019, 8, 3),
+                "end": date(2022, 5, 6),
+                "version": "2022-04-14",
+                "note": ("before the 6 May 2022 amendment: a Last Resort Supply Payment claim did not "
+                         "yet expressly provide for finance costs, there was no paragraph 9.7A on "
+                         "transferring or assigning a claim, and 'Valid Claim' was not yet defined"),
+            },
+            {
+                "start": date(2022, 5, 6),
+                "end": None,  # open — current (text stable v2024-07 through v2025)
+                "version": "2025-08-01",
+                "note": ("as amended 6 May 2022: paragraph (ba) added so a claim may include the "
+                         "finance costs the supplier incurred, paragraph 9.7A added governing the "
+                         "transfer or assignment of a claim, and a definition of 'Valid Claim' introduced"),
+            },
+        ],
+    },
 }
 
 

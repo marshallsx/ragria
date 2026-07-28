@@ -475,3 +475,25 @@
   expect_version: "2025-08-01"
   expect_contains: "1 October 2022"
   expect_history: "text-change"
+
+# --- 9 (Claims for Last Resort Supply Payment) — one Scott-verified change effective 6 May 2022
+# (paragraph (ba) finance costs + 9.7A transfer/assignment + "Valid Claim" definition). Two segments:
+# pre-change v2019 == v2022 (serve v2022), post-change v2024-07 == v2025 (serve current).
+- id: T37  # 9 BEFORE the 6 May 2022 amendment
+  category: Temporal
+  question: How does a supplier make a claim for a Last Resort Supply Payment?
+  as_of: 2021-01-01
+  expected: answer
+  expect_conditions: ["9"]
+  expect_version: "2022-04-14"
+  expect_contains: "14 April 2022"
+  expect_history: "text-change"
+- id: T38  # 9 AFTER the 6 May 2022 amendment
+  category: Temporal
+  question: How does a supplier make a claim for a Last Resort Supply Payment?
+  as_of: 2023-06-01
+  expected: answer
+  expect_conditions: ["9"]
+  expect_version: "2025-08-01"
+  expect_contains: "6 May 2022"
+  expect_history: "text-change"
