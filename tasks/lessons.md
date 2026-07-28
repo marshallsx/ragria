@@ -608,3 +608,18 @@ Running log of what we learned building RAGRIA — the non-obvious stuff worth r
   was untouched by the rebrand and a headless `streamlit.testing.v1.AppTest` click confirmed the value
   lands in the box with no exception. It was a transient freeze. AppTest simulates button clicks with no
   API cost — the right tool to isolate UI-state bugs from environment flukes.
+
+## BREADTH / temporal mapping (2026-07-28)
+- **When mapping a single-change condition across 5 held versions, verify the two versions you SERVE
+  are identical — a mid-window snapshot can show a spurious diff from BOTH neighbours and still not be
+  a second change.** Condition 9 changed once (6 May 2022). The $0 corpus diff showed v2019==v2022
+  (pre) and v2024-07==v2025 (post) — clean — but v2024-10 differed from BOTH by 7 chars. A token diff
+  revealed scattered single-word gibberish ("relatio n"→"relation", "suc"→"assignment") = PDF/OCR
+  extraction noise, NOT a regulatory edit (a real change is a contiguous inserted/deleted phrase, not 7
+  isolated nonsense swaps). Because we serve v2022 (pre) and v2025 (post) and those ARE byte-identical
+  to their same-side partners, the noise is off the serving path and the map stays gap-free. Rule:
+  diff the BODY per version, confirm the served pair matches, and treat scattered single-token gibberish
+  as noise — but never wave away a diff you haven't actually looked at.
+- **Re-check candidates against the live map before working them — one may already be done.** Condition
+  60 was on the "next candidates" list but had already been mapped in batch 3; Scott's freshly-verified
+  date just confirmed the existing entry. Grep temporal.py first; don't re-map.

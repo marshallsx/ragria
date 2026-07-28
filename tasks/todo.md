@@ -1591,3 +1591,45 @@ so it can't be scraped — WebFetch/curl both 403; Scott supplied the palette + 
 ### ⚠️ FIRST ACTION NEXT SESSION (updated)
 **REBOOT the Streamlit app** — now covers the rebrand (c028910) AND everything from 2026-07-23
 (batch 3, 31G, 4A+8, citation fix, history-panel fix). None of it is on the deployed site until reboot.
+
+## SESSION — 2026-07-28. UI: coral dropped (lime+teal only) + BREADTH: Condition 9 mapped (16 → 17).
+Site rebranded to a TWO-accent palette (lime + teal, no coral); RIA's UI followed. Then mapped the
+last ready BREADTH candidate.
+
+### UI — coral removed (commit d805758, LIVE-pending reboot)
+scottdmarshall.com dropped coral, so RIA did too. Reassigned the h1 hero title from coral (#E93E43)
+to lime (--accent) so it matches its own lime bolt + the Ask RIA action; removed the --coral var;
+updated "three-accent" → "two-accent" comments. Teal keeps sub-headings/links/example chips. UI-only
+(evals never touch app/main.py) → no gate. Verified $0 via headless AppTest (renders, no exception).
+
+### BREADTH — Condition 9 MAPPED (commit e3e5dd5), mapped set 16 → 17
+- **9 (Claims for Last Resort Supply Payment)** — ONE Scott-verified change effective **6 May 2022**
+  (paragraph (ba) finance costs + 9.7A transfer/assignment + "Valid Claim" definition). Two segments,
+  gap-free: $0 corpus diff confirmed **v2019 == v2022** (pre-change, both before 6 May 2022) and
+  **v2024-07 == v2025** (stable post-change). The lone **v2024-10** blip is proven PDF-extraction
+  noise (7 scattered single-token OCR gibberish swaps, e.g. "relatio n"→"relation"), NOT a second
+  change — v2024-07 and v2025 are byte-identical. Serve v2022 before 6 May 2022, current (v2025) after.
+- **Condition 60** — already mapped (batch 3, introduced 1 Oct 2024); Scott's info confirmed it exactly,
+  no change needed.
+- CODE: `src/temporal.py` (9 in TEXT_CHANGES, 2 segments) + `evals/cases.yaml` (T37 before→v2022 /
+  T38 after→v2025). Cases = **60**.
+- SHIP-GATE `results_breadth_9.json` (60 cases, Opus synth + Opus judge): **decision 60/60,
+  retrieval+citation 56/56, content 35/35, version 23/23, history 36/36, faithfulness 56/56 (0
+  hallucinations), 0 false refusals, 0 false answers.** recall@1 49/56, mean_rank 1.18. P6 did NOT
+  reproduce this run.
+- ⚠️ LIVE pipeline change → **app reboot needed** to go live. Demo-check: dated LRS-payment claim —
+  as-of 2021 → v2022; as-of 2023+ → v2025 "effective from 6 May 2022" + history panel renders.
+
+### Mapped temporal set now 17: 0A, 4A, 4C, 4D, 5A, 5B, 8, 9, 19C, 19D, 21B, 25E, 27A, 28, 31G, 31H, 60.
+Regression baseline = 60-case suite; last GREEN = `results_breadth_9.json`.
+
+### ⚠️ FIRST ACTION NEXT SESSION — REBOOT the Streamlit app
+Covers the coral-removal (d805758) + Condition 9 (e3e5dd5) + everything still-pending from 2026-07-23/24.
+
+### RESUME OPTIONS (BREADTH process warm + repeatable)
+- **Change-map re-scan** ($0 local) to surface the next cheap single-change / introduced candidates now
+  that 5 versions are held — line up the next batch. Existence boundaries are cheapest (intro-date-only).
+- **Condition 24** — STILL BLOCKED: reconcile 24.3A ("proportionate… direct economic loss") against
+  Ofgem's authoritative source (in our v2022+v2025 corpus but Scott couldn't locate it) + v2019
+  tracked-changes markup data-quality flag on Cond 24.
+- **P6 faithfulness flicker** — didn't fire this run; still logged, low priority.
