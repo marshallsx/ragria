@@ -1663,3 +1663,38 @@ gate+ship now (one 64-case run), or hold as pipeline validation data, or revert 
 re-derives). Decision pending. (Cond 9 already shipped, e3e5dd5. Cond 26 held — cross-ref conflict.)
 
 ### Legal/reuse terms for the public register (Crown/Ofgem) — human check before republishing.
+
+## SESSION CLOSE — 2026-07-28 (eve) · RESUME = close out temporal mapping tomorrow
+Big day: mapped Cond 9 (shipped), removed coral from UI (shipped), ran the EPR recce,
+and reached the DECISION that temporal mapping is essentially COMPLETE.
+
+### The finish-line decision (agreed with Scott)
+Temporal mapping is at a natural, defensible end at **19 conditions** (17 committed +
+57/7A held). The date-sourceable, gap-free, mappable set is EXHAUSTED — the remaining
+~59 "candidates" are all one of: UNSOURCEABLE (7, 22 — Scott, Fable 5, AND the EPR all
+failed to find authoritative dates → don't guess, per the non-negotiable rule),
+VOLATILE/not gap-free (27, 47, 28AD, 14A…), BLOCKED (24's 24.3A, 26's cross-ref), or
+OBSCURE/low-value (~40 smart-metering / Green Deal / procedural). Unmapped = SAFE
+REFUSAL on dated queries (correct behaviour, not a gap). So we STOP at 19.
+
+### ⚠️ FIRST ACTIONS TOMORROW (the closeout)
+1. Run the closing gate: `venv/bin/python evals/run_evals.py --label breadth_57_7A`
+   (64 cases, Opus synth + Opus judge). 57 + 7A are UNCOMMITTED in the working tree
+   (src/temporal.py + evals/cases.yaml T39-T42), $0-verified, ready. Expect decision
+   64/64, T39-T42 pass, faithfulness clean, 0 false refusals.
+2. GREEN → commit + push src/temporal.py + evals/cases.yaml → live mapped set = 19.
+3. Write "TEMPORAL MAPPING — COMPLETE (19 conditions)" closeout here with the rationale
+   above. Park the ~40 obscure conditions as an "only if a real user asks" backlog.
+4. REBOOT the Streamlit app (57/7A + Cond 9 + coral removal all pending live).
+
+### EPR pipeline recce outcome (today) — the re-scope, for the record
+Built + recce'd a separate repo (github.com/marshallsx/ria-epr-pipeline, private) for a
+systematic EPR change-history pipeline. RESULT: the EPR is reachable (public GraphQL,
+collection-scoped endpoint) BUT does NOT hold RIA's needed 2019-2025 modification dates
+(modern collection = Oct-2025+ only; legacy per-condition instruments end ~2017; the data
+lives on ofgem.gov.uk). Re-scoped to Option A+B: (A) historic dating stays with RIA's
+consolidation-diff + verify method [this repo]; (B) the pipeline repo narrows to a
+consolidation-text harvester (B1) + forward-change monitor (B2), neither built yet. See
+memory [[epr-pipeline-repo]] + ria-epr-pipeline/docs/recce-findings.md §8-9.
+This CONFIRMS the finish-line decision: even a purpose-built pipeline can't source the
+remaining dates, so 19 is genuinely the end.
