@@ -121,9 +121,8 @@ st.markdown(
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800;900&display=swap');
     :root {
-        --accent: #ECFF1A;      /* lime — section headings, divider/accents, primary action */
+        --accent: #ECFF1A;      /* lime — hero title, section headings, divider/accents, primary action */
         --teal: #00C2C1;        /* teal — links, sub-headings, interactive chips */
-        --coral: #E93E43;       /* coral — the hero page title */
         --on-accent: #0E0E0D;   /* text/icon on a lime OR teal fill (never white) */
         --bg: #0E0E0D;          /* page background */
         --surface: #262624;     /* card / panel surface */
@@ -140,12 +139,12 @@ st.markdown(
     .stApp, .stMarkdown, p, li, label { color: var(--text); }
     a, .stMarkdown a { color: var(--teal); }   /* links = teal, as the site's nav */
 
-    /* Headings mirror the site's three-accent hierarchy:
-       h1 = coral hero title, uppercase + heavy + tight (like "PREVIOUS PROJECTS");
+    /* Headings mirror the site's two-accent hierarchy (lime + teal, no coral):
+       h1 = lime hero title, uppercase + heavy + tight (matches its lime bolt + the Ask RIA action);
        h2 = lime section heading, title case (like "Claude Enterprise");
        h3 = teal sub-heading (like "Digital Natives Claude Improvements"). */
     .stApp h1 {
-        color: var(--coral);
+        color: var(--accent);
         font-weight: 900;
         letter-spacing: -0.03em;
         text-transform: uppercase;
@@ -191,7 +190,7 @@ st.markdown(
         box-shadow: none !important;
     }
     /* Secondary (outline): the example chips take TEAL — the site's interactive/nav colour — so
-       the palette reads as three-accent, not monochrome lime. Surface fill, teal text + border;
+       the palette reads as two-accent, not monochrome lime. Surface fill, teal text + border;
        hover fills teal with near-black text. Descendant colour forced for the same reason. */
     [data-testid="stBaseButton-secondary"],
     [data-testid="stBaseButton-secondary"] * { color: var(--teal) !important; }
@@ -386,8 +385,8 @@ def render_compare(condition: str, as_of: date) -> None:
 
 # --- Header ---
 # Emoji ignore CSS `color` (they carry their own built-in yellow), so the bolt is an inline SVG
-# with an explicit lime fill (--accent, the Ask RIA colour). The title text stays coral/uppercase
-# via the .stApp h1 rule; the SVG fill is independent of it.
+# with an explicit lime fill (--accent, the Ask RIA colour). The title text is lime/uppercase
+# via the .stApp h1 rule, so bolt + title now read as one lime hero.
 _BOLT_SVG = (
     '<svg viewBox="0 0 24 24" width="0.82em" height="0.82em" role="img" aria-label="lightning bolt" '
     'style="vertical-align:-0.02em;margin-right:0.12em">'
